@@ -1,0 +1,152 @@
+[
+  {
+    "timestamp": "2026-07-18T23:43:14.445224",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-lcbsih5au-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-irtijk6jw-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks",
+    "live_verify": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T23:42:22.992853",
+    "action": "deploy",
+    "status": "FAIL",
+    "staging_url": "https://bleuboard-9qy3ktfmz-navakanth1984s-projects.vercel.app",
+    "prod_url": "deployed https://bleuboard-96feacner-navakanth1984s-projects.vercel.app but promote failed",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks",
+    "live_verify": "skipped \u2014 prod deploy failed"
+  },
+  {
+    "timestamp": "2026-07-18T21:40:05.113804",
+    "action": "rollback",
+    "status": "FAIL",
+    "detail": "Vercel CLI 56.3.1 (Node.js 24.13.1)\nFetching deployment \"https://bleuboard-6maewv40l-navakanth1984s-projects.vercel.app\" in navakanth1984s-projects\u2026\n> Fetching deployment \"https://bleuboard-6maewv40l-navakanth1984s-projects.vercel.app\" in navakanth1984s-projects\u2026\nError: To rollback further than the "
+  },
+  {
+    "timestamp": "2026-07-18T21:38:14.584928",
+    "action": "verify",
+    "status": "PASS",
+    "detail": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T21:36:46.812848",
+    "action": "verify",
+    "status": "PASS",
+    "detail": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T21:09:05.044250",
+    "action": "verify",
+    "status": "PASS",
+    "detail": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T21:07:39.865089",
+    "action": "verify",
+    "status": "PASS",
+    "detail": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T21:06:32.118007",
+    "action": "verify",
+    "status": "PASS",
+    "detail": "Live verify PASSED on https://bleuboard.vercel.app (3 markers, size ratio 1.02)"
+  },
+  {
+    "timestamp": "2026-07-18T20:57:50.218950",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-qidi7zbvc-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-adqnbthiv-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-18T20:30:20.879002",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-fg7p4txf6-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-7a2h63p1w-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-18T12:35:56.410208",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-jdjg1igqd-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-6maewv40l-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-18T11:25:47.719460",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-k548xlgq2-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-kafy392gf-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-17T19:09:33.339043",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-9nn56sgra-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-kh3pxj2lz-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-17T19:07:52.363168",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-j4f27xc3u-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-f35fayr7f-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-07-10T21:44:43.633932",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-8pbwq7378-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-6x2h3x3pz-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-06-25T21:24:31.668108",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-7t5kkp3ls-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-84q5822ru-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-06-25T21:14:34.191022",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-bfpsmz082-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-avpvbcjol-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-06-25T21:06:50.029444",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-cml69kur7-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-4w4rmsv2c-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-06-25T20:51:16.301998",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-qe875gu8o-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-ph8h37rr8-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  },
+  {
+    "timestamp": "2026-06-25T19:56:54.526302",
+    "action": "deploy",
+    "status": "PASS",
+    "staging_url": "https://bleuboard-lbyort03b-navakanth1984s-projects.vercel.app",
+    "prod_url": "https://bleuboard-fqux2kcoc-navakanth1984s-projects.vercel.app",
+    "smoke": "Smoke test PASSED \u2014 8/8 checks"
+  }
+]

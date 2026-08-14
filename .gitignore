@@ -1,0 +1,5 @@
+.vercel
+__pycache__
+.graphify
+spatial-bridge/*.log
+node_modules
