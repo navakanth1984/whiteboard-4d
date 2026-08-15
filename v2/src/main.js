@@ -20,12 +20,45 @@ import {
   addCursiveText3D,
   addTextRing
 } from './objects/text.js';
+import {
+  SHAPES,
+  curShape,
+  setCurShape,
+  addShape,
+  addBlock
+} from './objects/shapes.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 initStrokeSystem();
 initTextSystem();
+
+// Populate Shapes in Palette
+function buildShapePalette() {
+  const pal = document.getElementById('palette');
+  const grid = document.getElementById('pal-grid');
+  const title = document.getElementById('pal-title');
+  if (!grid || !title) return;
+
+  title.textContent = '3D Solids & 2D Shapes';
+  grid.innerHTML = '';
+
+  Object.keys(SHAPES).forEach(key => {
+    const item = SHAPES[key];
+    const b = document.createElement('div');
+    b.className = 'pal-item' + (key === curShape ? ' sel' : '');
+    b.textContent = item.icon;
+    b.title = item.label;
+    b.addEventListener('click', () => {
+      setCurShape(key);
+      grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+    grid.appendChild(b);
+  });
+}
+buildShapePalette();
 
 // Mode state (starts in 'nav', can switch to 'draw')
 export let currentMode = 'nav';
@@ -37,6 +70,11 @@ export function setMode(mode) {
   const bp = document.getElementById('brush-picker');
   if (bp) {
     bp.classList.toggle('show', mode === 'draw');
+  }
+  const pal = document.getElementById('palette');
+  if (pal) {
+    pal.classList.toggle('show', mode === 'shape');
+    if (mode === 'shape') buildShapePalette();
   }
   if (controls) {
     controls.enabled = (mode === 'nav');
@@ -96,6 +134,14 @@ window.__drawProbe = {
   getDrawPts: () => drawPts
 };
 
+window.__shapeProbe = {
+  SHAPES,
+  curShape: () => curShape,
+  setCurShape,
+  addShape,
+  addBlock
+};
+
 window.__inputProbe = {
   lastHit: null,
   hitCount: 0,
@@ -108,8 +154,17 @@ window.__inputProbe = {
 
 setupPointerEvents({
   onDown: (cx, cy) => {
+    const ink = document.getElementById('pick-ink')?.value || '#00ccff';
+
     if (currentMode === 'draw') {
       beginStroke(cx, cy);
+    } else if (currentMode === 'shape') {
+      const surf = hitToSurface(cx, cy);
+      if (surf) addShape(curShape, surf, ink);
+    } else if (currentMode === 'block') {
+      const hit = getHit(cx, cy);
+      const pos = hitToPos(hit);
+      if (pos) addBlock(pos.x, pos.y, pos.z, ink);
     } else if (currentMode === 'text') {
       const hit = getHit(cx, cy);
       const free = hitToFree(hit);
@@ -167,6 +222,19 @@ function animate() {
   updateDust(dt);
   updateTesseract(t);
   updateLive();
+
+  // Tick object billboard and spin rotations
+  objects.forEach(o => {
+    if (o.root.userData.billboardY && camera) {
+      const dx = camera.position.x - o.root.position.x;
+      const dz = camera.position.z - o.root.position.z;
+      o.root.rotation.y = Math.atan2(dx, dz);
+    }
+    if (o.root.userData.spin && o.root.children[0]) {
+      o.root.children[0].rotation.y += 0.01;
+      o.root.children[0].rotation.x += 0.004;
+    }
+  });
 
   if (fill) {
     fill.intensity = 1.1 + Math.sin(t * 0.85) * 0.3;
