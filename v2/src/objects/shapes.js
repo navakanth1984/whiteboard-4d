@@ -42,29 +42,29 @@ export function heartGeo() {
 }
 
 export const SHAPES = {
-  // 3D solids — radius ~0.9 for consistent sizing
-  cube:     { d3: true,  icon: '⬛', label: 'Cube',        make: () => new THREE.BoxGeometry(1.4, 1.4, 1.4) },
-  sphere:   { d3: true,  icon: '⬤', label: 'Sphere',      make: () => new THREE.SphereGeometry(0.9, 32, 24) },
-  cone:     { d3: true,  icon: '🔺', label: 'Cone',        make: () => new THREE.ConeGeometry(0.9, 1.6, 32) },
-  cylinder: { d3: true,  icon: '🛢', label: 'Cylinder',    make: () => new THREE.CylinderGeometry(0.7, 0.7, 1.5, 32) },
-  torus:    { d3: true,  icon: '🍩', label: 'Torus',       make: () => new THREE.TorusGeometry(0.7, 0.28, 16, 40) },
-  knot:     { d3: true,  icon: '🪢', label: 'Torus Knot',  make: () => new THREE.TorusKnotGeometry(0.6, 0.22, 80, 12) },
-  ico:      { d3: true,  icon: '🔶', label: 'Icosahedron', make: () => new THREE.IcosahedronGeometry(0.95, 0) },
-  dodeca:   { d3: true,  icon: '⬡', label: 'Dodecahedron', make: () => new THREE.DodecahedronGeometry(0.95, 0) },
-  octa:     { d3: true,  icon: '💠', label: 'Octahedron',   make: () => new THREE.OctahedronGeometry(0.95, 0) },
-  tetra:    { d3: true,  icon: '△', label: 'Tetrahedron',  make: () => new THREE.TetrahedronGeometry(1.05, 0) },
-  prism:    { d3: true,  icon: '🔻', label: 'Prism',       make: () => new THREE.CylinderGeometry(0.85, 0.85, 1.4, 3) },
-  capsule:  { d3: true,  icon: '💊', label: 'Capsule',     make: () => new THREE.CylinderGeometry(0.5, 0.5, 1.3, 20) },
+  // 3D solids
+  cube:     { d3: true,  icon: 'view_in_ar',            label: 'Cube',        make: () => new THREE.BoxGeometry(1.4, 1.4, 1.4) },
+  sphere:   { d3: true,  icon: 'radio_button_unchecked', label: 'Sphere',      make: () => new THREE.SphereGeometry(0.9, 32, 24) },
+  cone:     { d3: true,  icon: 'change_history',        label: 'Cone',        make: () => new THREE.ConeGeometry(0.9, 1.6, 32) },
+  cylinder: { d3: true,  icon: 'cylinder',              label: 'Cylinder',    make: () => new THREE.CylinderGeometry(0.7, 0.7, 1.5, 32) },
+  torus:    { d3: true,  icon: 'adjust',                label: 'Torus',       make: () => new THREE.TorusGeometry(0.7, 0.28, 16, 40) },
+  knot:     { d3: true,  icon: 'all_inclusive',         label: 'Torus Knot',  make: () => new THREE.TorusKnotGeometry(0.6, 0.22, 80, 12) },
+  ico:      { d3: true,  icon: 'diamond',               label: 'Icosahedron', make: () => new THREE.IcosahedronGeometry(0.95, 0) },
+  dodeca:   { d3: true,  icon: 'hexagon',               label: 'Dodecahedron', make: () => new THREE.DodecahedronGeometry(0.95, 0) },
+  octa:     { d3: true,  icon: 'grain',                 label: 'Octahedron',   make: () => new THREE.OctahedronGeometry(0.95, 0) },
+  tetra:    { d3: true,  icon: 'details',               label: 'Tetrahedron',  make: () => new THREE.TetrahedronGeometry(1.05, 0) },
+  prism:    { d3: true,  icon: 'filter_vintage',        label: 'Prism',       make: () => new THREE.CylinderGeometry(0.85, 0.85, 1.4, 3) },
+  capsule:  { d3: true,  icon: 'medication',            label: 'Capsule',     make: () => new THREE.CylinderGeometry(0.5, 0.5, 1.3, 20) },
 
-  // 2D flats — built from THREE.Shape, placed as billboards
-  circle:   { d3: false, icon: '⭕', label: 'Circle',   make: () => new THREE.CircleGeometry(0.95, 48) },
-  square:   { d3: false, icon: '⬜', label: 'Square',   make: () => new THREE.PlaneGeometry(1.7, 1.7) },
-  triangle: { d3: false, icon: '▲', label: 'Triangle', make: () => flatShape(s => { s.moveTo(0, 1); s.lineTo(-0.95, -0.7); s.lineTo(0.95, -0.7); s.closePath(); }) },
-  star:     { d3: false, icon: '⭐', label: 'Star',     make: () => starGeo(5, 1, 0.45) },
-  heart:    { d3: false, icon: '❤️', label: 'Heart',    make: () => heartGeo() },
-  hexagon:  { d3: false, icon: '⬢', label: 'Hexagon',  make: () => polyGeo(6, 1) },
-  pentagon: { d3: false, icon: '⬠', label: 'Pentagon', make: () => polyGeo(5, 1) },
-  diamond:  { d3: false, icon: '🔷', label: 'Diamond',  make: () => polyGeo(4, 1) },
+  // 2D flats
+  circle:   { d3: false, icon: 'circle',                label: 'Circle',   make: () => new THREE.CircleGeometry(0.95, 48) },
+  square:   { d3: false, icon: 'square',                label: 'Square',   make: () => new THREE.PlaneGeometry(1.7, 1.7) },
+  triangle: { d3: false, icon: 'change_history',        label: 'Triangle', make: () => flatShape(s => { s.moveTo(0, 1); s.lineTo(-0.95, -0.7); s.lineTo(0.95, -0.7); s.closePath(); }) },
+  star:     { d3: false, icon: 'star',                  label: 'Star',     make: () => starGeo(5, 1, 0.45) },
+  heart:    { d3: false, icon: 'favorite',              label: 'Heart',    make: () => heartGeo() },
+  hexagon:  { d3: false, icon: 'hexagon',               label: 'Hexagon',  make: () => polyGeo(6, 1) },
+  pentagon: { d3: false, icon: 'pentagon',              label: 'Pentagon', make: () => polyGeo(5, 1) },
+  diamond:  { d3: false, icon: 'diamond',               label: 'Diamond',  make: () => polyGeo(4, 1) },
 };
 
 export let curShape = 'cube';

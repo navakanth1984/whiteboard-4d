@@ -48,7 +48,7 @@ function buildShapePalette() {
     const item = SHAPES[key];
     const b = document.createElement('div');
     b.className = 'pal-item' + (key === curShape ? ' sel' : '');
-    b.textContent = item.icon;
+    b.innerHTML = `<span class="material-symbols-outlined">${item.icon}</span><span class="pal-lbl">${item.label}</span>`;
     b.title = item.label;
     b.addEventListener('click', () => {
       setCurShape(key);
