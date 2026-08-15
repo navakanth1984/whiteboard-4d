@@ -1,9 +1,34 @@
 import * as THREE from 'three';
 import { initScene, updateDust, updateTesseract, render, controls, fill, ambient } from './core/scene.js';
+import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
+
+// Wire input handlers & test diagnostic probe
+window.__inputProbe = {
+  lastHit: null,
+  hitCount: 0,
+  getHit,
+  hitToPos,
+  hitToFree,
+  hitToSurface,
+  rayPlane
+};
+
+setupPointerEvents({
+  onDown: (cx, cy) => {
+    const hit = getHit(cx, cy);
+    window.__inputProbe.lastHit = hit ? { point: hit.point, name: hit.object.name } : null;
+    window.__inputProbe.hitCount++;
+  },
+  onMove: (cx, cy) => {
+    setMouse(cx, cy);
+  },
+  onUp: () => {}
+});
+
 
 const clock = new THREE.Clock();
 let elapsed = 0;
