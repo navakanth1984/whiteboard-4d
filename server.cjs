@@ -21,7 +21,11 @@ const MIME_TYPES = {
 
 http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0]; // strip query string before comparing/joining
-  let filePath = path.join(__dirname, urlPath === '/' ? 'index.html' : urlPath);
+  let normalizedPath = urlPath === '/' ? 'index.html' : urlPath;
+  if (normalizedPath === '/v2' || normalizedPath === '/v2/' || normalizedPath === 'v2' || normalizedPath === 'v2/') {
+    normalizedPath = 'v2/index.html';
+  }
+  let filePath = path.join(__dirname, normalizedPath);
   let extname = path.extname(filePath);
 
   fs.readFile(filePath, (err, content) => {
