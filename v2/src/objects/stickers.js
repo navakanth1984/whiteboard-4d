@@ -1,1 +1,221 @@
-// v2\src\objects\stickers.js stub
+import * as THREE from 'three';
+import { register } from '../core/history.js';
+
+// ── Official Brand & Architecture Node Definitions (Simple Icons & Lucide) ─
+export const ICON_CATEGORIES = {
+  'Data Eng': [
+    { id: 'databricks', label: 'Databricks', slug: 'databricks', hex: '#FF3621' },
+    { id: 'apachespark', label: 'Spark', slug: 'apachespark', hex: '#E25A1C' },
+    { id: 'snowflake', label: 'Snowflake', slug: 'snowflake', hex: '#29B5E8' },
+    { id: 'apachekafka', label: 'Kafka', slug: 'apachekafka', hex: '#231F20' },
+    { id: 'apacheairflow', label: 'Airflow', slug: 'apacheairflow', hex: '#017CEE' },
+    { id: 'dbt', label: 'dbt', slug: 'dbt', hex: '#FF694B' },
+    { id: 'apacheflink', label: 'Flink', slug: 'apacheflink', hex: '#E6526F' },
+    { id: 'trino', label: 'Trino', slug: 'trino', hex: '#DD00A1' },
+    { id: 'postgresql', label: 'Postgres', slug: 'postgresql', hex: '#4169E1' },
+    { id: 'mongodb', label: 'MongoDB', slug: 'mongodb', hex: '#47A248' },
+    { id: 'redis', label: 'Redis', slug: 'redis', hex: '#DC382D' },
+    { id: 'elasticsearch', label: 'Elastic', slug: 'elastic', hex: '#005571' }
+  ],
+  'Cloud': [
+    { id: 'aws', label: 'AWS', slug: 'amazonwebservices', hex: '#FF9900' },
+    { id: 'azure', label: 'Azure', slug: 'microsoftazure', hex: '#0078D4' },
+    { id: 'gcp', label: 'Google Cloud', slug: 'googlecloud', hex: '#4285F4' },
+    { id: 'kubernetes', label: 'Kubernetes', slug: 'kubernetes', hex: '#326CE5' },
+    { id: 'docker', label: 'Docker', slug: 'docker', hex: '#2496ED' },
+    { id: 'terraform', label: 'Terraform', slug: 'terraform', hex: '#844FBA' },
+    { id: 'cloudflare', label: 'Cloudflare', slug: 'cloudflare', hex: '#F38020' },
+    { id: 'vercel', label: 'Vercel', slug: 'vercel', hex: '#FFFFFF' },
+    { id: 'supabase', label: 'Supabase', slug: 'supabase', hex: '#3FCF8E' },
+    { id: 'firebase', label: 'Firebase', slug: 'firebase', hex: '#FFCA28' },
+    { id: 'githubactions', label: 'CI / CD', slug: 'githubactions', hex: '#2088FF' },
+    { id: 'grafana', label: 'Grafana', slug: 'grafana', hex: '#F46800' }
+  ],
+  'AI & Frontier': [
+    { id: 'openai', label: 'OpenAI', slug: 'openai', hex: '#412991' },
+    { id: 'googlegemini', label: 'Gemini', slug: 'googlegemini', hex: '#8E75FF' },
+    { id: 'anthropic', label: 'Claude', slug: 'anthropic', hex: '#D97757' },
+    { id: 'huggingface', label: 'HuggingFace', slug: 'huggingface', hex: '#FFD21E' },
+    { id: 'pytorch', label: 'PyTorch', slug: 'pytorch', hex: '#EE4C2C' },
+    { id: 'tensorflow', label: 'TensorFlow', slug: 'tensorflow', hex: '#FF6F00' },
+    { id: 'langchain', label: 'LangChain', slug: 'langchain', hex: '#1C3C3C' },
+    { id: 'nvidia', label: 'NVIDIA NIM', slug: 'nvidia', hex: '#76B900' },
+    { id: 'ollama', label: 'Ollama', slug: 'ollama', hex: '#FFFFFF' },
+    { id: 'pinecone', label: 'Pinecone', slug: 'pinecone', hex: '#000000' },
+    { id: 'qdrant', label: 'Qdrant', slug: 'qdrant', hex: '#DC2626' },
+    { id: 'meta', label: 'Llama 3', slug: 'meta', hex: '#0081FB' }
+  ],
+  'Dev & Tools': [
+    { id: 'react', label: 'React', slug: 'react', hex: '#61DAFB' },
+    { id: 'typescript', label: 'TypeScript', slug: 'typescript', hex: '#3178C6' },
+    { id: 'python', label: 'Python', slug: 'python', hex: '#3776AB' },
+    { id: 'rust', label: 'Rust', slug: 'rust', hex: '#000000' },
+    { id: 'go', label: 'Go', slug: 'go', hex: '#00ADD8' },
+    { id: 'nodedotjs', label: 'Node.js', slug: 'nodedotjs', hex: '#5FA04E' },
+    { id: 'graphql', label: 'GraphQL', slug: 'graphql', hex: '#E10098' },
+    { id: 'tailwindcss', label: 'Tailwind', slug: 'tailwindcss', hex: '#06B6D4' },
+    { id: 'threejs', label: 'Three.js', slug: 'threedotjs', hex: '#000000' },
+    { id: 'figma', label: 'Figma', slug: 'figma', hex: '#F24E1E' },
+    { id: 'github', label: 'GitHub', slug: 'github', hex: '#181717' },
+    { id: 'postman', label: 'Postman', slug: 'postman', hex: '#FF6C37' }
+  ]
+};
+
+export let curIconCat = 'Data Eng';
+export let curIconKey = 0;
+
+export function setIconCategory(cat) {
+  if (ICON_CATEGORIES[cat]) {
+    curIconCat = cat;
+    curIconKey = 0;
+  }
+}
+
+export function setCurIconIndex(idx) {
+  curIconKey = idx;
+}
+
+// ── Sticker Library ─────────────────────────────────────────
+export const STICKERS = [
+  '😀', '😎', '🥳', '🤖', '👽', '💀', '❤️', '🔥', '⭐', '🌟', '✨', '⚡', '💎', '🎈', '🚀', '🌈',
+  '🦅', '🐦', '🕊️', '🦜', '🦢', '🦋', '🐝', '🐞', '🐱', '🐶', '🦊', '🐼', '🦁', '🐯', '🐰', '🐸',
+  '🐢', '🐙', '🐠', '🦈', '🌳', '🌲', '🌸', '🌺', '🍄', '🍎', '🌙', '☀️', '☁️', '💧', '🎵', '💡'
+];
+
+export let curSticker = '🦋';
+export function setCurSticker(s) {
+  curSticker = s;
+}
+
+// Helper to create high-resolution emoji textures
+export function emojiTexture(ch) {
+  const S = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+  ctx.font = '200px "Segoe UI Emoji","Apple Color Emoji",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(ch, S / 2, S / 2 + 12);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+export function addSticker(ch, surf, ink = '#00ccff') {
+  const sp = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: emojiTexture(ch),
+      transparent: true,
+      depthTest: true
+    })
+  );
+  sp.scale.set(3.2, 3.2, 1);
+  const root = new THREE.Group();
+  const normal = surf.normal || new THREE.Vector3(0, 1, 0);
+  const point = surf.point || surf;
+  root.position.copy(point).addScaledVector(normal, 1.6);
+  root.add(sp);
+  const o = register(root, 'sticker', ch, ink);
+  o.sprite = sp;
+  return o;
+}
+
+// ── Official Simple Icons SVG Rasterizer & 3D Node Creator ─
+export function createIconTexture(item) {
+  const S = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+
+  // Background Glassmorphic Rounded Pill
+  const rr = 28;
+  ctx.beginPath();
+  ctx.moveTo(rr, 0);
+  ctx.lineTo(S - rr, 0);
+  ctx.arcTo(S, 0, S, rr, rr);
+  ctx.lineTo(S, S - rr);
+  ctx.arcTo(S, S, S - rr, S, rr);
+  ctx.lineTo(rr, S);
+  ctx.arcTo(0, S, 0, S - rr, rr);
+  ctx.lineTo(0, rr);
+  ctx.arcTo(0, 0, rr, 0, rr);
+  ctx.closePath();
+
+  // Dark slate background
+  ctx.fillStyle = '#060d24';
+  ctx.fill();
+
+  // Outer border with brand color glow
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = item.hex || '#38bdf8';
+  ctx.stroke();
+
+  // Draw bottom label strip
+  ctx.fillStyle = 'rgba(0, 4, 16, 0.88)';
+  ctx.fillRect(0, S * 0.76, S, S * 0.24);
+
+  ctx.font = '700 24px "Plus Jakarta Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText(item.label, S / 2, S * 0.88);
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+
+  // Load official Simple Icons vector SVG asynchronously
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`;
+  img.onload = () => {
+    // Fill brand icon in top zone
+    const iconSize = 100;
+    const ix = (S - iconSize) / 2;
+    const iy = 32;
+
+    // Tint icon white / brand color with subtle glow
+    ctx.drawImage(img, ix, iy, iconSize, iconSize);
+    tex.needsUpdate = true;
+  };
+
+  return tex;
+}
+
+export function addIconNode(item, surf, ink = '#00ccff') {
+  const tex = createIconTexture(item);
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+
+  const geo = new THREE.PlaneGeometry(2.4, 2.4);
+  const mesh = new THREE.Mesh(geo, mat);
+
+  // Subtle glassmorphic backing frame
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(item.hex || ink),
+    emissive: new THREE.Color(item.hex || ink).multiplyScalar(0.4),
+    roughness: 0.2,
+    metalness: 0.8,
+    transparent: true,
+    opacity: 0.85
+  });
+  const frameGeo = new THREE.BoxGeometry(2.5, 2.5, 0.08);
+  const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+  frameMesh.position.z = -0.05;
+
+  const root = new THREE.Group();
+  root.add(mesh);
+  root.add(frameMesh);
+
+  const normal = surf.normal || new THREE.Vector3(0, 1, 0);
+  const point = surf.point || surf;
+  root.position.copy(point).addScaledVector(normal, 1.4);
+  root.userData.billboardY = true;
+
+  const o = register(root, 'icon', item.label, item.hex || ink);
+  o.iconItem = item;
+  return o;
+}

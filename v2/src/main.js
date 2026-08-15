@@ -27,6 +27,18 @@ import {
   addShape,
   addBlock
 } from './objects/shapes.js';
+import {
+  ICON_CATEGORIES,
+  curIconCat,
+  curIconKey,
+  setIconCategory,
+  setCurIconIndex,
+  STICKERS,
+  curSticker,
+  setCurSticker,
+  addSticker,
+  addIconNode
+} from './objects/stickers.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -37,10 +49,12 @@ initTextSystem();
 // Populate Shapes in Palette
 function buildShapePalette() {
   const pal = document.getElementById('palette');
+  const tabs = document.getElementById('pal-tabs');
   const grid = document.getElementById('pal-grid');
   const title = document.getElementById('pal-title');
-  if (!grid || !title) return;
+  if (!grid || !title || !tabs) return;
 
+  tabs.style.display = 'none';
   title.textContent = '3D Solids & 2D Shapes';
   grid.innerHTML = '';
 
@@ -58,9 +72,79 @@ function buildShapePalette() {
     grid.appendChild(b);
   });
 }
-buildShapePalette();
 
-// Mode state (starts in 'nav', can switch to 'draw')
+// Populate Stickers in Palette
+function buildStickerPalette() {
+  const pal = document.getElementById('palette');
+  const tabs = document.getElementById('pal-tabs');
+  const grid = document.getElementById('pal-grid');
+  const title = document.getElementById('pal-title');
+  if (!grid || !title || !tabs) return;
+
+  tabs.style.display = 'none';
+  title.textContent = 'Emoji & Nature Stickers';
+  grid.innerHTML = '';
+
+  STICKERS.forEach(s => {
+    const b = document.createElement('div');
+    b.className = 'pal-item' + (s === curSticker ? ' sel' : '');
+    b.style.fontSize = '22px';
+    b.textContent = s;
+    b.addEventListener('click', () => {
+      setCurSticker(s);
+      grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+    grid.appendChild(b);
+  });
+}
+
+// Populate Official Architecture Nodes in Palette with Category Tabs
+function buildIconPalette() {
+  const pal = document.getElementById('palette');
+  const tabs = document.getElementById('pal-tabs');
+  const grid = document.getElementById('pal-grid');
+  const title = document.getElementById('pal-title');
+  if (!grid || !title || !tabs) return;
+
+  tabs.style.display = 'flex';
+  tabs.innerHTML = '';
+  title.textContent = 'Tech & AI Architecture Nodes';
+
+  Object.keys(ICON_CATEGORIES).forEach(cat => {
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'pal-tab' + (cat === curIconCat ? ' active' : '');
+    tabBtn.textContent = cat;
+    tabBtn.addEventListener('click', () => {
+      setIconCategory(cat);
+      tabs.querySelectorAll('.pal-tab').forEach(t => t.classList.remove('active'));
+      tabBtn.classList.add('active');
+      renderIconGrid();
+    });
+    tabs.appendChild(tabBtn);
+  });
+
+  function renderIconGrid() {
+    grid.innerHTML = '';
+    const items = ICON_CATEGORIES[curIconCat] || [];
+    items.forEach((item, idx) => {
+      const b = document.createElement('div');
+      b.className = 'pal-item' + (idx === curIconKey ? ' sel' : '');
+      b.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg" style="width:20px;height:20px;filter:invert(1);" alt="${item.label}"><span class="pal-lbl">${item.label}</span>`;
+      b.title = item.label;
+      b.addEventListener('click', () => {
+        setCurIconIndex(idx);
+        grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+      });
+      grid.appendChild(b);
+    });
+  }
+
+  renderIconGrid();
+}
+
+// Mode state
 export let currentMode = 'nav';
 export function setMode(mode) {
   currentMode = mode;
@@ -73,8 +157,11 @@ export function setMode(mode) {
   }
   const pal = document.getElementById('palette');
   if (pal) {
-    pal.classList.toggle('show', mode === 'shape');
+    const isPaletteMode = (mode === 'shape' || mode === 'sticker' || mode === 'icon');
+    pal.classList.toggle('show', isPaletteMode);
     if (mode === 'shape') buildShapePalette();
+    else if (mode === 'sticker') buildStickerPalette();
+    else if (mode === 'icon') buildIconPalette();
   }
   if (controls) {
     controls.enabled = (mode === 'nav');
@@ -161,6 +248,14 @@ setupPointerEvents({
     } else if (currentMode === 'shape') {
       const surf = hitToSurface(cx, cy);
       if (surf) addShape(curShape, surf, ink);
+    } else if (currentMode === 'sticker') {
+      const surf = hitToSurface(cx, cy);
+      if (surf) addSticker(curSticker, surf, ink);
+    } else if (currentMode === 'icon') {
+      const surf = hitToSurface(cx, cy);
+      const items = ICON_CATEGORIES[curIconCat] || [];
+      const item = items[curIconKey] || items[0];
+      if (surf && item) addIconNode(item, surf, ink);
     } else if (currentMode === 'block') {
       const hit = getHit(cx, cy);
       const pos = hitToPos(hit);
