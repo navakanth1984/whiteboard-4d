@@ -128,7 +128,7 @@ export function addSticker(ch, surf, ink = '#00ccff') {
 
 // ── Official Simple Icons SVG Rasterizer & 3D Node Creator ─
 export function createIconTexture(item) {
-  const S = 256;
+  const S = 512;
   const cv = document.createElement('canvas');
   cv.width = cv.height = S;
   const ctx = cv.getContext('2d');
@@ -137,7 +137,7 @@ export function createIconTexture(item) {
     ctx.clearRect(0, 0, S, S);
 
     // Background Glassmorphic Rounded Pill
-    const rr = 28;
+    const rr = 56;
     ctx.beginPath();
     ctx.moveTo(rr, 0);
     ctx.lineTo(S - rr, 0);
@@ -151,29 +151,31 @@ export function createIconTexture(item) {
     ctx.closePath();
 
     // Dark slate background
-    ctx.fillStyle = '#060d24';
+    ctx.fillStyle = '#040d21';
     ctx.fill();
 
     // Outer border with brand color glow
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 10;
     ctx.strokeStyle = item.hex || '#38bdf8';
     ctx.stroke();
 
     // Draw bottom label strip
-    ctx.fillStyle = 'rgba(0, 4, 16, 0.88)';
-    ctx.fillRect(0, S * 0.74, S, S * 0.26);
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.92)';
+    ctx.fillRect(0, S * 0.72, S, S * 0.28);
 
-    ctx.font = '700 22px "Plus Jakarta Sans", sans-serif';
+    ctx.font = '700 36px "Syne", "Outfit", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f1f5f9';
-    ctx.fillText(item.label, S / 2, S * 0.87);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(item.label, S / 2, S * 0.86);
   }
 
   drawBackground();
 
   const tex = new THREE.CanvasTexture(cv);
-  tex.minFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
 
   // Fetch official Simple Icons vector SVG, inject fill color, and render
   fetch(`https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`)
@@ -186,9 +188,9 @@ export function createIconTexture(item) {
       const img = new Image();
       img.onload = () => {
         drawBackground();
-        const iconSize = 105;
+        const iconSize = 220;
         const ix = (S - iconSize) / 2;
-        const iy = 28;
+        const iy = 56;
         ctx.drawImage(img, ix, iy, iconSize, iconSize);
         tex.needsUpdate = true;
         URL.revokeObjectURL(blobUrl);
@@ -197,7 +199,7 @@ export function createIconTexture(item) {
     })
     .catch(() => {
       // Fallback: draw brand letter
-      ctx.font = '900 64px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '900 120px "Syne", sans-serif';
       ctx.fillStyle = item.hex || '#38bdf8';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

@@ -18,15 +18,15 @@ export function setCurCard(key) {
 }
 
 export function createCardTexture(preset, ink = '#38bdf8') {
-  const W = 512;
-  const H = 280;
+  const W = 1024;
+  const H = 560;
   const cv = document.createElement('canvas');
   cv.width = W;
   cv.height = H;
   const ctx = cv.getContext('2d');
 
   // Background Glassmorphic Rounded Surface
-  const r = 24;
+  const r = 48;
   ctx.beginPath();
   ctx.moveTo(r, 0);
   ctx.lineTo(W - r, 0);
@@ -39,60 +39,64 @@ export function createCardTexture(preset, ink = '#38bdf8') {
   ctx.arcTo(0, 0, r, 0, r);
   ctx.closePath();
 
-  // Dark slate gradient
+  // Obsidian glass gradient
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, 'rgba(10, 20, 42, 0.94)');
-  grad.addColorStop(1, 'rgba(4, 9, 22, 0.97)');
+  grad.addColorStop(0, '#040d21');
+  grad.addColorStop(1, '#020617');
   ctx.fillStyle = grad;
   ctx.fill();
 
   // Outer border with preset accent glow
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 8;
   ctx.strokeStyle = preset.hex || ink;
   ctx.stroke();
 
   // Tag Badge pill
   ctx.fillStyle = preset.hex || ink;
   ctx.beginPath();
-  ctx.roundRect(32, 28, 120, 28, 14);
+  ctx.roundRect(64, 56, 240, 56, 28);
   ctx.fill();
 
-  ctx.font = '700 12px "Roboto Mono", monospace';
+  ctx.font = '700 24px "JetBrains Mono", monospace';
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
-  ctx.fillText(preset.tag.toUpperCase(), 32 + 60, 47);
+  ctx.textBaseline = 'middle';
+  ctx.fillText(preset.tag.toUpperCase(), 64 + 120, 56 + 28);
 
   // Card Title
-  ctx.font = '700 24px "Plus Jakarta Sans", sans-serif';
+  ctx.font = '800 48px "Syne", "Outfit", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillText(preset.label, 32, 105);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(preset.label, 64, 210);
 
   // Separator Line
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(32, 130);
-  ctx.lineTo(W - 32, 130);
+  ctx.moveTo(64, 260);
+  ctx.lineTo(W - 64, 260);
   ctx.stroke();
 
   // Metadata Description
-  ctx.font = '400 14px "Roboto Mono", monospace';
+  ctx.font = '600 28px "JetBrains Mono", monospace';
   ctx.fillStyle = '#94a3b8';
-  ctx.fillText(preset.desc, 32, 175);
+  ctx.fillText(preset.desc, 64, 350);
 
   // Status Indicator Dot
   ctx.fillStyle = '#10b981';
   ctx.beginPath();
-  ctx.arc(42, 225, 6, 0, Math.PI * 2);
+  ctx.arc(84, 450, 14, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillText('ACTIVE TELEMETRY NODE', 58, 229);
+  ctx.font = '700 26px "Outfit", sans-serif';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('ACTIVE TELEMETRY NODE', 116, 458);
 
   const tex = new THREE.CanvasTexture(cv);
-  tex.minFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
   return tex;
 }
 

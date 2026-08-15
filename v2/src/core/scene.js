@@ -17,6 +17,10 @@ export let composer = null;
 export let bloomPass = null;
 export let outlinePass = null;
 
+export function getSceneState() {
+  return { canvas, renderer, scene, camera, controls, composer, bloomPass, outlinePass };
+}
+
 export let ambient = null;
 export let sun = null;
 export let fill = null;
@@ -143,71 +147,53 @@ export function initScene(canvasEl) {
   scene.add(dustParticles);
 
   // Surfaces
+  // Studio Cyber Grid & Floor
   placeTargets = [];
-  const floorGeo = new THREE.PlaneGeometry(120, 120);
+  const floorGeo = new THREE.PlaneGeometry(200, 200);
   floorGeo.rotateX(-Math.PI / 2);
-  floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ color: 0x08182e, roughness: 0.95, transparent: true, opacity: 0.7 }));
+  floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.85, metalness: 0.2 }));
   floor.receiveShadow = true;
   floor.name = 'floor';
   scene.add(floor);
   placeTargets.push(floor);
 
-  grid = new THREE.GridHelper(120, 120, 0x0d2044, 0x060f20);
+  grid = new THREE.GridHelper(160, 80, 0x38bdf8, 0x1e293b);
   grid.material.transparent = true;
-  grid.material.opacity = 0.5;
+  grid.material.opacity = 0.22;
   scene.add(grid);
 
-  const wallGeo = new THREE.PlaneGeometry(44, 22);
-  wall = new THREE.Mesh(wallGeo, new THREE.MeshStandardMaterial({ color: 0x0c1e3a, roughness: 0.9, transparent: true, opacity: 0.5, side: THREE.FrontSide }));
-  wall.position.set(0, 11, -9);
+  const wallGeo = new THREE.PlaneGeometry(60, 30);
+  wall = new THREE.Mesh(wallGeo, new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9, transparent: true, opacity: 0.45, side: THREE.FrontSide }));
+  wall.position.set(0, 15, -12);
   wall.name = 'wall';
   wall.receiveShadow = true;
   scene.add(wall);
   placeTargets.push(wall);
 
-  wEdge = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeo), new THREE.LineBasicMaterial({ color: 0x1a4080, transparent: true, opacity: 0.6 }));
+  wEdge = new THREE.LineSegments(new THREE.EdgesGeometry(wallGeo), new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 }));
   wEdge.position.copy(wall.position);
   scene.add(wEdge);
 
-  // Starfield
-  const N = 7000;
+  // Deep Space Atmosphere
+  const N = 4000;
   const p = new Float32Array(N * 3);
   const c = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    const r = 600 + Math.random() * 1400;
+    const r = 500 + Math.random() * 1200;
     const t = Math.random() * Math.PI * 2;
     const a = Math.acos(2 * Math.random() - 1);
     p[i * 3] = r * Math.sin(a) * Math.cos(t);
     p[i * 3 + 1] = r * Math.sin(a) * Math.sin(t);
     p[i * 3 + 2] = r * Math.cos(a);
-    const b = 0.3 + Math.random() * 0.7;
-    c[i * 3] = b * (0.7 + Math.random() * 0.3);
-    c[i * 3 + 1] = c[i * 3];
+    const b = 0.4 + Math.random() * 0.6;
+    c[i * 3] = b * 0.7;
+    c[i * 3 + 1] = b * 0.85;
     c[i * 3 + 2] = b;
   }
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(p, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(c, 3));
-  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.4, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.7 })));
-
-  // 4D Tesseract Backdrop
-  tGrp = new THREE.Group();
-  tGrp.position.set(0, 11, -130);
-  scene.add(tGrp);
-  v4 = [];
-  for (let x of [-1, 1]) for (let y of [-1, 1]) for (let z of [-1, 1]) for (let w of [-1, 1]) v4.push([x, y, z, w]);
-  e4 = [];
-  for (let i = 0; i < 16; i++) for (let j = i + 1; j < 16; j++) {
-    let d = 0;
-    for (let k = 0; k < 4; k++) d += Math.abs(v4[i][k] - v4[j][k]);
-    if (d === 2) e4.push([i, j]);
-  }
-  eObjs = e4.map(() => {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-    tGrp.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x0c2850, transparent: true, opacity: 0.5 })));
-    return { geo };
-  });
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.35, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.5 })));
 
   // Resize handler
   window.addEventListener('resize', onResize);
