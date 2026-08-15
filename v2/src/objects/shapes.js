@@ -46,14 +46,14 @@ export const SHAPES = {
   cube:     { d3: true,  icon: 'view_in_ar',            label: 'Cube',        make: () => new THREE.BoxGeometry(1.4, 1.4, 1.4) },
   sphere:   { d3: true,  icon: 'radio_button_unchecked', label: 'Sphere',      make: () => new THREE.SphereGeometry(0.9, 32, 24) },
   cone:     { d3: true,  icon: 'change_history',        label: 'Cone',        make: () => new THREE.ConeGeometry(0.9, 1.6, 32) },
-  cylinder: { d3: true,  icon: 'cylinder',              label: 'Cylinder',    make: () => new THREE.CylinderGeometry(0.7, 0.7, 1.5, 32) },
+  cylinder: { d3: true,  icon: 'view_column',           label: 'Cylinder',    make: () => new THREE.CylinderGeometry(0.7, 0.7, 1.5, 32) },
   torus:    { d3: true,  icon: 'adjust',                label: 'Torus',       make: () => new THREE.TorusGeometry(0.7, 0.28, 16, 40) },
   knot:     { d3: true,  icon: 'all_inclusive',         label: 'Torus Knot',  make: () => new THREE.TorusKnotGeometry(0.6, 0.22, 80, 12) },
   ico:      { d3: true,  icon: 'diamond',               label: 'Icosahedron', make: () => new THREE.IcosahedronGeometry(0.95, 0) },
   dodeca:   { d3: true,  icon: 'hexagon',               label: 'Dodecahedron', make: () => new THREE.DodecahedronGeometry(0.95, 0) },
   octa:     { d3: true,  icon: 'grain',                 label: 'Octahedron',   make: () => new THREE.OctahedronGeometry(0.95, 0) },
   tetra:    { d3: true,  icon: 'details',               label: 'Tetrahedron',  make: () => new THREE.TetrahedronGeometry(1.05, 0) },
-  prism:    { d3: true,  icon: 'filter_vintage',        label: 'Prism',       make: () => new THREE.CylinderGeometry(0.85, 0.85, 1.4, 3) },
+  prism:    { d3: true,  icon: 'change_history',        label: 'Prism',       make: () => new THREE.CylinderGeometry(0.85, 0.85, 1.4, 3) },
   capsule:  { d3: true,  icon: 'medication',            label: 'Capsule',     make: () => new THREE.CylinderGeometry(0.5, 0.5, 1.3, 20) },
 
   // 2D flats

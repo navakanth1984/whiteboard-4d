@@ -289,24 +289,30 @@ input[type=color]:hover{border-color:#5af;box-shadow:0 0 10px rgba(80,160,255,0.
 }
 
 /* ════════ PALETTE (shapes / stickers / icons) ════════ */
-#palette{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);z-index:250;
-  display:none;background:rgba(2,10,40,.97);border:1px solid rgba(80,160,255,.3);
-  border-radius:14px;padding:10px;max-width:92vw;width:max-content;
-  box-shadow:0 0 30px rgba(20,60,180,.25);backdrop-filter:blur(16px);}
-#palette.show{display:block;}
-#palette .pal-title{font-size:9px;color:#669;letter-spacing:1px;text-transform:uppercase;margin:0 2px 7px;}
-#palette .pal-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
-#palette .pal-tab{font-size:9px;padding:3px 8px;border:1px solid rgba(80,160,255,.18);border-radius:12px;background:none;color:#446;cursor:pointer;letter-spacing:.5px;transition:all .15s;}
-#palette .pal-tab.active{background:rgba(20,70,200,.5);color:#9df;border-color:#5af;}
-#palette .pal-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;max-height:160px;overflow-y:auto;}
-@media(max-width:520px){#palette .pal-grid{grid-template-columns:repeat(6,1fr);}}
-.pal-item{
-  width:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;background:rgba(12,28,70,.6);border:1px solid rgba(80,160,255,.2);
-  border-radius:10px;cursor:pointer;transition:all .15s ease;touch-action:manipulation;color:#90caf9;
+#palette{
+  position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:250;
+  display:none;background:rgba(4,12,38,0.94);border:1px solid rgba(80,160,255,.28);
+  border-radius:16px;padding:12px;max-width:92vw;width:max-content;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 }
-.pal-item .material-symbols-outlined{font-size:22px;transition:transform .15s ease;}
-.pal-item .pal-lbl{font-size:7.5px;font-weight:600;color:#8ab;letter-spacing:.3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;}
+#palette.show{display:block;}
+#palette .pal-title{font-size:9.5px;font-weight:700;color:#7aa2f7;letter-spacing:1.2px;text-transform:uppercase;margin:0 4px 8px;}
+#palette .pal-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+#palette .pal-tab{font-size:9.5px;padding:4px 10px;border:1px solid rgba(80,160,255,.18);border-radius:12px;background:none;color:#8ab;cursor:pointer;letter-spacing:.5px;transition:all .15s;}
+#palette .pal-tab.active{background:rgba(20,70,200,.5);color:#9df;border-color:#5af;}
+#palette .pal-grid{
+  display:grid;grid-template-columns:repeat(7, 56px);gap:6px;max-height:220px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(80,160,255,0.3) transparent;padding-right:2px;
+}
+@media(max-width:520px){#palette .pal-grid{grid-template-columns:repeat(5, 52px);}}
+.pal-item{
+  width:100%;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;background:rgba(14,28,64,.65);border:1px solid rgba(80,160,255,.2);
+  border-radius:10px;cursor:pointer;transition:all .15s ease;touch-action:manipulation;color:#90caf9;
+  user-select:none;
+}
+.pal-item .material-symbols-outlined{font-size:20px;transition:transform .15s ease;}
+.pal-item .pal-lbl{font-size:7.5px;font-weight:600;color:#8ab;letter-spacing:.2px;max-width:95%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;}
 .pal-item:hover{background:rgba(30,100,230,.35);border-color:rgba(80,160,255,.5);color:#fff;}
 .pal-item:hover .material-symbols-outlined{transform:scale(1.15);}
 .pal-item.sel{border-color:#5af;background:rgba(20,90,240,.45);box-shadow:0 0 12px rgba(80,180,255,.3) inset;color:#fff;}
@@ -314,7 +320,7 @@ input[type=color]:hover{border-color:#5af;box-shadow:0 0 10px rgba(80,160,255,0.
 .pal-item svg{width:24px;height:24px;}
 .pal-item.icon-node{font-size:17px;flex-direction:column;gap:1px;}
 .pal-item.icon-node .pal-lbl{font-size:7px;color:#7af;letter-spacing:.2px;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-@media(min-width:820px){#palette{left:80px;bottom:60px;transform:none;}}
+@media(min-width:820px){#palette{left:86px;bottom:70px;transform:none;}}
 
 /* ════════ SESSION MODAL ════════ */
 #session-modal{

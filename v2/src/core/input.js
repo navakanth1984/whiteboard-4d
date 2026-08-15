@@ -74,19 +74,20 @@ export function rayPlane(plane, cx, cy) {
 
 // Global pointer event listeners connector
 export function setupPointerEvents(handlers = {}) {
-  if (!canvas) return;
+  const cvs = canvas || document.getElementById('c');
+  if (!cvs) return;
 
-  canvas.style.touchAction = 'none';
+  cvs.style.touchAction = 'none';
 
-  canvas.addEventListener('pointerdown', (e) => {
+  cvs.addEventListener('pointerdown', (e) => {
     if (handlers.onDown) handlers.onDown(e.clientX, e.clientY, e);
   });
 
-  canvas.addEventListener('pointermove', (e) => {
+  cvs.addEventListener('pointermove', (e) => {
     if (handlers.onMove) handlers.onMove(e.clientX, e.clientY, e);
   });
 
-  canvas.addEventListener('pointerup', (e) => {
+  cvs.addEventListener('pointerup', (e) => {
     if (handlers.onUp) handlers.onUp(e.clientX, e.clientY, e);
   });
 }
