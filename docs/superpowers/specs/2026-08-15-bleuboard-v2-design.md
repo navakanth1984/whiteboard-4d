@@ -168,9 +168,10 @@ Panels/HUD: `hud`, `hud-desktop`, `coord-hud`, `bottombar`, `brush-picker`, `orb
 `orbit-radius`, `mode-tip`, `conn-banner`, `draw-suggest` (+ `ds-*`), `guide-overlay` (+ `guide-*`,
 `gstep-0..3`), `cine-*` (cinematic intro), `audio-rec-panel` (+ `audio-*`), session buttons.
 
-**Open decision, unanswered:** nothing has yet been marked *drop*. Navakanth was asked whether any
-v1 feature could be dropped and the session moved on before answering. **Antigravity must obtain
-this answer before starting Phase 2** — porting everything is the expensive default.
+**Decision (2026-08-15): drop nothing. Port all 18 modules.** Navakanth's rationale: *"I don't know
+how it looks in the app"* — a feature cannot be judged before it has been seen. Every row above is
+therefore `port`; `deferred` is permitted only with a written reason, `dropped` is not available
+without a new decision from Navakanth. This blocker is closed; Phase 2 may proceed.
 
 ---
 
@@ -178,14 +179,25 @@ this answer before starting Phase 2** — porting everything is the expensive de
 
 ### Phase 0 — Protect existing work `[BLOCKING — do this first]`
 
-`index.html` and `server.cjs` have **uncommitted changes** (the postprocessing/hologram pass from a
-prior session). A fork over uncommitted WIP is how work gets lost.
+`index.html` and `server.cjs` have **uncommitted changes**. These were inspected on 2026-08-15 and
+are **two unrelated changes that must not share a fate**:
 
-1. `git status` and `git diff --stat` — confirm what is actually modified.
-2. **Ask Navakanth** whether the WIP is good (commit it) or exploratory (stash it). Do not decide
-   this unilaterally.
-3. Commit or stash accordingly. Working tree must be clean before Phase 1.
-4. Tag the pre-fork state: `git tag v1-final` — this is the permanent reference for parity checks.
+- **`index.html` — 915 deletions / 102 insertions. DO NOT COMMIT.** It removes the post-processing
+  chain (`EffectComposer`/`RenderPass`/`ShaderPass`/`Pass`), the handwriting/OCR stack
+  (`opentype.js`, `tesseract.js`, `btn-text-cursive`, `ds-handwriting`, `word-predict-row`), the
+  entire Share & Export Hub modal, the Spatial Bridge UI panel (`bridge-panel`, `bridge-moments`,
+  `rec-bridge`), GSAP, lz-string, and the `btn-motion-toggle` WCAG motion toggle. Committing it
+  deletes ~900 lines of shipped features on the branch Vercel deploys.
+- **`server.cjs` — additive and safe.** MIME types for `.spz`/`.splat`/`.ply`/`.ksplat`/`.sog`/
+  `.bin`/`.wasm` (Gaussian splat + WASM support).
+
+Steps:
+
+1. `git diff --stat` — re-confirm the above still holds before acting.
+2. `git stash push index.html` — parks the destructive diff, recoverable via `git stash pop`.
+3. `git add server.cjs && git commit` — the splat/WASM MIME change, on its own.
+4. Working tree must be clean before Phase 1.
+5. Tag the pre-fork state: `git tag v1-final` — the permanent reference for parity checks.
 
 ### Phase 1 — Scaffold v2 alongside v1
 
