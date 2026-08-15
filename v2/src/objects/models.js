@@ -103,24 +103,54 @@ export function createCardTexture(preset, ink = '#38bdf8') {
 export function addSpatialCard(key, surf, ink = '#38bdf8') {
   const preset = CARD_PRESETS.find(c => c.id === key) || CARD_PRESETS[0];
   const tex = createCardTexture(preset, ink);
-  const sp = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: tex,
-      transparent: true,
-      depthTest: true
-    })
-  );
-  sp.scale.set(5.2, 2.8, 1);
+
+  // 1. Front Glass Face with High-DPI Texture
+  const faceMat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    side: THREE.FrontSide
+  });
+  const faceGeo = new THREE.PlaneGeometry(5.2, 2.8);
+  const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+  faceMesh.position.z = 0.08;
+
+  // 2. Physical 3D Translucent Glass Slab Body
+  const slabCol = new THREE.Color(preset.hex || ink);
+  const slabMat = new THREE.MeshStandardMaterial({
+    color: 0x050d24,
+    emissive: slabCol.clone().multiplyScalar(0.25),
+    roughness: 0.15,
+    metalness: 0.85,
+    transparent: true,
+    opacity: 0.92
+  });
+  const slabGeo = new THREE.BoxGeometry(5.3, 2.9, 0.15);
+  const slabMesh = new THREE.Mesh(slabGeo, slabMat);
+  slabMesh.castShadow = true;
+  slabMesh.receiveShadow = true;
+
+  // 3. Glowing Neon Accent Frame Wire
+  const edgeGeo = new THREE.EdgesGeometry(slabGeo);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: slabCol,
+    transparent: true,
+    opacity: 0.8
+  });
+  const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
 
   const root = new THREE.Group();
-  root.add(sp);
+  root.add(slabMesh);
+  root.add(faceMesh);
+  root.add(edgeLines);
 
   const normal = surf.normal || new THREE.Vector3(0, 1, 0);
   const point = surf.point || surf;
   root.position.copy(point).addScaledVector(normal, 1.4);
+  root.userData.billboardY = true;
 
   const o = register(root, 'card', preset.label, preset.hex || ink);
-  o.sprite = sp;
   o.preset = preset;
+  o.collider = slabMesh;
+  placeTargets.push(slabMesh);
   return o;
 }

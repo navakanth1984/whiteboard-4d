@@ -48,6 +48,14 @@ import {
   addSpatialCard
 } from './objects/models.js';
 
+import {
+  createLink,
+  tickLinks,
+  refreshLinks,
+  setFlowMotion,
+  flowMotionEnabled
+} from './graph/links.js';
+
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
@@ -242,6 +250,8 @@ window.__sceneProbe = {
   get composer() { return getSceneState().composer; }
 };
 
+let pendingLinkSource = null;
+
 setupPointerEvents({
   onDown: (cx, cy) => {
     const ink = document.getElementById('pick-ink')?.value || '#00ccff';
@@ -255,6 +265,19 @@ setupPointerEvents({
       const surf = hitToSurface(cx, cy);
       const item = getActiveIconItem();
       if (surf && item) addIconNode(item, surf, ink);
+    } else if (currentMode === 'connect') {
+      const hit = getHit(cx, cy);
+      if (hit && hit.object) {
+        const clickedObj = objects.find(o => o.collider === hit.object || o.root === hit.object || o.root.children.includes(hit.object));
+        if (clickedObj) {
+          if (!pendingLinkSource) {
+            pendingLinkSource = clickedObj;
+          } else if (pendingLinkSource !== clickedObj) {
+            createLink(pendingLinkSource, clickedObj, ink);
+            pendingLinkSource = null;
+          }
+        }
+      }
     } else if (currentMode === 'text') {
       const hit = getHit(cx, cy);
       const free = hitToFree(hit);
@@ -311,8 +334,9 @@ function animate() {
 
   if (controls) controls.update();
   updateDust(dt);
-  updateTesseract(t);
   updateLive();
+  tickLinks(dt);
+  refreshLinks();
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

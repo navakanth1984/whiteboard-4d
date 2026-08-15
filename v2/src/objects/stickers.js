@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { register } from '../core/history.js';
+import { placeTargets } from '../core/scene.js';
 
 // ── Official Brand & Architecture Node Definitions (Simple Icons & Lucide) ─
 export const ICON_CATEGORIES = {
@@ -212,38 +213,54 @@ export function createIconTexture(item) {
 
 export function addIconNode(item, surf, ink = '#00ccff') {
   const tex = createIconTexture(item);
-  const sp = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: tex,
-      transparent: true,
-      depthTest: true
-    })
-  );
-  sp.scale.set(3.4, 3.4, 1);
 
-  // Subtle pulse glow ring on the floor/surface
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(item.hex || ink),
+  // 1. Front High-DPI Vector Face
+  const faceMat = new THREE.MeshBasicMaterial({
+    map: tex,
     transparent: true,
-    opacity: 0.45,
-    side: THREE.DoubleSide,
-    depthWrite: false
+    side: THREE.FrontSide
   });
-  const ringGeo = new THREE.RingGeometry(1.4, 1.65, 32);
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = -Math.PI / 2;
+  const faceGeo = new THREE.PlaneGeometry(2.6, 2.6);
+  const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+  faceMesh.position.z = 0.08;
+
+  // 2. Physical Glass Tile Body
+  const brandCol = new THREE.Color(item.hex || ink);
+  const tileMat = new THREE.MeshStandardMaterial({
+    color: 0x050d24,
+    emissive: brandCol.clone().multiplyScalar(0.3),
+    roughness: 0.18,
+    metalness: 0.8,
+    transparent: true,
+    opacity: 0.92
+  });
+  const tileGeo = new THREE.BoxGeometry(2.7, 2.7, 0.14);
+  const tileMesh = new THREE.Mesh(tileGeo, tileMat);
+  tileMesh.castShadow = true;
+  tileMesh.receiveShadow = true;
+
+  // 3. Glowing Neon Accent Frame Wire
+  const edgeGeo = new THREE.EdgesGeometry(tileGeo);
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: brandCol,
+    transparent: true,
+    opacity: 0.85
+  });
+  const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
 
   const root = new THREE.Group();
-  root.add(sp);
-  root.add(ring);
+  root.add(tileMesh);
+  root.add(faceMesh);
+  root.add(edgeLines);
 
   const normal = surf.normal || new THREE.Vector3(0, 1, 0);
   const point = surf.point || surf;
-  root.position.copy(point).addScaledVector(normal, 1.8);
+  root.position.copy(point).addScaledVector(normal, 1.4);
+  root.userData.billboardY = true;
 
   const o = register(root, 'icon', item.label, item.hex || ink);
-  o.sprite = sp;
-  o.ring = ring;
   o.iconItem = item;
+  o.collider = tileMesh;
+  placeTargets.push(tileMesh);
   return o;
 }
