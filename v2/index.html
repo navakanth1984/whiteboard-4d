@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BleuBoard v2 — 4D Creative Whiteboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="styles/main.css">
   <script type="importmap">
   {
@@ -32,24 +36,24 @@
 
 <!-- ════════ TOOL BAR ════════ -->
 <div id="bottombar">
-  <button class="tb active" data-mode="nav"    title="Smart navigate — drag empty space to orbit, drag an object to move it, wheel on grabbed object to push/pull depth">🎮<span class="tb-label">Nav</span></button>
-  <button class="tb"        data-mode="draw"   title="Draw freehand 3D strokes"><span id="draw-icon">🖊️</span><span class="tb-label">Draw</span></button>
-  <button class="tb"        data-mode="text"   title="Place extruded 3D text">🅣<span class="tb-label">3D Text</span></button>
-  <button class="tb"        data-mode="image"  title="Place an image">🖼<span class="tb-label">Image</span></button>
-  <button class="tb"        data-mode="video"  title="Place animated video">🎬<span class="tb-label">Video</span></button>
-  <button class="tb"        data-mode="audio"  title="Place spatial audio (plays in 3D)">🔊<span class="tb-label">Audio</span></button>
-  <button class="tb"        data-mode="block"  title="Place a 3D block">🟦<span class="tb-label">Block</span></button>
-  <button class="tb"        data-mode="shape"  title="Place 3D & 2D shapes">🔷<span class="tb-label">Shapes</span></button>
-  <button class="tb"        data-mode="sticker" title="Place emoji, animals, birds & icons">🦋<span class="tb-label">Stickers</span></button>
-  <button class="tb"        data-mode="model"  title="Place animated 3D critters">🦩<span class="tb-label">Critters</span></button>
-  <button class="tb"        data-mode="icon"   title="Place tech & creative icon nodes">⬡<span class="tb-label">Icons</span></button>
-  <button class="tb"        data-mode="connect" title="Link two objects — click for animated flow">🔗<span class="tb-label">Link</span></button>
-  <button class="tb danger" data-mode="erase"  title="Delete an object">✂️<span class="tb-label">Erase</span></button>
-  <button class="tb" id="btn-undo" title="Undo last object (Ctrl+Z)" disabled style="opacity:.35">↩<span class="tb-label">Undo</span></button>
-  <button class="tb" id="btn-redo" title="Redo (Ctrl+Y)" disabled style="opacity:.35">↪<span class="tb-label">Redo</span></button>
-  <button class="tb toggle on" id="btn-motion-toggle" role="switch" aria-pressed="true" aria-label="Pause or resume 3D flow animations" title="Pause or resume flow signal animations (WCAG Accessibility)">⚡<span class="tb-label">Flow Motion</span></button>
-  <button class="tb toggle" id="btn-4d"        title="Toggle 4D time animation for new objects">⏱<span class="tb-label">4D</span></button>
-  <button class="tb"        id="btn-guide"     title="Show the guide">❓<span class="tb-label">Guide</span></button>
+  <button class="tb active" data-mode="nav"    title="Smart navigate — drag empty space to orbit, drag an object to move it, wheel on grabbed object to push/pull depth"><span class="material-symbols-outlined tb-icon">explore</span><span class="tb-label">Nav</span></button>
+  <button class="tb"        data-mode="draw"   title="Draw freehand 3D strokes"><span class="material-symbols-outlined tb-icon" id="draw-icon">draw</span><span class="tb-label">Draw</span></button>
+  <button class="tb"        data-mode="text"   title="Place extruded 3D text"><span class="material-symbols-outlined tb-icon">title</span><span class="tb-label">3D Text</span></button>
+  <button class="tb"        data-mode="image"  title="Place an image"><span class="material-symbols-outlined tb-icon">image</span><span class="tb-label">Image</span></button>
+  <button class="tb"        data-mode="video"  title="Place animated video"><span class="material-symbols-outlined tb-icon">videocam</span><span class="tb-label">Video</span></button>
+  <button class="tb"        data-mode="audio"  title="Place spatial audio (plays in 3D)"><span class="material-symbols-outlined tb-icon">volume_up</span><span class="tb-label">Audio</span></button>
+  <button class="tb"        data-mode="block"  title="Place a 3D block"><span class="material-symbols-outlined tb-icon">view_in_ar</span><span class="tb-label">Block</span></button>
+  <button class="tb"        data-mode="shape"  title="Place 3D & 2D shapes"><span class="material-symbols-outlined tb-icon">category</span><span class="tb-label">Shapes</span></button>
+  <button class="tb"        data-mode="sticker" title="Place emoji, animals, birds & icons"><span class="material-symbols-outlined tb-icon">sentiment_satisfied</span><span class="tb-label">Stickers</span></button>
+  <button class="tb"        data-mode="model"  title="Place animated 3D critters"><span class="material-symbols-outlined tb-icon">pets</span><span class="tb-label">Critters</span></button>
+  <button class="tb"        data-mode="icon"   title="Place tech & creative icon nodes"><span class="material-symbols-outlined tb-icon">hub</span><span class="tb-label">Icons</span></button>
+  <button class="tb"        data-mode="connect" title="Link two objects — click for animated flow"><span class="material-symbols-outlined tb-icon">link</span><span class="tb-label">Link</span></button>
+  <button class="tb danger" data-mode="erase"  title="Delete an object"><span class="material-symbols-outlined tb-icon">delete</span><span class="tb-label">Erase</span></button>
+  <button class="tb" id="btn-undo" title="Undo last object (Ctrl+Z)" disabled style="opacity:.35"><span class="material-symbols-outlined tb-icon">undo</span><span class="tb-label">Undo</span></button>
+  <button class="tb" id="btn-redo" title="Redo (Ctrl+Y)" disabled style="opacity:.35"><span class="material-symbols-outlined tb-icon">redo</span><span class="tb-label">Redo</span></button>
+  <button class="tb toggle on" id="btn-motion-toggle" role="switch" aria-pressed="true" aria-label="Pause or resume 3D flow animations" title="Pause or resume flow signal animations (WCAG Accessibility)"><span class="material-symbols-outlined tb-icon">bolt</span><span class="tb-label">Flow Motion</span></button>
+  <button class="tb toggle" id="btn-4d"        title="Toggle 4D time animation for new objects"><span class="material-symbols-outlined tb-icon">schedule</span><span class="tb-label">4D</span></button>
+  <button class="tb"        id="btn-guide"     title="Show the guide"><span class="material-symbols-outlined tb-icon">help_outline</span><span class="tb-label">Guide</span></button>
 </div>
 
 <!-- ════════ SIZE HUD ════════ -->
@@ -216,13 +220,13 @@
 
 <!-- ════════ BRUSH PICKER ════════ -->
 <div id="brush-picker">
-  <button class="bp-btn active" data-brush="pen"         title="Pen — thin, sharp">🖊️<span>Pen</span></button>
-  <button class="bp-btn"        data-brush="pencil"      title="Pencil — light, sketchy">✏️<span>Pencil</span></button>
+  <button class="bp-btn active" data-brush="pen"         title="Pen — thin, sharp"><span class="material-symbols-outlined">edit</span><span>Pen</span></button>
+  <button class="bp-btn"        data-brush="pencil"      title="Pencil — light, sketchy"><span class="material-symbols-outlined">border_color</span><span>Pencil</span></button>
   <div class="bp-sep"></div>
-  <button class="bp-btn"        data-brush="marker"      title="Marker — bold, opaque">🖍️<span>Marker</span></button>
-  <button class="bp-btn"        data-brush="brush"       title="Brush — soft, painterly">🎨<span>Brush</span></button>
+  <button class="bp-btn"        data-brush="marker"      title="Marker — bold, opaque"><span class="material-symbols-outlined">format_paint</span><span>Marker</span></button>
+  <button class="bp-btn"        data-brush="brush"       title="Brush — soft, painterly"><span class="material-symbols-outlined">brush</span><span>Brush</span></button>
   <div class="bp-sep"></div>
-  <button class="bp-btn"        data-brush="highlighter" title="Highlighter — wide, glowing">🌟<span>Glow</span></button>
+  <button class="bp-btn"        data-brush="highlighter" title="Highlighter — wide, glowing"><span class="material-symbols-outlined">auto_awesome</span><span>Glow</span></button>
 </div>
 
 <!-- ════ CINEMATIC INTRO ════ -->

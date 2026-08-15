@@ -12,11 +12,11 @@ export const BRUSHES = {
 };
 
 export const BRUSH_ICONS = {
-  pen: '🖊️',
-  pencil: '✏️',
-  marker: '🖍️',
-  brush: '🎨',
-  highlighter: '🌟'
+  pen: 'edit',
+  pencil: 'border_color',
+  marker: 'format_paint',
+  brush: 'brush',
+  highlighter: 'auto_awesome'
 };
 
 export let brushStyle = 'pen';
@@ -48,7 +48,7 @@ export function setBrushStyle(style) {
   if (BRUSHES[style]) {
     brushStyle = style;
     const di = document.getElementById('draw-icon');
-    if (di) di.textContent = BRUSH_ICONS[brushStyle] || '🖊️';
+    if (di) di.textContent = BRUSH_ICONS[brushStyle] || 'draw';
   }
 }
 
