@@ -24,10 +24,28 @@ quality as a domain where autonomous loops drift randomly. Taste is a human gate
 3-iteration cap. A luminance bound is mandatory in the check specifically because the Fresnel
 hologram shader regressed to a dark screen in a prior session.
 
-Open / not done: `index.html` and `server.cjs` still hold **uncommitted WIP** (the
-postprocessing/hologram pass) — deliberately left untouched; Phase 0 of the spec blocks on
-Navakanth deciding commit-vs-stash. Navakanth was asked whether any v1 feature can be dropped
-and the session ended before an answer — spec §4 flags this as blocking Phase 2. Mobbin MCP is
+Open / not done: `index.html` and `server.cjs` still hold **uncommitted WIP** — deliberately
+left untouched; Phase 0 of the spec blocks on Navakanth deciding commit-vs-stash.
+
+**CORRECTION, same session (2026-08-15):** that WIP was described earlier in this session, and in
+the first version of this entry, as "the postprocessing/hologram pass". **That was false** — it was
+taken from a memory note rather than from `git diff`. The actual diff is **102 insertions, 915
+deletions**, and it *removes* that work: the post-processing chain (`EffectComposer`, `RenderPass`,
+`ShaderPass`, `Pass`), the handwriting/OCR stack (`opentype.js`, `tesseract.js`, `btn-text-cursive`,
+`ds-handwriting`, `word-predict-row`), the entire **Share & Export Hub** modal (link/json/embed/PNG/
+SVG), the **Spatial Bridge** UI panel (`bridge-panel`, `bridge-moments`, `rec-bridge`), GSAP,
+lz-string, and the `btn-motion-toggle` WCAG motion toggle. Verified by reading `git diff --stat` and
+the hunks directly. **Committing it would delete ~900 lines of shipped, committed features on
+`master`, which is also what Vercel deploys — do not commit `index.html`.**
+
+The two modified files are unrelated changes and must not share a fate: `server.cjs` is a small,
+correct, *additive* change (MIME types for `.spz`/`.splat`/`.ply`/`.ksplat`/`.sog`/`.bin`/`.wasm` —
+Gaussian splat + WASM support) and is worth committing on its own. Recommended: commit `server.cjs`,
+`git stash push index.html`. Not yet actioned — awaiting Navakanth.
+
+**Decision recorded (2026-08-15):** no v1 feature is to be dropped in v2 — port everything.
+Rationale given: "I don't know how it looks in the app", i.e. features cannot be judged before
+they have been seen. This closes the spec §4 blocker on Phase 2. Mobbin MCP is
 **not connected** to the session at all; Figma MCP is present but unauthorized. Nothing was
 built, ported, or deployed this session.
 

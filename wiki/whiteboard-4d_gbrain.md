@@ -154,11 +154,17 @@ project would accidentally become the rejected option B.
 
 ### Known Gaps
 - **Nothing in this section has been implemented.** No v2 directory exists. The spec is a plan.
-- `index.html` and `server.cjs` carry **uncommitted WIP** (postprocessing/hologram pass) on
-  branch `master`. Spec Phase 0 blocks on Navakanth choosing commit vs stash. Until then a fork
-  risks losing that work.
-- **Unanswered**: whether any v1 feature may be dropped in v2. Asked 2026-08-15, no answer given.
-  Porting all 18 modules is the expensive default; this blocks spec Phase 2.
+- `index.html` and `server.cjs` carry **uncommitted WIP** on branch `master`. This was initially
+  mis-described as "the postprocessing/hologram pass" — **false**, corrected 2026-08-15 by reading
+  `git diff`. It is a **915-deletion / 102-insertion mass removal** of shipped features
+  (post-processing chain, handwriting/OCR stack, Share & Export Hub modal, Spatial Bridge UI panel,
+  GSAP, lz-string, WCAG motion toggle). **`index.html` must not be committed** — doing so would
+  delete ~900 lines of committed features on the branch Vercel deploys. `server.cjs` is a separate,
+  additive, safe change (Gaussian splat + WASM MIME types). Recommended: commit `server.cjs`, stash
+  `index.html`. Awaiting Navakanth; spec Phase 0 still blocks.
+- ~~Unanswered: whether any v1 feature may be dropped in v2.~~ **Resolved 2026-08-15: drop nothing,
+  port everything.** Rationale: features cannot be judged before they have been seen in the app.
+  Spec §4's Phase 2 blocker is closed.
 - The ≥45fps threshold is an **assumed** target, never measured against v1. v1's actual baseline
   frame rate on this machine is unknown — the threshold may prove wrong in either direction.
 - Two pre-existing bugs are to be ported **as-is**, deliberately, so parity stays honest:
