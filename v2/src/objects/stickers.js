@@ -64,6 +64,11 @@ export const ICON_CATEGORIES = {
 export let curIconCat = 'Data Eng';
 export let curIconKey = 0;
 
+export function getActiveIconItem() {
+  const items = ICON_CATEGORIES[curIconCat] || [];
+  return items[curIconKey] || items[0] || null;
+}
+
 export function setIconCategory(cat) {
   if (ICON_CATEGORIES[cat]) {
     curIconCat = cat;
@@ -128,56 +133,77 @@ export function createIconTexture(item) {
   cv.width = cv.height = S;
   const ctx = cv.getContext('2d');
 
-  // Background Glassmorphic Rounded Pill
-  const rr = 28;
-  ctx.beginPath();
-  ctx.moveTo(rr, 0);
-  ctx.lineTo(S - rr, 0);
-  ctx.arcTo(S, 0, S, rr, rr);
-  ctx.lineTo(S, S - rr);
-  ctx.arcTo(S, S, S - rr, S, rr);
-  ctx.lineTo(rr, S);
-  ctx.arcTo(0, S, 0, S - rr, rr);
-  ctx.lineTo(0, rr);
-  ctx.arcTo(0, 0, rr, 0, rr);
-  ctx.closePath();
+  function drawBackground() {
+    ctx.clearRect(0, 0, S, S);
 
-  // Dark slate background
-  ctx.fillStyle = '#060d24';
-  ctx.fill();
+    // Background Glassmorphic Rounded Pill
+    const rr = 28;
+    ctx.beginPath();
+    ctx.moveTo(rr, 0);
+    ctx.lineTo(S - rr, 0);
+    ctx.arcTo(S, 0, S, rr, rr);
+    ctx.lineTo(S, S - rr);
+    ctx.arcTo(S, S, S - rr, S, rr);
+    ctx.lineTo(rr, S);
+    ctx.arcTo(0, S, 0, S - rr, rr);
+    ctx.lineTo(0, rr);
+    ctx.arcTo(0, 0, rr, 0, rr);
+    ctx.closePath();
 
-  // Outer border with brand color glow
-  ctx.lineWidth = 6;
-  ctx.strokeStyle = item.hex || '#38bdf8';
-  ctx.stroke();
+    // Dark slate background
+    ctx.fillStyle = '#060d24';
+    ctx.fill();
 
-  // Draw bottom label strip
-  ctx.fillStyle = 'rgba(0, 4, 16, 0.88)';
-  ctx.fillRect(0, S * 0.76, S, S * 0.24);
+    // Outer border with brand color glow
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = item.hex || '#38bdf8';
+    ctx.stroke();
 
-  ctx.font = '700 24px "Plus Jakarta Sans", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillText(item.label, S / 2, S * 0.88);
+    // Draw bottom label strip
+    ctx.fillStyle = 'rgba(0, 4, 16, 0.88)';
+    ctx.fillRect(0, S * 0.74, S, S * 0.26);
+
+    ctx.font = '700 22px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillText(item.label, S / 2, S * 0.87);
+  }
+
+  drawBackground();
 
   const tex = new THREE.CanvasTexture(cv);
   tex.minFilter = THREE.LinearFilter;
 
-  // Load official Simple Icons vector SVG asynchronously
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`;
-  img.onload = () => {
-    // Fill brand icon in top zone
-    const iconSize = 100;
-    const ix = (S - iconSize) / 2;
-    const iy = 32;
-
-    // Tint icon white / brand color with subtle glow
-    ctx.drawImage(img, ix, iy, iconSize, iconSize);
-    tex.needsUpdate = true;
-  };
+  // Fetch official Simple Icons vector SVG, inject fill color, and render
+  fetch(`https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${item.slug}.svg`)
+    .then(r => r.text())
+    .then(svgText => {
+      // Colorize the SVG with white fill
+      const coloredSvg = svgText.replace('<svg ', '<svg fill="#ffffff" ');
+      const blob = new Blob([coloredSvg], { type: 'image/svg+xml;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        drawBackground();
+        const iconSize = 105;
+        const ix = (S - iconSize) / 2;
+        const iy = 28;
+        ctx.drawImage(img, ix, iy, iconSize, iconSize);
+        tex.needsUpdate = true;
+        URL.revokeObjectURL(blobUrl);
+      };
+      img.src = blobUrl;
+    })
+    .catch(() => {
+      // Fallback: draw brand letter
+      ctx.font = '900 64px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = item.hex || '#38bdf8';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(item.label.slice(0, 2).toUpperCase(), S / 2, S * 0.4);
+      tex.needsUpdate = true;
+    });
 
   return tex;
 }

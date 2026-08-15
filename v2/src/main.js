@@ -31,6 +31,7 @@ import {
   ICON_CATEGORIES,
   curIconCat,
   curIconKey,
+  getActiveIconItem,
   setIconCategory,
   setCurIconIndex,
   STICKERS,
@@ -253,8 +254,7 @@ setupPointerEvents({
       if (surf) addSticker(curSticker, surf, ink);
     } else if (currentMode === 'icon') {
       const surf = hitToSurface(cx, cy);
-      const items = ICON_CATEGORIES[curIconCat] || [];
-      const item = items[curIconKey] || items[0];
+      const item = getActiveIconItem();
       if (surf && item) addIconNode(item, surf, ink);
     } else if (currentMode === 'block') {
       const hit = getHit(cx, cy);
