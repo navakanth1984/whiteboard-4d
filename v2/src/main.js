@@ -2,10 +2,60 @@ import * as THREE from 'three';
 import { initScene, updateDust, updateTesseract, render, controls, fill, ambient, scene } from './core/scene.js';
 import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
 import { register, undoLast, redoLast, updateUndoRedoBtns, objects, undoStack, redoStack } from './core/history.js';
+import {
+  initStrokeSystem,
+  beginStroke,
+  addStrokePoint,
+  updateLive,
+  endStroke,
+  setBrushStyle,
+  setInkColor,
+  drawing,
+  drawPts
+} from './draw/strokes.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
+initStrokeSystem();
+
+// Mode state (starts in 'nav', can switch to 'draw')
+export let currentMode = 'nav';
+export function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('#bottombar .tb').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  if (controls) {
+    controls.enabled = (mode === 'nav');
+  }
+}
+
+// Connect Bottombar mode buttons
+document.querySelectorAll('#bottombar .tb').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+    if (mode) setMode(mode);
+  });
+});
+
+// Connect Brush Picker buttons
+document.querySelectorAll('#brush-picker .bp-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#brush-picker .bp-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const brush = btn.dataset.brush;
+    if (brush) setBrushStyle(brush);
+  });
+});
+
+// Connect Ink Color Picker
+const pickInk = document.getElementById('pick-ink');
+if (pickInk) {
+  pickInk.addEventListener('input', (e) => {
+    setInkColor(e.target.value);
+  });
+}
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -24,6 +74,16 @@ window.__historyProbe = {
   redoStack
 };
 
+window.__drawProbe = {
+  beginStroke,
+  addStrokePoint,
+  endStroke,
+  setMode,
+  setBrushStyle,
+  getDrawing: () => drawing,
+  getDrawPts: () => drawPts
+};
+
 window.__inputProbe = {
   lastHit: null,
   hitCount: 0,
@@ -36,14 +96,25 @@ window.__inputProbe = {
 
 setupPointerEvents({
   onDown: (cx, cy) => {
-    const hit = getHit(cx, cy);
-    window.__inputProbe.lastHit = hit ? { point: hit.point, name: hit.object.name } : null;
-    window.__inputProbe.hitCount++;
+    if (currentMode === 'draw') {
+      beginStroke(cx, cy);
+    } else if (currentMode === 'nav') {
+      const hit = getHit(cx, cy);
+      window.__inputProbe.lastHit = hit ? { point: hit.point, name: hit.object.name } : null;
+      window.__inputProbe.hitCount++;
+    }
   },
   onMove: (cx, cy) => {
     setMouse(cx, cy);
+    if (currentMode === 'draw' && drawing) {
+      addStrokePoint(cx, cy);
+    }
   },
-  onUp: () => {}
+  onUp: () => {
+    if (currentMode === 'draw') {
+      endStroke();
+    }
+  }
 });
 
 
@@ -79,6 +150,7 @@ function animate() {
   if (controls) controls.update();
   updateDust(dt);
   updateTesseract(t);
+  updateLive();
 
   if (fill) {
     fill.intensity = 1.1 + Math.sin(t * 0.85) * 0.3;
