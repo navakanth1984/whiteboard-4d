@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { initScene, updateDust, updateTesseract, render, controls, fill, ambient, scene } from './core/scene.js';
+import { initScene, updateDust, updateTesseract, render, getSceneState, camera, controls, fill, ambient, scene } from './core/scene.js';
 import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
 import { register, undoLast, redoLast, updateUndoRedoBtns, objects, undoStack, redoStack } from './core/history.js';
 import {
@@ -41,14 +41,21 @@ import {
   addIconNode
 } from './objects/stickers.js';
 
+import {
+  CARD_PRESETS,
+  curCard,
+  setCurCard,
+  addSpatialCard
+} from './objects/models.js';
+
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 initStrokeSystem();
 initTextSystem();
 
-// Populate Shapes in Palette
-function buildShapePalette() {
+// Populate Spatial Cards in Palette
+function buildCardPalette() {
   const pal = document.getElementById('palette');
   const tabs = document.getElementById('pal-tabs');
   const grid = document.getElementById('pal-grid');
@@ -56,17 +63,16 @@ function buildShapePalette() {
   if (!grid || !title || !tabs) return;
 
   tabs.style.display = 'none';
-  title.textContent = '3D Solids & 2D Shapes';
+  title.textContent = 'Spatial Architecture & Telemetry Cards';
   grid.innerHTML = '';
 
-  Object.keys(SHAPES).forEach(key => {
-    const item = SHAPES[key];
+  CARD_PRESETS.forEach(item => {
     const b = document.createElement('div');
-    b.className = 'pal-item' + (key === curShape ? ' sel' : '');
+    b.className = 'pal-item' + (item.id === curCard ? ' sel' : '');
     b.innerHTML = `<span class="material-symbols-outlined">${item.icon}</span><span class="pal-lbl">${item.label}</span>`;
     b.title = item.label;
     b.addEventListener('click', () => {
-      setCurShape(key);
+      setCurCard(item.id);
       grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
       b.classList.add('sel');
     });
@@ -158,10 +164,9 @@ export function setMode(mode) {
   }
   const pal = document.getElementById('palette');
   if (pal) {
-    const isPaletteMode = (mode === 'shape' || mode === 'sticker' || mode === 'icon');
+    const isPaletteMode = (mode === 'card' || mode === 'icon');
     pal.classList.toggle('show', isPaletteMode);
-    if (mode === 'shape') buildShapePalette();
-    else if (mode === 'sticker') buildStickerPalette();
+    if (mode === 'card') buildCardPalette();
     else if (mode === 'icon') buildIconPalette();
   }
   if (controls) {
@@ -230,14 +235,11 @@ window.__shapeProbe = {
   addBlock
 };
 
-window.__inputProbe = {
-  lastHit: null,
-  hitCount: 0,
-  getHit,
-  hitToPos,
-  hitToFree,
-  hitToSurface,
-  rayPlane
+window.__sceneProbe = {
+  get camera() { return getSceneState().camera; },
+  get controls() { return getSceneState().controls; },
+  get scene() { return getSceneState().scene; },
+  get composer() { return getSceneState().composer; }
 };
 
 setupPointerEvents({
@@ -246,28 +248,22 @@ setupPointerEvents({
 
     if (currentMode === 'draw') {
       beginStroke(cx, cy);
-    } else if (currentMode === 'shape') {
+    } else if (currentMode === 'card') {
       const surf = hitToSurface(cx, cy);
-      if (surf) addShape(curShape, surf, ink);
-    } else if (currentMode === 'sticker') {
-      const surf = hitToSurface(cx, cy);
-      if (surf) addSticker(curSticker, surf, ink);
+      if (surf) addSpatialCard(curCard, surf, ink);
     } else if (currentMode === 'icon') {
       const surf = hitToSurface(cx, cy);
       const item = getActiveIconItem();
       if (surf && item) addIconNode(item, surf, ink);
-    } else if (currentMode === 'block') {
-      const hit = getHit(cx, cy);
-      const pos = hitToPos(hit);
-      if (pos) addBlock(pos.x, pos.y, pos.z, ink);
     } else if (currentMode === 'text') {
       const hit = getHit(cx, cy);
       const free = hitToFree(hit);
       showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
     } else if (currentMode === 'nav') {
       const hit = getHit(cx, cy);
-      window.__inputProbe.lastHit = hit ? { point: hit.point, name: hit.object.name } : null;
-      window.__inputProbe.hitCount++;
+      if (hit) {
+        window.__lastHit = { point: hit.point, name: hit.object.name };
+      }
     }
   },
   onMove: (cx, cy) => {
