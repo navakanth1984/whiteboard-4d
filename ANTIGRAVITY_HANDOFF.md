@@ -146,6 +146,7 @@ RENDER_CHECK → TASTE_GATE → commit cycle.
 | 5 | **Typography** | `FontLoader`/`TextGeometry` both moved namespace in modern Three.js. |
 | 6 | **Ambient motion** | Wisps/particles. **Budget-capped: must not cost more than 5fps.** |
 | 7 | **Custom cursor** | Already in v1; refine. |
+| 8 | **Icon & surface language (M3 tokens)** | See "Material Symbols & M3 tokens" below. **Not** the rejected React/MUI migration. |
 
 **Design references — mine for technique, never for structure:**
 CollectUI (https://collectui.com/), Kage (https://mengto.github.io/kage/ ·
@@ -158,6 +159,30 @@ and lighting quality. Leave the scroll narrative.
 
 **Tooling that does not exist — do not plan around it:** Mobbin MCP is not connected. Figma MCP is
 present but unauthorized (needs OAuth from an interactive session). Both are additive if they land.
+
+### Item 8 in detail — Material Symbols & M3 tokens
+
+Proposed 2026-08-15, scoped in rather than rejected outright — **this is not** the out-of-scope
+"React + MUI + Keycloak migration" line below. That line means the npm `@mui/material` component
+framework and a rebuild of the app's UI layer on React. This item means two much narrower things,
+both static assets/CSS, both usable from the existing vanilla-JS `v2/src/ui/*` without a framework:
+
+1. **Google Material Symbols** — a font/SVG icon set, swapped in for the current emoji toolbar
+   glyphs (`🖊️` → `draw`, `🅣` → `text_fields`, etc). No dependency beyond a font file or inline SVGs.
+2. **Material 3 design tokens** — CSS custom properties for surface color, elevation, and
+   backdrop-filter blur, applied to `v2/styles/main.css`. Concept and values only, not the MUI
+   `ThemeProvider`/component runtime.
+
+**Explicitly not in scope under this item:** any `@mui/*` package, any React component, ripple/Speed
+Dial/Bottom-Sheet *components* (the concepts — thumb-reachable action placement — are fair game; the
+literal MUI React widgets are not, per the rejection below).
+
+**Sequencing:** this is Phase 3 work like every other row in this table — it does not start until
+every §4 module is `ported` or `deferred` in writing. Restyling `ui/hud.js` / `ui/modes.js` before
+they exist in `v2/` is not possible; port them first.
+
+**Gate:** same as every Phase 3 item — RENDER_CHECK → screenshot → TASTE_GATE, one icon/token pass
+at a time, not a single sweeping restyle commit.
 
 ---
 
