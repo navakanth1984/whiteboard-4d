@@ -210,38 +210,38 @@ export function createIconTexture(item) {
 
 export function addIconNode(item, surf, ink = '#00ccff') {
   const tex = createIconTexture(item);
-  const mat = new THREE.MeshBasicMaterial({
-    map: tex,
-    transparent: true,
-    side: THREE.DoubleSide
-  });
+  const sp = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: tex,
+      transparent: true,
+      depthTest: true
+    })
+  );
+  sp.scale.set(3.4, 3.4, 1);
 
-  const geo = new THREE.PlaneGeometry(2.4, 2.4);
-  const mesh = new THREE.Mesh(geo, mat);
-
-  // Subtle glassmorphic backing frame
-  const frameMat = new THREE.MeshStandardMaterial({
+  // Subtle pulse glow ring on the floor/surface
+  const ringMat = new THREE.MeshBasicMaterial({
     color: new THREE.Color(item.hex || ink),
-    emissive: new THREE.Color(item.hex || ink).multiplyScalar(0.4),
-    roughness: 0.2,
-    metalness: 0.8,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.45,
+    side: THREE.DoubleSide,
+    depthWrite: false
   });
-  const frameGeo = new THREE.BoxGeometry(2.5, 2.5, 0.08);
-  const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-  frameMesh.position.z = -0.05;
+  const ringGeo = new THREE.RingGeometry(1.4, 1.65, 32);
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
 
   const root = new THREE.Group();
-  root.add(mesh);
-  root.add(frameMesh);
+  root.add(sp);
+  root.add(ring);
 
   const normal = surf.normal || new THREE.Vector3(0, 1, 0);
   const point = surf.point || surf;
-  root.position.copy(point).addScaledVector(normal, 1.4);
-  root.userData.billboardY = true;
+  root.position.copy(point).addScaledVector(normal, 1.8);
 
   const o = register(root, 'icon', item.label, item.hex || ink);
+  o.sprite = sp;
+  o.ring = ring;
   o.iconItem = item;
   return o;
 }
