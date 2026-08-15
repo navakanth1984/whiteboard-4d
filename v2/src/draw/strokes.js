@@ -11,6 +11,14 @@ export const BRUSHES = {
   highlighter: { radius: 0.20,  radSeg: 8,  opacity: 0.28, roughness: 0.05, emissive: 0.90, transparent: true  },
 };
 
+export const BRUSH_ICONS = {
+  pen: '🖊️',
+  pencil: '✏️',
+  marker: '🖍️',
+  brush: '🎨',
+  highlighter: '🌟'
+};
+
 export let brushStyle = 'pen';
 export let inkColor = '#00ccff';
 export let drawing = false;
@@ -37,7 +45,11 @@ export function initStrokeSystem() {
 }
 
 export function setBrushStyle(style) {
-  if (BRUSHES[style]) brushStyle = style;
+  if (BRUSHES[style]) {
+    brushStyle = style;
+    const di = document.getElementById('draw-icon');
+    if (di) di.textContent = BRUSH_ICONS[brushStyle] || '🖊️';
+  }
 }
 
 export function setInkColor(color) {

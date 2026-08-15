@@ -13,11 +13,19 @@ import {
   drawing,
   drawPts
 } from './draw/strokes.js';
+import {
+  initTextSystem,
+  showTextInput,
+  addText3D,
+  addCursiveText3D,
+  addTextRing
+} from './objects/text.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 initStrokeSystem();
+initTextSystem();
 
 // Mode state (starts in 'nav', can switch to 'draw')
 export let currentMode = 'nav';
@@ -26,6 +34,10 @@ export function setMode(mode) {
   document.querySelectorAll('#bottombar .tb').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
+  const bp = document.getElementById('brush-picker');
+  if (bp) {
+    bp.classList.toggle('show', mode === 'draw');
+  }
   if (controls) {
     controls.enabled = (mode === 'nav');
   }
@@ -98,6 +110,10 @@ setupPointerEvents({
   onDown: (cx, cy) => {
     if (currentMode === 'draw') {
       beginStroke(cx, cy);
+    } else if (currentMode === 'text') {
+      const hit = getHit(cx, cy);
+      const free = hitToFree(hit);
+      showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
     } else if (currentMode === 'nav') {
       const hit = getHit(cx, cy);
       window.__inputProbe.lastHit = hit ? { point: hit.point, name: hit.object.name } : null;
