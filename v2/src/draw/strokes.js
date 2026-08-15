@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { scene, camera, controls } from '../core/scene.js';
+import { getSceneState } from '../core/scene.js';
 import { ray, m2, setMouse } from '../core/input.js';
 import { register } from '../core/history.js';
 
@@ -34,6 +34,7 @@ let liveGeo = null;
 let liveLine = null;
 
 export function initStrokeSystem() {
+  const { scene } = getSceneState();
   if (!scene) return;
   liveGeo = new THREE.BufferGeometry();
   liveLine = new THREE.Line(
@@ -57,6 +58,7 @@ export function setInkColor(color) {
 }
 
 export function beginStroke(cx, cy) {
+  const { camera, controls } = getSceneState();
   if (!camera || !controls) return;
   const nrm = new THREE.Vector3();
   camera.getWorldDirection(nrm);
@@ -68,6 +70,7 @@ export function beginStroke(cx, cy) {
 
 export function planePoint(cx, cy) {
   setMouse(cx, cy);
+  const { camera } = getSceneState();
   if (!camera) return null;
   ray.setFromCamera(m2, camera);
   const p = new THREE.Vector3();
@@ -123,6 +126,7 @@ export function endStroke(onComplete) {
   const registeredObj = register(root, 'stroke', 'Stroke', inkColor);
 
   // Compute screen coords & centroid
+  const { camera } = getSceneState();
   if (camera) {
     const projected = lastPt.clone().project(camera);
     const sx = (projected.x * 0.5 + 0.5) * window.innerWidth;
