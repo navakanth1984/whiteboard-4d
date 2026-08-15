@@ -1,12 +1,29 @@
 import * as THREE from 'three';
-import { initScene, updateDust, updateTesseract, render, controls, fill, ambient } from './core/scene.js';
+import { initScene, updateDust, updateTesseract, render, controls, fill, ambient, scene } from './core/scene.js';
 import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
+import { register, undoLast, redoLast, updateUndoRedoBtns, objects, undoStack, redoStack } from './core/history.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 
+// Connect UI Undo / Redo buttons
+const btnUndo = document.getElementById('btn-undo');
+const btnRedo = document.getElementById('btn-redo');
+if (btnUndo) btnUndo.addEventListener('click', () => undoLast());
+if (btnRedo) btnRedo.addEventListener('click', () => redoLast());
+updateUndoRedoBtns();
+
 // Wire input handlers & test diagnostic probe
+window.__historyProbe = {
+  register,
+  undoLast,
+  redoLast,
+  objects,
+  undoStack,
+  redoStack
+};
+
 window.__inputProbe = {
   lastHit: null,
   hitCount: 0,
