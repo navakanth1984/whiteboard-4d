@@ -9,7 +9,14 @@ const MIME_TYPES = {
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.spz': 'application/octet-stream',
+  '.splat': 'application/octet-stream',
+  '.ply': 'application/octet-stream',
+  '.sog': 'application/octet-stream',
+  '.ksplat': 'application/octet-stream',
+  '.bin': 'application/octet-stream',
+  '.wasm': 'application/wasm'
 };
 
 http.createServer((req, res) => {
