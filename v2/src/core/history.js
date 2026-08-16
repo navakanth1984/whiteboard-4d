@@ -22,8 +22,21 @@ export function setMoveTarget(target) {
   moveTarget = target;
 }
 
-export function register(root, type, label, color, opts = {}) {
+export function register(rootOrObj, type, label, color, opts = {}) {
   const id = idCtr++;
+  let root = rootOrObj;
+  let customOpts = opts;
+
+  if (rootOrObj && rootOrObj.root) {
+    root = rootOrObj.root;
+    type = rootOrObj.type || type;
+    label = rootOrObj.label || label;
+    color = rootOrObj.color || color;
+    customOpts = { ...rootOrObj, ...opts };
+  }
+
+  const basePos = (root && root.position) ? root.position.clone() : new THREE.Vector3();
+
   const o = {
     id,
     root,
@@ -32,11 +45,11 @@ export function register(root, type, label, color, opts = {}) {
     color,
     fourD: fourDOn,
     wPhase: Math.random() * Math.PI * 2,
-    basePos: root.position.clone(),
+    basePos,
     orbitPattern: curOrbitPattern,
     orbitRadius: curOrbitRadius,
     orbitSpeed: 0.38,
-    ...opts
+    ...customOpts
   };
 
   objects.push(o);

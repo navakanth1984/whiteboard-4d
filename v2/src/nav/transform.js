@@ -7,6 +7,7 @@ export let transformControl = null;
 export let selectedObject = null;
 let dropLine = null;
 let floorShadowCircle = null;
+let boxHelper = null;
 
 export function initTransformSystem() {
   const { scene, camera, renderer, controls } = getSceneState();
@@ -24,7 +25,13 @@ export function initTransformSystem() {
 
   transformControl.addEventListener('change', () => {
     updateDropLine();
+    if (boxHelper && selectedObject) boxHelper.update();
   });
+
+  // Bounding Box Highlight Helper
+  boxHelper = new THREE.BoxHelper(new THREE.Mesh(), 0x38bdf8);
+  boxHelper.visible = false;
+  scene.add(boxHelper);
 
   // Create Floor Elevation Drop Line Helper
   const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
@@ -55,6 +62,16 @@ export function initTransformSystem() {
   // Keyboard Shortcuts for 3D Object Manipulation
   window.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // Tab to cycle through objects
+    if (e.code === 'Tab' && objects.length > 0) {
+      e.preventDefault();
+      const curIdx = selectedObject ? objects.indexOf(selectedObject) : -1;
+      const nextIdx = (curIdx + 1) % objects.length;
+      selectObject(objects[nextIdx]);
+      return;
+    }
+
     if (!selectedObject) return;
 
     if (e.code === 'KeyG') {
@@ -86,6 +103,11 @@ export function selectObject(obj) {
     transformControl.attach(obj.root);
   }
 
+  if (boxHelper) {
+    boxHelper.setFromObject(obj.root);
+    boxHelper.visible = true;
+  }
+
   updateDropLine();
 }
 
@@ -95,6 +117,7 @@ export function deselectObject() {
   if (transformControl) {
     transformControl.detach();
   }
+  if (boxHelper) boxHelper.visible = false;
   if (dropLine) dropLine.visible = false;
   if (floorShadowCircle) floorShadowCircle.visible = false;
 }

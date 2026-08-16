@@ -49,6 +49,13 @@ import {
 } from './objects/models.js';
 
 import {
+  BOARD_STYLES,
+  curBoardStyle,
+  setCurBoardStyle,
+  addMiniBoard
+} from './objects/board.js';
+
+import {
   addImagePanel,
   addVideoPanel,
   addSpatialAudio,
@@ -222,6 +229,34 @@ function buildIconPalette() {
   renderIconGrid();
 }
 
+// Populate Mini Lecture Boards in Palette
+function buildBoardPalette() {
+  const pal = document.getElementById('palette');
+  const tabs = document.getElementById('pal-tabs');
+  const grid = document.getElementById('pal-grid');
+  const title = document.getElementById('pal-title');
+  if (!grid || !title || !tabs) return;
+
+  tabs.style.display = 'none';
+  title.textContent = '3D Lecture & Classroom Boards';
+  grid.innerHTML = '';
+
+  Object.keys(BOARD_STYLES).forEach(key => {
+    const item = BOARD_STYLES[key];
+    const b = document.createElement('div');
+    b.className = 'pal-item' + (key === curBoardStyle ? ' sel' : '');
+    const icon = key === 'chalkboard' ? 'edit_note' : (key === 'glassboard' ? 'blur_on' : 'co_present');
+    b.innerHTML = `<span class="material-symbols-outlined">${icon}</span><span class="pal-lbl">${item.label}</span>`;
+    b.title = item.desc;
+    b.addEventListener('click', () => {
+      setCurBoardStyle(key);
+      grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+    grid.appendChild(b);
+  });
+}
+
 // Mode state
 export let currentMode = 'nav';
 export function setMode(mode) {
@@ -235,10 +270,11 @@ export function setMode(mode) {
   }
   const pal = document.getElementById('palette');
   if (pal) {
-    const isPaletteMode = (mode === 'card' || mode === 'icon');
+    const isPaletteMode = (mode === 'card' || mode === 'icon' || mode === 'board');
     pal.classList.toggle('show', isPaletteMode);
     if (mode === 'card') buildCardPalette();
     else if (mode === 'icon') buildIconPalette();
+    else if (mode === 'board') buildBoardPalette();
   }
   const { controls: liveControls } = getSceneState();
   if (liveControls) {
@@ -326,6 +362,20 @@ window.__mediaProbe = {
   createLink
 };
 
+window.__boardProbe = {
+  addMiniBoard,
+  BOARD_STYLES,
+  curBoardStyle,
+  setCurBoardStyle
+};
+
+window.__transformProbe = {
+  selectObject,
+  deselectObject,
+  get transformControl() { return transformControl; },
+  get selectedObject() { return selectedObject; }
+};
+
 const btnWindow = document.getElementById('btn-window');
 if (btnWindow) {
   btnWindow.addEventListener('click', () => {
@@ -390,6 +440,13 @@ setupPointerEvents({
           selectObject(o);
         });
       }
+    } else if (currentMode === 'board') {
+      const surf = hitToSurface(cx, cy);
+      const pos = surf ? surf.point.clone().add(new THREE.Vector3(0, 2.5, 0)) : new THREE.Vector3(0, 4.5, -5);
+      performAvatarAction('place', pos, () => {
+        const o = addMiniBoard({ styleKey: curBoardStyle, position: pos, colorHex: ink });
+        if (o) selectObject(o);
+      });
     } else if (currentMode === 'icon') {
       const surf = hitToSurface(cx, cy);
       const item = getActiveIconItem();

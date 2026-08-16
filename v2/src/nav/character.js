@@ -4,36 +4,39 @@ import { getSceneState } from '../core/scene.js';
 export const GENDERS = {
   female: {
     label: 'Female Cyber Architect',
-    torsoScale: [0.75, 1.1, 0.45],
-    shoulderWidth: 0.9,
-    hipWidth: 0.85,
-    height: 2.3,
+    torsoScale: [0.72, 1.05, 0.42],
+    shoulderWidth: 0.85,
+    hipWidth: 0.78,
+    height: 2.25,
     hairStyle: 'bob',
-    hairColor: '#f43f5e'
+    hairColor: '#f43f5e',
+    jacketColor: 0x0f172a
   },
   male: {
     label: 'Male Cyber Architect',
-    torsoScale: [0.95, 1.15, 0.55],
-    shoulderWidth: 1.15,
-    hipWidth: 0.75,
-    height: 2.45,
+    torsoScale: [0.92, 1.15, 0.52],
+    shoulderWidth: 1.12,
+    hipWidth: 0.74,
+    height: 2.42,
     hairStyle: 'tactical',
-    hairColor: '#0ea5e9'
+    hairColor: '#0ea5e9',
+    jacketColor: 0x090f24
   },
   nonbinary: {
     label: 'Cyber Android (Non-Binary)',
-    torsoScale: [0.85, 1.12, 0.48],
-    shoulderWidth: 1.0,
-    hipWidth: 0.8,
-    height: 2.38,
-    hairStyle: 'holo_antenna',
-    hairColor: '#a855f7'
+    torsoScale: [0.82, 1.10, 0.46],
+    shoulderWidth: 0.98,
+    hipWidth: 0.76,
+    height: 2.35,
+    hairStyle: 'holo_crest',
+    hairColor: '#a855f7',
+    jacketColor: 0x030712
   }
 };
 
 export const SKIN_TONES = [
   '#ffd1b3', // Fair
-  '#e0a97c', // Medium Warm
+  '#e0a97c', // Warm
   '#b07a53', // Tan
   '#6b4423', // Deep
   '#00f0ff', // Cyber Neon
@@ -50,7 +53,33 @@ export let avatarConfig = {
 
 export let avatarRoot = null;
 export let fpHandRoot = null;
-let avatarLimbs = {};
+
+// Rig Limb References for Kinematics
+let rig = {
+  pelvis: null,
+  torso: null,
+  chest: null,
+  neck: null,
+  head: null,
+  visor: null,
+  lShoulder: null,
+  lUpperArm: null,
+  lForearm: null,
+  lHand: null,
+  rShoulder: null,
+  rUpperArm: null,
+  rForearm: null,
+  rHand: null,
+  rStylus: null,
+  stylusTip: null,
+  lThighGroup: null,
+  lCalfGroup: null,
+  lBoot: null,
+  rThighGroup: null,
+  rCalfGroup: null,
+  rBoot: null
+};
+
 let laserBeam = null;
 let currentAction = null;
 let actionTimer = 0;
@@ -84,169 +113,278 @@ export function rebuildAvatar() {
   const spec = GENDERS[avatarConfig.gender] || GENDERS.female;
   const suitCol = new THREE.Color(avatarConfig.suitColor);
   const skinCol = new THREE.Color(avatarConfig.skinTone);
-  const darkSuitMat = new THREE.MeshStandardMaterial({
-    color: 0x090f24,
-    roughness: 0.25,
-    metalness: 0.85
+  const darkClothMat = new THREE.MeshStandardMaterial({
+    color: spec.jacketColor,
+    roughness: 0.45,
+    metalness: 0.35
   });
-  const accentSuitMat = new THREE.MeshStandardMaterial({
+  const accentMat = new THREE.MeshStandardMaterial({
     color: suitCol,
-    emissive: suitCol.clone().multiplyScalar(0.45),
-    roughness: 0.15,
-    metalness: 0.6
+    emissive: suitCol.clone().multiplyScalar(0.55),
+    roughness: 0.2,
+    metalness: 0.8
   });
   const skinMat = new THREE.MeshStandardMaterial({
     color: skinCol,
-    roughness: 0.6,
+    roughness: 0.55,
     metalness: 0.1
   });
   const visorMat = new THREE.MeshStandardMaterial({
     color: suitCol,
     emissive: suitCol,
-    emissiveIntensity: 1.2,
+    emissiveIntensity: 1.4,
     roughness: 0.1,
-    metalness: 0.9,
+    metalness: 0.95,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.9
+  });
+  const jointMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    roughness: 0.3,
+    metalness: 0.9
   });
 
-  // 1. Torso
-  const torsoGeo = new THREE.BoxGeometry(spec.torsoScale[0], spec.torsoScale[1], spec.torsoScale[2]);
-  const torso = new THREE.Mesh(torsoGeo, darkSuitMat);
-  torso.position.y = 1.35;
+  // 1. Pelvis / Base Center
+  const pelvis = new THREE.Group();
+  pelvis.position.y = 1.15;
+  avatarRoot.add(pelvis);
+
+  // 2. Torso & Tech Jacket
+  const torsoGroup = new THREE.Group();
+  pelvis.add(torsoGroup);
+
+  const torsoGeo = new THREE.CylinderGeometry(spec.torsoScale[0] * 0.48, spec.torsoScale[0] * 0.42, spec.torsoScale[1], 16);
+  const torso = new THREE.Mesh(torsoGeo, darkClothMat);
+  torso.position.y = spec.torsoScale[1] * 0.5;
   torso.castShadow = true;
-  avatarRoot.add(torso);
+  torsoGroup.add(torso);
 
-  // Chest Armor & Glowing Core
-  const chestGeo = new THREE.BoxGeometry(spec.torsoScale[0] * 0.9, spec.torsoScale[1] * 0.5, spec.torsoScale[2] * 0.3);
-  const chest = new THREE.Mesh(chestGeo, accentSuitMat);
-  chest.position.set(0, 0.2, spec.torsoScale[2] * 0.45);
-  torso.add(chest);
+  // Chest Armor & Glowing Energy Reactor
+  const chestPlate = new THREE.Mesh(
+    new THREE.BoxGeometry(spec.torsoScale[0] * 0.85, spec.torsoScale[1] * 0.45, spec.torsoScale[2] * 0.4),
+    darkClothMat
+  );
+  chestPlate.position.set(0, spec.torsoScale[1] * 0.65, spec.torsoScale[2] * 0.38);
+  torsoGroup.add(chestPlate);
 
-  const coreGeo = new THREE.SphereGeometry(0.12, 16, 16);
+  const coreGeo = new THREE.SphereGeometry(0.1, 16, 16);
   const core = new THREE.Mesh(coreGeo, visorMat);
-  core.position.set(0, 0.15, spec.torsoScale[2] * 0.6);
-  torso.add(core);
+  core.position.set(0, spec.torsoScale[1] * 0.65, spec.torsoScale[2] * 0.55);
+  torsoGroup.add(core);
 
-  // 2. Head
-  const headGeo = new THREE.SphereGeometry(0.28, 20, 20);
+  // Collar
+  const collarGeo = new THREE.TorusGeometry(0.22, 0.05, 8, 16);
+  collarGeo.rotateX(Math.PI / 2);
+  const collar = new THREE.Mesh(collarGeo, accentMat);
+  collar.position.set(0, spec.torsoScale[1] * 0.98, 0);
+  torsoGroup.add(collar);
+
+  // 3. Neck & Head
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.11, 0.22, 12), skinMat);
+  neck.position.set(0, spec.torsoScale[1] * 1.05, 0);
+  torsoGroup.add(neck);
+
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 0.2, 0);
+  neck.add(headGroup);
+
+  const headGeo = new THREE.SphereGeometry(0.24, 24, 24);
   const head = new THREE.Mesh(headGeo, skinMat);
-  head.position.y = 0.85;
   head.castShadow = true;
-  torso.add(head);
+  headGroup.add(head);
 
-  // Visor / Cyber Goggles
-  const visorGeo = new THREE.BoxGeometry(0.42, 0.14, 0.25);
+  // Sleek Cyber Visor
+  const visorGeo = new THREE.BoxGeometry(0.38, 0.12, 0.26);
   const visor = new THREE.Mesh(visorGeo, visorMat);
-  visor.position.set(0, 0.04, 0.18);
-  head.add(visor);
+  visor.position.set(0, 0.02, 0.14);
+  headGroup.add(visor);
 
-  // Hair / Headgear
+  // Headset Earcomms
+  [-0.24, 0.24].forEach(x => {
+    const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 12), jointMat);
+    ear.rotateZ(Math.PI / 2);
+    ear.position.set(x, 0.02, 0);
+    headGroup.add(ear);
+  });
+
+  // Stylized Hair
   if (spec.hairStyle === 'bob') {
-    const hairGeo = new THREE.BoxGeometry(0.55, 0.35, 0.45);
-    const hairMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.hairColor), roughness: 0.4 });
+    const hairGeo = new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.65);
+    const hairMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.hairColor), roughness: 0.35 });
     const hair = new THREE.Mesh(hairGeo, hairMat);
-    hair.position.set(0, 0.15, -0.05);
-    head.add(hair);
+    hair.position.set(0, 0.05, -0.04);
+    headGroup.add(hair);
   } else if (spec.hairStyle === 'tactical') {
-    const hairGeo = new THREE.BoxGeometry(0.48, 0.18, 0.42);
-    const hairMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.hairColor), roughness: 0.5 });
+    const hairGeo = new THREE.BoxGeometry(0.42, 0.14, 0.36);
+    const hairMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(spec.hairColor), roughness: 0.45 });
     const hair = new THREE.Mesh(hairGeo, hairMat);
-    hair.position.set(0, 0.22, 0);
-    head.add(hair);
+    hair.position.set(0, 0.2, -0.02);
+    headGroup.add(hair);
   } else {
-    // Holographic Antenna
-    const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.35, 8);
-    const ant = new THREE.Mesh(antGeo, visorMat);
-    ant.position.set(0.18, 0.3, 0);
-    ant.rotation.z = -0.3;
-    head.add(ant);
+    // Holographic Crest Antenna
+    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.35), visorMat);
+    crest.position.set(0, 0.26, 0);
+    headGroup.add(crest);
   }
 
-  // 3. Left Arm
-  const lArmGroup = new THREE.Group();
-  lArmGroup.position.set(-spec.shoulderWidth * 0.55, 0.45, 0);
-  torso.add(lArmGroup);
+  // 4. Left Arm (Shoulder -> Upper Arm -> Forearm -> Hand)
+  const lShoulder = new THREE.Group();
+  lShoulder.position.set(-spec.shoulderWidth * 0.54, spec.torsoScale[1] * 0.85, 0);
+  torsoGroup.add(lShoulder);
 
-  const armGeo = new THREE.CylinderGeometry(0.09, 0.08, 0.8, 12);
-  const lArm = new THREE.Mesh(armGeo, darkSuitMat);
-  lArm.position.y = -0.4;
-  lArm.castShadow = true;
-  lArmGroup.add(lArm);
+  const lShoulderPad = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), accentMat);
+  lShoulder.add(lShoulderPad);
 
-  const lHandGeo = new THREE.SphereGeometry(0.09, 12, 12);
-  const lHand = new THREE.Mesh(lHandGeo, skinMat);
-  lHand.position.y = -0.85;
-  lArmGroup.add(lHand);
+  const lUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.45, 12), darkClothMat);
+  lUpperArm.position.y = -0.22;
+  lUpperArm.castShadow = true;
+  lShoulder.add(lUpperArm);
 
-  // 4. Right Arm (Weapon / Cyber Stylus Tool Arm)
-  const rArmGroup = new THREE.Group();
-  rArmGroup.position.set(spec.shoulderWidth * 0.55, 0.45, 0);
-  torso.add(rArmGroup);
+  const lForearm = new THREE.Group();
+  lForearm.position.set(0, -0.45, 0);
+  lShoulder.add(lForearm);
 
-  const rArm = new THREE.Mesh(armGeo, darkSuitMat);
-  rArm.position.y = -0.4;
-  rArm.castShadow = true;
-  rArmGroup.add(rArm);
+  const lElbow = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), jointMat);
+  lForearm.add(lElbow);
 
-  const rHand = new THREE.Mesh(lHandGeo, skinMat);
-  rHand.position.y = -0.85;
-  rArmGroup.add(rHand);
+  const lForearmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.42, 12), darkClothMat);
+  lForearmMesh.position.y = -0.2;
+  lForearm.add(lForearmMesh);
 
-  // Cyber Stylus in Right Hand
-  const stylusGeo = new THREE.CylinderGeometry(0.025, 0.015, 0.65, 8);
-  stylusGeo.rotateX(Math.PI / 2);
-  const stylus = new THREE.Mesh(stylusGeo, accentSuitMat);
-  stylus.position.set(0, -0.9, 0.25);
-  rArmGroup.add(stylus);
+  const lHand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), skinMat);
+  lHand.position.set(0, -0.44, 0);
+  lForearm.add(lHand);
 
-  // Stylus Tip Glow
-  const tipGeo = new THREE.SphereGeometry(0.04, 8, 8);
-  const tip = new THREE.Mesh(tipGeo, visorMat);
-  tip.position.set(0, -0.9, 0.58);
-  rArmGroup.add(tip);
+  // 5. Right Arm (Weapon / Stylus Grip)
+  const rShoulder = new THREE.Group();
+  rShoulder.position.set(spec.shoulderWidth * 0.54, spec.torsoScale[1] * 0.85, 0);
+  torsoGroup.add(rShoulder);
 
-  // 5. Left & Right Legs
-  const legGeo = new THREE.CylinderGeometry(0.12, 0.09, 0.95, 12);
-  const lLegGroup = new THREE.Group();
-  lLegGroup.position.set(-spec.hipWidth * 0.4, 0.8, 0);
-  avatarRoot.add(lLegGroup);
+  const rShoulderPad = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), accentMat);
+  rShoulder.add(rShoulderPad);
 
-  const lLeg = new THREE.Mesh(legGeo, darkSuitMat);
-  lLeg.position.y = -0.45;
-  lLeg.castShadow = true;
-  lLegGroup.add(lLeg);
+  const rUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.45, 12), darkClothMat);
+  rUpperArm.position.y = -0.22;
+  rUpperArm.castShadow = true;
+  rShoulder.add(rUpperArm);
 
-  const rLegGroup = new THREE.Group();
-  rLegGroup.position.set(spec.hipWidth * 0.4, 0.8, 0);
-  avatarRoot.add(rLegGroup);
+  const rForearm = new THREE.Group();
+  rForearm.position.set(0, -0.45, 0);
+  rShoulder.add(rForearm);
 
-  const rLeg = new THREE.Mesh(legGeo, darkSuitMat);
-  rLeg.position.y = -0.45;
-  rLeg.castShadow = true;
-  rLegGroup.add(rLeg);
+  const rElbow = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), jointMat);
+  rForearm.add(rElbow);
 
-  // 6. Laser Holographic Beam (for action execution)
-  const beamGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 8);
+  const rForearmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.42, 12), darkClothMat);
+  rForearmMesh.position.y = -0.2;
+  rForearm.add(rForearmMesh);
+
+  const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), skinMat);
+  rHand.position.set(0, -0.44, 0);
+  rForearm.add(rHand);
+
+  // High-Tech Cyber Stylus Pen
+  const stylusGroup = new THREE.Group();
+  stylusGroup.position.set(0, -0.44, 0.12);
+  stylusGroup.rotation.x = Math.PI / 2.5;
+  rForearm.add(stylusGroup);
+
+  const stylusGeo = new THREE.CylinderGeometry(0.02, 0.012, 0.65, 10);
+  const stylusMesh = new THREE.Mesh(stylusGeo, accentMat);
+  stylusGroup.add(stylusMesh);
+
+  const stylusTip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), visorMat);
+  stylusTip.position.y = 0.34;
+  stylusGroup.add(stylusTip);
+
+  // 6. Left Leg (Thigh -> Knee -> Calf -> Boot)
+  const lThighGroup = new THREE.Group();
+  lThighGroup.position.set(-spec.hipWidth * 0.44, 0, 0);
+  pelvis.add(lThighGroup);
+
+  const lThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.095, 0.55, 14), darkClothMat);
+  lThigh.position.y = -0.28;
+  lThigh.castShadow = true;
+  lThighGroup.add(lThigh);
+
+  const lCalfGroup = new THREE.Group();
+  lCalfGroup.position.set(0, -0.58, 0);
+  lThighGroup.add(lCalfGroup);
+
+  const lKnee = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10), jointMat);
+  lCalfGroup.add(lKnee);
+
+  const lCalf = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.55, 14), darkClothMat);
+  lCalf.position.y = -0.28;
+  lCalf.castShadow = true;
+  lCalfGroup.add(lCalf);
+
+  // High-Top Cyber Sneaker / Boot
+  const bootGeo = new THREE.BoxGeometry(0.16, 0.14, 0.35);
+  const lBoot = new THREE.Mesh(bootGeo, accentMat);
+  lBoot.position.set(0, -0.55, 0.08);
+  lBoot.castShadow = true;
+  lCalfGroup.add(lBoot);
+
+  // 7. Right Leg (Thigh -> Knee -> Calf -> Boot)
+  const rThighGroup = new THREE.Group();
+  rThighGroup.position.set(spec.hipWidth * 0.44, 0, 0);
+  pelvis.add(rThighGroup);
+
+  const rThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.095, 0.55, 14), darkClothMat);
+  rThigh.position.y = -0.28;
+  rThigh.castShadow = true;
+  rThighGroup.add(rThigh);
+
+  const rCalfGroup = new THREE.Group();
+  rCalfGroup.position.set(0, -0.58, 0);
+  rThighGroup.add(rCalfGroup);
+
+  const rKnee = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10), jointMat);
+  rCalfGroup.add(rKnee);
+
+  const rCalf = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.55, 14), darkClothMat);
+  rCalf.position.y = -0.28;
+  rCalf.castShadow = true;
+  rCalfGroup.add(rCalf);
+
+  const rBoot = new THREE.Mesh(bootGeo, accentMat);
+  rBoot.position.set(0, -0.55, 0.08);
+  rBoot.castShadow = true;
+  rCalfGroup.add(rBoot);
+
+  // 8. Laser Holographic Emitter Beam
+  const beamGeo = new THREE.CylinderGeometry(0.025, 0.025, 1, 8);
   beamGeo.rotateX(Math.PI / 2);
-  const beamMat = new THREE.MeshBasicMaterial({
-    color: suitCol,
-    transparent: true,
-    opacity: 0.85
-  });
+  const beamMat = new THREE.MeshBasicMaterial({ color: suitCol, transparent: true, opacity: 0.85 });
   laserBeam = new THREE.Mesh(beamGeo, beamMat);
   laserBeam.visible = false;
   const { scene } = getSceneState();
   if (scene) scene.add(laserBeam);
 
-  avatarLimbs = {
-    torso,
-    head,
-    lArmGroup,
-    rArmGroup,
-    lLegGroup,
-    rLegGroup,
-    stylusTip: tip
+  rig = {
+    pelvis,
+    torso: torsoGroup,
+    chest: chestPlate,
+    neck,
+    head: headGroup,
+    visor,
+    lShoulder,
+    lUpperArm,
+    lForearm,
+    lHand,
+    rShoulder,
+    rUpperArm,
+    rForearm,
+    rHand,
+    rStylus: stylusGroup,
+    stylusTip,
+    lThighGroup,
+    lCalfGroup,
+    lBoot,
+    rThighGroup,
+    rCalfGroup,
+    rBoot
   };
 }
 
@@ -255,7 +393,7 @@ export function initFPHand() {
   if (!camera) return;
 
   fpHandRoot = new THREE.Group();
-  fpHandRoot.position.set(0.35, -0.3, -0.65);
+  fpHandRoot.position.set(0.35, -0.32, -0.65);
   fpHandRoot.rotation.set(0.1, -0.2, 0);
   camera.add(fpHandRoot);
 
@@ -271,17 +409,17 @@ export function rebuildFPHand() {
   const suitCol = new THREE.Color(avatarConfig.suitColor);
   const skinCol = new THREE.Color(avatarConfig.skinTone);
 
-  const gloveMat = new THREE.MeshStandardMaterial({ color: 0x090f24, roughness: 0.3, metalness: 0.8 });
+  const gloveMat = new THREE.MeshStandardMaterial({ color: 0x090f24, roughness: 0.35, metalness: 0.7 });
   const accentMat = new THREE.MeshStandardMaterial({ color: suitCol, emissive: suitCol.clone().multiplyScalar(0.5) });
-  const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.6 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.55 });
 
-  // Forearm
+  // Sleek Arm Mesh
   const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.45, 12), gloveMat);
   arm.rotation.x = Math.PI / 2.8;
   arm.position.set(0, 0, 0.1);
   fpHandRoot.add(arm);
 
-  // Hand & Bracer
+  // Holographic Bracer
   const bracer = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.12, 12), accentMat);
   bracer.rotation.x = Math.PI / 2.8;
   bracer.position.set(0, 0, 0.18);
@@ -292,14 +430,14 @@ export function rebuildFPHand() {
   fpHandRoot.add(hand);
 
   // Stylus
-  const stylus = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.01, 0.38, 8), accentMat);
+  const stylus = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.01, 0.42, 10), accentMat);
   stylus.rotation.x = Math.PI / 3;
-  stylus.position.set(0, 0.12, -0.26);
+  stylus.position.set(0, 0.14, -0.28);
   fpHandRoot.add(stylus);
 
-  // Tip
+  // Glow Tip
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), new THREE.MeshBasicMaterial({ color: suitCol }));
-  tip.position.set(0, 0.26, -0.42);
+  tip.position.set(0, 0.28, -0.46);
   fpHandRoot.add(tip);
 
   fpHandRoot.visible = (avatarConfig.povMode === 'fps');
@@ -308,55 +446,95 @@ export function rebuildFPHand() {
 export function updateAvatar(dt, velocity = new THREE.Vector3(), isMoving = false) {
   if (!avatarRoot) return;
 
-  // Visibility based on POV
   avatarRoot.visible = (avatarConfig.povMode !== 'fps');
   if (fpHandRoot) fpHandRoot.visible = (avatarConfig.povMode === 'fps');
 
-  // Procedural Animation
+  // Realistic Human Kinematics
   if (isMoving) {
-    animWalkTime += dt * 8.5;
-    const legAngle = Math.sin(animWalkTime) * 0.55;
-    const armAngle = Math.cos(animWalkTime) * 0.55;
+    animWalkTime += dt * 7.5;
 
-    if (avatarLimbs.lLegGroup) avatarLimbs.lLegGroup.rotation.x = legAngle;
-    if (avatarLimbs.rLegGroup) avatarLimbs.rLegGroup.rotation.x = -legAngle;
+    // Pelvis vertical bounce and hip sway
+    const bounce = Math.abs(Math.sin(animWalkTime * 2)) * 0.07;
+    const hipRoll = Math.sin(animWalkTime) * 0.06;
+    if (rig.pelvis) {
+      rig.pelvis.position.y = 1.15 + bounce;
+      rig.pelvis.rotation.z = hipRoll;
+      rig.pelvis.rotation.y = -Math.sin(animWalkTime) * 0.08; // Torso counter-rotation
+    }
 
+    // Legs: Thigh and Knee Articulation
+    const leftLegCycle = Math.sin(animWalkTime);
+    const rightLegCycle = -Math.sin(animWalkTime);
+
+    if (rig.lThighGroup) {
+      rig.lThighGroup.rotation.x = leftLegCycle * 0.65;
+      if (rig.lCalfGroup) {
+        rig.lCalfGroup.rotation.x = Math.max(0, -leftLegCycle) * 0.75;
+      }
+    }
+
+    if (rig.rThighGroup) {
+      rig.rThighGroup.rotation.x = rightLegCycle * 0.65;
+      if (rig.rCalfGroup) {
+        rig.rCalfGroup.rotation.x = Math.max(0, -rightLegCycle) * 0.75;
+      }
+    }
+
+    // Arms: Counter-Swing with Elbow Flexion
     if (!currentAction) {
-      if (avatarLimbs.lArmGroup) avatarLimbs.lArmGroup.rotation.x = -armAngle;
-      if (avatarLimbs.rArmGroup) avatarLimbs.rArmGroup.rotation.x = armAngle;
+      if (rig.lShoulder) {
+        rig.lShoulder.rotation.x = -leftLegCycle * 0.55;
+        if (rig.lForearm) rig.lForearm.rotation.x = -0.25 + Math.abs(leftLegCycle) * 0.2;
+      }
+      if (rig.rShoulder) {
+        rig.rShoulder.rotation.x = -rightLegCycle * 0.55;
+        if (rig.rForearm) rig.rForearm.rotation.x = -0.25 + Math.abs(rightLegCycle) * 0.2;
+      }
     }
   } else {
-    // Idle breathing
-    animWalkTime += dt * 2.0;
-    const breath = Math.sin(animWalkTime) * 0.03;
-    if (avatarLimbs.torso) avatarLimbs.torso.position.y = 1.35 + breath;
+    // Idle Breathing and Weight Shift
+    animWalkTime += dt * 2.2;
+    const breath = Math.sin(animWalkTime) * 0.025;
+    if (rig.pelvis) {
+      rig.pelvis.position.y = 1.15 + breath;
+      rig.pelvis.rotation.z = Math.sin(animWalkTime * 0.5) * 0.02;
+    }
+    if (rig.head) {
+      rig.head.rotation.y = Math.sin(animWalkTime * 0.7) * 0.05;
+    }
 
     if (!currentAction) {
-      if (avatarLimbs.lLegGroup) avatarLimbs.lLegGroup.rotation.x = 0;
-      if (avatarLimbs.rLegGroup) avatarLimbs.rLegGroup.rotation.x = 0;
-      if (avatarLimbs.lArmGroup) avatarLimbs.lArmGroup.rotation.x = Math.sin(animWalkTime) * 0.08;
-      if (avatarLimbs.rArmGroup) avatarLimbs.rArmGroup.rotation.x = -Math.sin(animWalkTime) * 0.08;
+      if (rig.lThighGroup) rig.lThighGroup.rotation.set(0, 0, 0);
+      if (rig.rThighGroup) rig.rThighGroup.rotation.set(0, 0, 0);
+      if (rig.lCalfGroup) rig.lCalfGroup.rotation.set(0, 0, 0);
+      if (rig.rCalfGroup) rig.rCalfGroup.rotation.set(0, 0, 0);
+      if (rig.lShoulder) rig.lShoulder.rotation.x = Math.sin(animWalkTime) * 0.05;
+      if (rig.rShoulder) rig.rShoulder.rotation.x = -Math.sin(animWalkTime) * 0.05;
+      if (rig.lForearm) rig.lForearm.rotation.x = -0.15;
+      if (rig.rForearm) rig.rForearm.rotation.x = -0.15;
     }
   }
 
   // Handle in-progress action (drawing / placing)
   if (currentAction) {
     actionTimer += dt;
-    const arm = avatarLimbs.rArmGroup;
-    if (arm) {
-      arm.rotation.x = -Math.PI / 2.2 + Math.sin(actionTimer * 12) * 0.1;
-      arm.rotation.y = -0.2;
+    if (rig.rShoulder) {
+      rig.rShoulder.rotation.x = -Math.PI / 2.3 + Math.sin(actionTimer * 14) * 0.12;
+      rig.rShoulder.rotation.y = -0.25;
+    }
+    if (rig.rForearm) {
+      rig.rForearm.rotation.x = -0.1 + Math.cos(actionTimer * 14) * 0.08;
     }
 
     if (fpHandRoot && fpHandRoot.visible) {
-      fpHandRoot.position.y = -0.3 + Math.sin(actionTimer * 14) * 0.03;
+      fpHandRoot.position.y = -0.32 + Math.sin(actionTimer * 14) * 0.03;
       fpHandRoot.position.z = -0.65 + Math.cos(actionTimer * 14) * 0.04;
     }
 
     if (laserBeam && currentAction.targetPos) {
       const tipPos = new THREE.Vector3();
-      if (avatarLimbs.stylusTip) avatarLimbs.stylusTip.getWorldPosition(tipPos);
-      else avatarRoot.getWorldPosition(tipPos).add(new THREE.Vector3(0.5, 1.2, 0));
+      if (rig.stylusTip) rig.stylusTip.getWorldPosition(tipPos);
+      else avatarRoot.getWorldPosition(tipPos).add(new THREE.Vector3(0.5, 1.4, 0));
 
       const dist = tipPos.distanceTo(currentAction.targetPos);
       laserBeam.position.copy(tipPos).lerp(currentAction.targetPos, 0.5);
@@ -369,9 +547,8 @@ export function updateAvatar(dt, velocity = new THREE.Vector3(), isMoving = fals
       if (currentAction.onComplete) currentAction.onComplete();
       currentAction = null;
       if (laserBeam) laserBeam.visible = false;
-      if (avatarLimbs.rArmGroup) {
-        avatarLimbs.rArmGroup.rotation.set(0, 0, 0);
-      }
+      if (rig.rShoulder) rig.rShoulder.rotation.set(0, 0, 0);
+      if (rig.rForearm) rig.rForearm.rotation.set(0, 0, 0);
     }
   }
 }
@@ -382,7 +559,6 @@ export function performAvatarAction(type, targetPos, onComplete, duration = 0.35
     return;
   }
 
-  // Turn avatar towards target
   if (avatarRoot && targetPos) {
     const dx = targetPos.x - avatarRoot.position.x;
     const dz = targetPos.z - avatarRoot.position.z;
