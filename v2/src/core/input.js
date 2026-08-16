@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { canvas, camera, placeTargets } from './scene.js';
+import { getSceneState } from './scene.js';
 
 export const ray = new THREE.Raycaster();
 export const m2 = new THREE.Vector2();
@@ -12,8 +12,10 @@ export function setGhost(mesh) {
 }
 
 export function setMouse(cx, cy) {
-  if (!canvas) return;
-  const r = canvas.getBoundingClientRect();
+  const { canvas } = getSceneState();
+  const cvs = canvas || document.getElementById('c');
+  if (!cvs) return;
+  const r = cvs.getBoundingClientRect();
   m2.x = ((cx - r.left) / r.width) * 2 - 1;
   m2.y = -((cy - r.top) / r.height) * 2 + 1;
   currentMouse.x = cx;
@@ -22,7 +24,8 @@ export function setMouse(cx, cy) {
 
 export function getHit(cx, cy) {
   setMouse(cx, cy);
-  if (!camera) return null;
+  const { camera, placeTargets } = getSceneState();
+  if (!camera || !placeTargets) return null;
   ray.setFromCamera(m2, camera);
   const targets = ghostMesh ? placeTargets.filter(o => o !== ghostMesh) : placeTargets;
   return ray.intersectObjects(targets, true)[0] || null;
@@ -62,6 +65,7 @@ export function hitToSurface(cx, cy) {
 
 export function rayPlane(plane, cx, cy) {
   setMouse(cx, cy);
+  const { camera } = getSceneState();
   if (!camera) return null;
   ray.setFromCamera(m2, camera);
   const p = new THREE.Vector3();
@@ -74,6 +78,7 @@ export function rayPlane(plane, cx, cy) {
 
 // Global pointer event listeners connector
 export function setupPointerEvents(handlers = {}) {
+  const { canvas } = getSceneState();
   const cvs = canvas || document.getElementById('c');
   if (!cvs) return;
 

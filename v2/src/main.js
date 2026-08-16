@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { initScene, updateDust, updateTesseract, render, getSceneState, camera, controls, fill, ambient, scene } from './core/scene.js';
 import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
-import { register, undoLast, redoLast, updateUndoRedoBtns, objects, undoStack, redoStack } from './core/history.js';
+import { register, undoLast, redoLast, updateUndoRedoBtns, objects, links, undoStack, redoStack } from './core/history.js';
 import {
   initStrokeSystem,
   beginStroke,
@@ -49,6 +49,13 @@ import {
 } from './objects/models.js';
 
 import {
+  addImagePanel,
+  addVideoPanel,
+  addSpatialAudio,
+  addLiveScreenShare
+} from './objects/media.js';
+
+import {
   createLink,
   tickLinks,
   refreshLinks,
@@ -56,11 +63,28 @@ import {
   flowMotionEnabled
 } from './graph/links.js';
 
+import {
+  serializeSession,
+  loadSessionData,
+  saveSessionToDownload
+} from './session/persist.js';
+
+import {
+  startRecording,
+  stopRecording
+} from './capture/record.js';
+
+import {
+  initAuraSystem,
+  tickAuras
+} from './fx/aura.js';
+
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 initStrokeSystem();
 initTextSystem();
+initAuraSystem();
 
 // Populate Spatial Cards in Palette
 function buildCardPalette() {
@@ -177,8 +201,9 @@ export function setMode(mode) {
     if (mode === 'card') buildCardPalette();
     else if (mode === 'icon') buildIconPalette();
   }
-  if (controls) {
-    controls.enabled = (mode === 'nav');
+  const { controls: liveControls } = getSceneState();
+  if (liveControls) {
+    liveControls.enabled = (mode === 'nav');
   }
 }
 
@@ -221,6 +246,7 @@ window.__historyProbe = {
   undoLast,
   redoLast,
   objects,
+  links,
   undoStack,
   redoStack
 };
@@ -250,6 +276,61 @@ window.__sceneProbe = {
   get composer() { return getSceneState().composer; }
 };
 
+window.__mediaProbe = {
+  addImagePanel,
+  addVideoPanel,
+  addSpatialAudio,
+  addLiveScreenShare,
+  serializeSession,
+  loadSessionData,
+  saveSessionToDownload,
+  createLink
+};
+
+const btnWindow = document.getElementById('btn-window');
+if (btnWindow) {
+  btnWindow.addEventListener('click', () => {
+    const ink = document.getElementById('pick-ink')?.value || '#00ccff';
+    addLiveScreenShare(ink);
+  });
+}
+
+const btnExport = document.getElementById('btn-export');
+if (btnExport) {
+  btnExport.addEventListener('click', () => {
+    saveSessionToDownload('bleuboard-session');
+  });
+}
+
+const btnImport = document.getElementById('btn-import');
+const importInput = document.getElementById('import-input');
+if (btnImport && importInput) {
+  btnImport.addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        loadSessionData(data);
+      } catch (err) {
+        console.error('Failed to parse session json:', err);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+const recStartBtn = document.getElementById('rec-start');
+if (recStartBtn) {
+  recStartBtn.addEventListener('click', () => {
+    const withMic = document.getElementById('rec-mic')?.checked !== false;
+    const withCam = document.getElementById('rec-cam')?.checked === true;
+    startRecording(withMic, withCam);
+  });
+}
+
 let pendingLinkSource = null;
 
 setupPointerEvents({
@@ -266,9 +347,18 @@ setupPointerEvents({
       const item = getActiveIconItem();
       if (surf && item) addIconNode(item, surf, ink);
     } else if (currentMode === 'connect') {
-      const hit = getHit(cx, cy);
-      if (hit && hit.object) {
-        const clickedObj = objects.find(o => o.collider === hit.object || o.root === hit.object || o.root.children.includes(hit.object));
+      const { camera } = getSceneState();
+      setMouse(cx, cy);
+      ray.setFromCamera(m2, camera);
+      const roots = objects.map(o => o.root);
+      const hits = ray.intersectObjects(roots, true);
+      if (hits.length > 0) {
+        let cur = hits[0].object;
+        let clickedObj = null;
+        while (cur && !clickedObj) {
+          clickedObj = objects.find(o => o.root === cur || o.collider === cur);
+          cur = cur.parent;
+        }
         if (clickedObj) {
           if (!pendingLinkSource) {
             pendingLinkSource = clickedObj;
@@ -277,6 +367,42 @@ setupPointerEvents({
             pendingLinkSource = null;
           }
         }
+      }
+    } else if (currentMode === 'image') {
+      const surf = hitToSurface(cx, cy);
+      if (surf) {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.onchange = e => {
+          const file = e.target.files[0];
+          if (file) addImagePanel(URL.createObjectURL(file), surf.point, ink);
+        };
+        inp.click();
+      }
+    } else if (currentMode === 'video') {
+      const surf = hitToSurface(cx, cy);
+      if (surf) {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'video/*';
+        inp.onchange = e => {
+          const file = e.target.files[0];
+          if (file) addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+        };
+        inp.click();
+      }
+    } else if (currentMode === 'audio') {
+      const surf = hitToSurface(cx, cy);
+      if (surf) {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'audio/*';
+        inp.onchange = e => {
+          const file = e.target.files[0];
+          if (file) addSpatialAudio(URL.createObjectURL(file), surf, ink);
+        };
+        inp.click();
       }
     } else if (currentMode === 'text') {
       const hit = getHit(cx, cy);
@@ -337,6 +463,7 @@ function animate() {
   updateLive();
   tickLinks(dt);
   refreshLinks();
+  tickAuras(t);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

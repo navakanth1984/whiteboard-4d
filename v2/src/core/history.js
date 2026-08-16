@@ -147,3 +147,46 @@ export function redoLast() {
 
   return o;
 }
+
+export function removeObj(o) {
+  if (!o) return;
+  if (scene && o.root) {
+    scene.remove(o.root);
+  }
+
+  const i = objects.indexOf(o);
+  if (i > -1) objects.splice(i, 1);
+
+  if (o.collider) {
+    const ci = placeTargets.indexOf(o.collider);
+    if (ci > -1) placeTargets.splice(ci, 1);
+  }
+
+  if (o.video && typeof o.video.pause === 'function') {
+    o.video.pause();
+  }
+  if (o.sound && typeof o.sound.pause === 'function') {
+    try { o.sound.pause(); } catch (e) {}
+  }
+  if (o._blobUrl) {
+    URL.revokeObjectURL(o._blobUrl);
+  }
+
+  for (let k = links.length - 1; k >= 0; k--) {
+    if (links[k].a === o.id || links[k].b === o.id) {
+      if (scene) scene.remove(links[k].line);
+      if (links[k].particles) {
+        links[k].particles.forEach(pt => {
+          if (scene) scene.remove(pt);
+        });
+      }
+      if (links[k].arrowHead && scene) {
+        scene.remove(links[k].arrowHead);
+      }
+      links.splice(k, 1);
+    }
+  }
+
+  if (moveTarget === o) moveTarget = null;
+  updateUndoRedoBtns();
+}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { scene } from '../core/scene.js';
+import { getSceneState } from '../core/scene.js';
 import { objects, links } from '../core/history.js';
 
 export let flowMotionEnabled = true;
@@ -15,6 +15,7 @@ export function center(o) {
 }
 
 function makeArrowHead(col) {
+  const { scene } = getSceneState();
   const geo = new THREE.ConeGeometry(0.22, 0.55, 16);
   geo.rotateX(Math.PI / 2);
   const mat = new THREE.MeshStandardMaterial({
@@ -24,11 +25,12 @@ function makeArrowHead(col) {
     roughness: 0.2
   });
   const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
+  if (scene) scene.add(mesh);
   return mesh;
 }
 
 function makeLinkParticle(col, scale = 1.0) {
+  const { scene } = getSceneState();
   const geo = new THREE.SphereGeometry(0.14 * scale, 12, 12);
   const mat = new THREE.MeshBasicMaterial({
     color: col,
@@ -36,11 +38,12 @@ function makeLinkParticle(col, scale = 1.0) {
     opacity: 0.95
   });
   const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
+  if (scene) scene.add(mesh);
   return mesh;
 }
 
 export function createLink(a, b, ink = '#38bdf8') {
+  const { scene } = getSceneState();
   const pa = center(a);
   const pb = center(b);
   const mid = pa.clone().lerp(pb, 0.5).add(new THREE.Vector3(0, 2.2, 0));
@@ -58,7 +61,7 @@ export function createLink(a, b, ink = '#38bdf8') {
     opacity: 0.85
   });
   const lineMesh = new THREE.Mesh(tubeGeo, mat);
-  scene.add(lineMesh);
+  if (scene) scene.add(lineMesh);
 
   const arrowHead = makeArrowHead(lineCol);
   const tangent = curve.getTangent(0.95);

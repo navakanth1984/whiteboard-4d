@@ -18,7 +18,7 @@ export let bloomPass = null;
 export let outlinePass = null;
 
 export function getSceneState() {
-  return { canvas, renderer, scene, camera, controls, composer, bloomPass, outlinePass };
+  return { canvas, renderer, scene, camera, controls, composer, bloomPass, outlinePass, placeTargets };
 }
 
 export let ambient = null;
