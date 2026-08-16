@@ -85,11 +85,26 @@
   <button class="tb"        data-mode="audio"   title="Place spatial 3D audio"><span class="material-symbols-outlined tb-icon">volume_up</span><span class="tb-label">Audio</span></button>
   <button class="tb"        data-mode="connect" title="Link objects with glowing signal flow"><span class="material-symbols-outlined tb-icon">timeline</span><span class="tb-label">Flow</span></button>
   <button class="tb danger" data-mode="erase"   title="Delete an object"><span class="material-symbols-outlined tb-icon">delete</span><span class="tb-label">Erase</span></button>
-  <button class="tb" id="btn-undo" title="Undo (Ctrl+Z)" disabled style="opacity:.35"><span class="material-symbols-outlined tb-icon">undo</span><span class="tb-label">Undo</span></button>
-  <button class="tb" id="btn-redo" title="Redo (Ctrl+Y)" disabled style="opacity:.35"><span class="material-symbols-outlined tb-icon">redo</span><span class="tb-label">Redo</span></button>
   <button class="tb toggle on" id="btn-motion-toggle" role="switch" aria-pressed="true" aria-label="Pause or resume 3D flow animations" title="Pause or resume flow signal animations"><span class="material-symbols-outlined tb-icon">bolt</span><span class="tb-label">Flow Motion</span></button>
   <button class="tb toggle" id="btn-4d"         title="Toggle 4D orbital animation for objects"><span class="material-symbols-outlined tb-icon">schedule</span><span class="tb-label">4D</span></button>
   <button class="tb"        id="btn-guide"      title="Show studio guide"><span class="material-symbols-outlined tb-icon">help_outline</span><span class="tb-label">Guide</span></button>
+</div>
+
+<!-- ════════ 3D SPATIAL D-PAD (Manual Touch / Click Flight Controller) ════════ -->
+<div id="spatial-dpad">
+  <div class="dpad-cross">
+    <button class="dpad-btn" id="dpad-up" title="Fly Forward (W)"><span class="material-symbols-outlined">expand_less</span></button>
+    <div class="dpad-mid-row">
+      <button class="dpad-btn" id="dpad-left" title="Strafe Left (A)"><span class="material-symbols-outlined">chevron_left</span></button>
+      <div class="dpad-center-core"><span class="material-symbols-outlined">flight</span></div>
+      <button class="dpad-btn" id="dpad-right" title="Strafe Right (D)"><span class="material-symbols-outlined">chevron_right</span></button>
+    </div>
+    <button class="dpad-btn" id="dpad-down" title="Fly Backward (S)"><span class="material-symbols-outlined">expand_more</span></button>
+  </div>
+  <div class="dpad-elev-col">
+    <button class="dpad-btn elev-btn" id="dpad-elev-up" title="Elevate Up (Space)"><span class="material-symbols-outlined">arrow_upward</span><span>UP</span></button>
+    <button class="dpad-btn elev-btn" id="dpad-elev-down" title="Elevate Down (C)"><span class="material-symbols-outlined">arrow_downward</span><span>DOWN</span></button>
+  </div>
 </div>
 
 <!-- ════════ SIZE HUD ════════ -->

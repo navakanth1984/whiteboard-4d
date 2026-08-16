@@ -6,14 +6,15 @@ export let isNavActive = true;
 export let keysPressed = {};
 export let playerVelocity = new THREE.Vector3();
 export let playerHeading = 0; // Yaw angle (radians)
-export let playerPitch = 0;   // Pitch angle (radians)
+export let playerPitch = 0.15; // Pitch angle (radians)
 
 export let povMode = 'tps'; // 'fps', 'tps', 'orbit'
-export let flySpeed = 16.0;
+export let flySpeed = 18.0;
 export let sprintMultiplier = 2.4;
 
-let isRightMouseDown = false;
-let prevMousePos = { x: 0, y: 0 };
+let isPointerDown = false;
+let pointerButton = 0;
+let prevPointerPos = { x: 0, y: 0 };
 let focusTarget = null;
 let focusTween = null;
 
@@ -26,6 +27,44 @@ export function setPOVMode(mode) {
       controls.enabled = (mode === 'orbit');
     }
   }
+}
+
+export function handlePointerDown(e) {
+  if (window.__currentMode === 'nav' || povMode !== 'orbit') {
+    isPointerDown = true;
+    pointerButton = e.button !== undefined ? e.button : 0;
+    prevPointerPos = { x: e.clientX, y: e.clientY };
+  }
+}
+
+export function handlePointerMove(e) {
+  if (!isPointerDown) return;
+  if (window.__transformControl && window.__transformControl.dragging) return;
+
+  const dx = e.clientX - prevPointerPos.x;
+  const dy = e.clientY - prevPointerPos.y;
+  prevPointerPos = { x: e.clientX, y: e.clientY };
+
+  if (povMode === 'orbit') return;
+
+  if (pointerButton === 1 || e.shiftKey) {
+    // Middle Click / Shift+Drag: Pan Avatar & Camera in 3D space
+    const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerHeading);
+    const up = new THREE.Vector3(0, 1, 0);
+    if (avatarRoot) {
+      avatarRoot.position.addScaledVector(right, -dx * 0.025);
+      avatarRoot.position.addScaledVector(up, dy * 0.025);
+    }
+  } else {
+    // Left Click / Right Click Drag: Smooth Free Look & Orbit
+    const sens = 0.0035;
+    playerHeading -= dx * sens;
+    playerPitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, playerPitch - dy * sens));
+  }
+}
+
+export function handlePointerUp() {
+  isPointerDown = false;
 }
 
 export function initGamerNav() {
@@ -50,33 +89,69 @@ export function initGamerNav() {
 
   const canvas = document.getElementById('c');
   if (canvas) {
-    canvas.addEventListener('mousedown', e => {
-      if (e.button === 2) { // Right click for gamer mouselook
-        isRightMouseDown = true;
-        prevMousePos = { x: e.clientX, y: e.clientY };
+    // 1. Pointer Down
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
+
+    // 2. Mouse Wheel: 3D Dolly / Zoom / Spatial Elevation
+    canvas.addEventListener('wheel', e => {
+      if (window.__currentMode === 'nav' && povMode !== 'orbit' && avatarRoot) {
+        e.preventDefault();
+        const zoomDelta = e.deltaY * 0.02;
+
+        if (e.ctrlKey) {
+          // Ctrl + Wheel: Elevate Up / Down in 3D
+          avatarRoot.position.y += (e.deltaY > 0 ? -0.8 : 0.8);
+        } else {
+          // Regular Wheel: Move along forward/backward 3D sight vector
+          const forward = new THREE.Vector3(
+            Math.sin(playerHeading) * Math.cos(playerPitch),
+            Math.sin(playerPitch),
+            -Math.cos(playerHeading) * Math.cos(playerPitch)
+          );
+          avatarRoot.position.addScaledVector(forward, -zoomDelta * 1.5);
+        }
       }
-    });
-
-    window.addEventListener('mouseup', e => {
-      if (e.button === 2) isRightMouseDown = false;
-    });
-
-    window.addEventListener('mousemove', e => {
-      if (isRightMouseDown && povMode !== 'orbit') {
-        const dx = e.clientX - prevMousePos.x;
-        const dy = e.clientY - prevMousePos.y;
-        prevMousePos = { x: e.clientX, y: e.clientY };
-
-        const sens = 0.0035;
-        playerHeading -= dx * sens;
-        playerPitch = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, playerPitch - dy * sens));
-      }
-    });
+    }, { passive: false });
 
     canvas.addEventListener('contextmenu', e => {
       if (povMode !== 'orbit') e.preventDefault();
     });
   }
+
+  // 3. Setup On-Screen 3D Navigation Controls (D-Pad)
+  setupOnScreenNavControls();
+}
+
+function setupOnScreenNavControls() {
+  const padWrap = document.getElementById('spatial-dpad');
+  if (!padWrap) return;
+
+  const bindPadBtn = (id, keyCode) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    const start = (e) => {
+      e.preventDefault();
+      keysPressed[keyCode] = true;
+    };
+    const end = (e) => {
+      e.preventDefault();
+      keysPressed[keyCode] = false;
+    };
+
+    btn.addEventListener('pointerdown', start);
+    btn.addEventListener('pointerup', end);
+    btn.addEventListener('pointerleave', end);
+  };
+
+  bindPadBtn('dpad-up', 'KeyW');
+  bindPadBtn('dpad-down', 'KeyS');
+  bindPadBtn('dpad-left', 'KeyA');
+  bindPadBtn('dpad-right', 'KeyD');
+  bindPadBtn('dpad-elev-up', 'Space');
+  bindPadBtn('dpad-elev-down', 'KeyC');
 }
 
 export function focusOnObject(obj) {
@@ -90,7 +165,7 @@ export function focusOnObject(obj) {
   const maxDim = Math.max(size.x, size.y, size.z, 2.0);
 
   if (avatarRoot) {
-    avatarRoot.position.set(center.x, Math.max(0, center.y - 1.0), center.z + maxDim * 2.0);
+    avatarRoot.position.set(center.x, center.y, center.z + maxDim * 2.0);
   }
 
   if (window.gsap) {
@@ -116,15 +191,15 @@ export function updateGamerNav(dt) {
   const { camera, controls } = getSceneState();
   if (!camera) return;
 
-  // 1. Calculate input movement vector relative to player heading
+  // 1. Calculate 6-DOF input movement vector (above, below, sideways, diagonal)
   const moveDir = new THREE.Vector3();
 
   if (keysPressed['KeyW'] || keysPressed['ArrowUp']) moveDir.z -= 1;
   if (keysPressed['KeyS'] || keysPressed['ArrowDown']) moveDir.z += 1;
   if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) moveDir.x -= 1;
   if (keysPressed['KeyD'] || keysPressed['ArrowRight']) moveDir.x += 1;
-  if (keysPressed['Space'] || keysPressed['KeyE']) moveDir.y += 1; // Ascend
-  if (keysPressed['KeyC'] || keysPressed['ControlLeft'] || keysPressed['KeyQ']) moveDir.y -= 1; // Descend
+  if (keysPressed['Space'] || keysPressed['KeyE']) moveDir.y += 1; // Elevate Up
+  if (keysPressed['KeyC'] || keysPressed['ControlLeft'] || keysPressed['KeyQ']) moveDir.y -= 1; // Elevate Down
 
   const isMoving = moveDir.lengthSq() > 0.001;
   const isSprinting = keysPressed['ShiftLeft'] || keysPressed['ShiftRight'];
@@ -133,7 +208,7 @@ export function updateGamerNav(dt) {
   if (isMoving) {
     moveDir.normalize();
 
-    // Rotate horizontal motion by player heading
+    // Rotate horizontal & depth motion by player heading
     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerHeading);
     const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerHeading);
 
@@ -141,22 +216,29 @@ export function updateGamerNav(dt) {
       .add(right.multiplyScalar(moveDir.x))
       .add(new THREE.Vector3(0, moveDir.y, 0));
 
-    playerVelocity.lerp(worldMove.multiplyScalar(curSpeed), 0.15);
+    playerVelocity.lerp(worldMove.multiplyScalar(curSpeed), 0.18);
   } else {
     playerVelocity.lerp(new THREE.Vector3(0, 0, 0), 0.18);
   }
 
-  // 2. Update Avatar Position in Space
+  // 2. Update Avatar Position & 3D Flight / Diagonal Movement
   if (avatarRoot) {
     avatarRoot.position.addScaledVector(playerVelocity, dt);
-    // Keep avatar above floor
-    avatarRoot.position.y = Math.max(0, avatarRoot.position.y);
 
     if (isMoving && Math.abs(moveDir.x) + Math.abs(moveDir.z) > 0.1) {
       const motionAngle = Math.atan2(playerVelocity.x, playerVelocity.z);
       avatarRoot.rotation.y = THREE.MathUtils.lerp(avatarRoot.rotation.y, motionAngle, 0.2);
+
+      // Banking Roll when moving sideways/diagonally
+      const bankTilt = (-moveDir.x * 0.15);
+      avatarRoot.rotation.z = THREE.MathUtils.lerp(avatarRoot.rotation.z, bankTilt, 0.15);
+      // Pitch tilt when ascending/descending
+      const pitchTilt = (moveDir.y * 0.12);
+      avatarRoot.rotation.x = THREE.MathUtils.lerp(avatarRoot.rotation.x, pitchTilt, 0.15);
     } else if (povMode !== 'orbit') {
       avatarRoot.rotation.y = THREE.MathUtils.lerp(avatarRoot.rotation.y, playerHeading, 0.15);
+      avatarRoot.rotation.z = THREE.MathUtils.lerp(avatarRoot.rotation.z, 0, 0.15);
+      avatarRoot.rotation.x = THREE.MathUtils.lerp(avatarRoot.rotation.x, 0, 0.15);
     }
 
     updateAvatar(dt, playerVelocity, isMoving);
@@ -164,7 +246,7 @@ export function updateGamerNav(dt) {
 
   // 3. Update Camera based on POV Mode
   if (povMode === 'fps' && avatarRoot) {
-    // 1st Person: Camera located at eye level of avatar
+    // 1st Person (FPS)
     camera.position.set(
       avatarRoot.position.x,
       avatarRoot.position.y + 2.1,
@@ -181,15 +263,19 @@ export function updateGamerNav(dt) {
     camera.lookAt(lookTarget);
 
   } else if (povMode === 'tps' && avatarRoot) {
-    // 3rd Person: Dynamic over-the-shoulder follow camera
-    const shoulderOffset = new THREE.Vector3(1.2, 2.2, 4.2);
+    // 3rd Person (TPS): Dynamic Over-the-Shoulder follow camera with 3D elevation
+    const shoulderOffset = new THREE.Vector3(1.2, 2.0, 4.4);
     shoulderOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), playerHeading);
 
     const targetCamPos = avatarRoot.position.clone().add(shoulderOffset);
-    camera.position.lerp(targetCamPos, 0.15);
+    camera.position.lerp(targetCamPos, 0.18);
 
-    const lookAtPos = avatarRoot.position.clone().add(new THREE.Vector3(0, 1.8, 0)).add(
-      new THREE.Vector3(Math.sin(playerHeading) * 10, Math.sin(playerPitch) * 10, -Math.cos(playerHeading) * 10)
+    const lookAtPos = avatarRoot.position.clone().add(new THREE.Vector3(0, 1.6, 0)).add(
+      new THREE.Vector3(
+        Math.sin(playerHeading) * Math.cos(playerPitch) * 10,
+        Math.sin(playerPitch) * 10,
+        -Math.cos(playerHeading) * Math.cos(playerPitch) * 10
+      )
     );
     camera.lookAt(lookAtPos);
 

@@ -99,7 +99,10 @@ import {
   updateGamerNav,
   setPOVMode,
   focusOnObject,
-  povMode
+  povMode,
+  handlePointerDown,
+  handlePointerMove,
+  handlePointerUp
 } from './nav/gamer_nav.js';
 
 import {
@@ -259,8 +262,11 @@ function buildBoardPalette() {
 
 // Mode state
 export let currentMode = 'nav';
+window.__currentMode = 'nav';
+
 export function setMode(mode) {
   currentMode = mode;
+  window.__currentMode = mode;
   document.querySelectorAll('#bottombar .tb').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
@@ -278,7 +284,7 @@ export function setMode(mode) {
   }
   const { controls: liveControls } = getSceneState();
   if (liveControls) {
-    liveControls.enabled = (mode === 'nav');
+    liveControls.enabled = (mode === 'nav' && povMode === 'orbit');
   }
 }
 
@@ -535,6 +541,7 @@ setupPointerEvents({
       const free = hitToFree(hit);
       showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
     } else if (currentMode === 'nav') {
+      handlePointerDown(e || { clientX: cx, clientY: cy, button: 0 });
       const { camera } = getSceneState();
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
@@ -555,13 +562,19 @@ setupPointerEvents({
       }
     }
   },
-  onMove: (cx, cy) => {
+  onMove: (cx, cy, e) => {
     setMouse(cx, cy);
+    if (currentMode === 'nav') {
+      handlePointerMove(e || { clientX: cx, clientY: cy });
+    }
     if (currentMode === 'draw' && drawing) {
       addStrokePoint(cx, cy);
     }
   },
-  onUp: () => {
+  onUp: (cx, cy, e) => {
+    if (currentMode === 'nav') {
+      handlePointerUp();
+    }
     if (currentMode === 'draw') {
       endStroke();
     }
