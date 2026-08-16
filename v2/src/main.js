@@ -110,7 +110,9 @@ import {
   selectObject,
   deselectObject,
   selectedObject,
-  transformControl
+  transformControl,
+  isGizmoHit,
+  setGizmoMode
 } from './nav/transform.js';
 
 import {
@@ -553,10 +555,16 @@ setupPointerEvents({
       const free = hitToFree(hit);
       showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
     } else if (currentMode === 'nav') {
-      handlePointerDown(e || { clientX: cx, clientY: cy, button: 0 });
       const { camera } = getSceneState();
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
+
+      // 1. If clicking on 3D Gizmo handles, let TransformControls drag without deselecting
+      if (isGizmoHit(ray)) {
+        return;
+      }
+
+      // 2. Raycast existing canvas objects
       const roots = objects.map(o => o.root).filter(Boolean);
       const hits = ray.intersectObjects(roots, true);
       if (hits.length > 0) {
@@ -573,12 +581,13 @@ setupPointerEvents({
 
         if (clickedObj) {
           selectObject(clickedObj);
-        }
-      } else {
-        if (!transformControl || !transformControl.dragging) {
-          deselectObject();
+          return;
         }
       }
+
+      // 3. If clicking empty background, deselect and enable camera look
+      deselectObject();
+      handlePointerDown(e || { clientX: cx, clientY: cy, button: 0 });
     }
   },
   onMove: (cx, cy, e) => {

@@ -8,6 +8,27 @@ export let selectedObject = null;
 let dropLine = null;
 let floorShadowCircle = null;
 let boxHelper = null;
+export let gizmoMode = 'translate'; // 'translate', 'rotate', 'scale'
+
+export function isGizmoHit(raycaster) {
+  if (!transformControl || !selectedObject) return false;
+  try {
+    const hits = raycaster.intersectObject(transformControl, true);
+    return hits && hits.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function setGizmoMode(mode) {
+  if (['translate', 'rotate', 'scale'].includes(mode)) {
+    gizmoMode = mode;
+    if (transformControl) {
+      transformControl.setMode(mode);
+    }
+    updateActionDockUI();
+  }
+}
 
 export function initTransformSystem() {
   const { scene, camera, renderer, controls } = getSceneState();
@@ -75,11 +96,11 @@ export function initTransformSystem() {
     if (!selectedObject) return;
 
     if (e.code === 'KeyG') {
-      transformControl.setMode('translate');
+      setGizmoMode('translate');
     } else if (e.code === 'KeyR') {
-      transformControl.setMode('rotate');
+      setGizmoMode('rotate');
     } else if (e.code === 'KeyS') {
-      transformControl.setMode('scale');
+      setGizmoMode('scale');
     } else if (e.code === 'Escape') {
       deselectObject();
     } else if (e.code === 'Delete' || e.code === 'Backspace') {
@@ -89,6 +110,54 @@ export function initTransformSystem() {
       }
     }
   });
+
+  setupActionDockEvents();
+}
+
+function updateActionDockUI() {
+  const dock = document.getElementById('object-action-dock');
+  if (!dock) return;
+
+  if (!selectedObject) {
+    dock.classList.remove('show');
+    return;
+  }
+
+  dock.classList.add('show');
+  const labelEl = document.getElementById('obj-dock-label');
+  if (labelEl) {
+    labelEl.textContent = selectedObject.label || 'Selected 3D Object';
+  }
+
+  // Update active state on gizmo mode buttons
+  const btnMove = document.getElementById('btn-gizmo-move');
+  const btnRotate = document.getElementById('btn-gizmo-rotate');
+  const btnScale = document.getElementById('btn-gizmo-scale');
+
+  if (btnMove) btnMove.classList.toggle('active', gizmoMode === 'translate');
+  if (btnRotate) btnRotate.classList.toggle('active', gizmoMode === 'rotate');
+  if (btnScale) btnScale.classList.toggle('active', gizmoMode === 'scale');
+}
+
+function setupActionDockEvents() {
+  const btnMove = document.getElementById('btn-gizmo-move');
+  const btnRotate = document.getElementById('btn-gizmo-rotate');
+  const btnScale = document.getElementById('btn-gizmo-scale');
+  const btnDelete = document.getElementById('btn-gizmo-delete');
+  const btnClose = document.getElementById('btn-gizmo-close');
+
+  if (btnMove) btnMove.addEventListener('click', () => setGizmoMode('translate'));
+  if (btnRotate) btnRotate.addEventListener('click', () => setGizmoMode('rotate'));
+  if (btnScale) btnScale.addEventListener('click', () => setGizmoMode('scale'));
+  if (btnDelete) {
+    btnDelete.addEventListener('click', () => {
+      if (selectedObject) {
+        removeObj(selectedObject);
+        deselectObject();
+      }
+    });
+  }
+  if (btnClose) btnClose.addEventListener('click', () => deselectObject());
 }
 
 export function selectObject(obj) {
@@ -101,6 +170,7 @@ export function selectObject(obj) {
   window.__selectedObject = obj;
   if (transformControl) {
     transformControl.attach(obj.root);
+    transformControl.setMode(gizmoMode);
   }
 
   if (boxHelper) {
@@ -109,6 +179,7 @@ export function selectObject(obj) {
   }
 
   updateDropLine();
+  updateActionDockUI();
 }
 
 export function deselectObject() {
@@ -120,6 +191,7 @@ export function deselectObject() {
   if (boxHelper) boxHelper.visible = false;
   if (dropLine) dropLine.visible = false;
   if (floorShadowCircle) floorShadowCircle.visible = false;
+  updateActionDockUI();
 }
 
 export function updateDropLine() {

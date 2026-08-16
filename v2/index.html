@@ -65,6 +65,22 @@
   </div>
 </div>
 
+<!-- ════════ OBJECT ACTION FLOATING DOCK (Move, Rotate, Scale, Delete) ════════ -->
+<div id="object-action-dock">
+  <div class="obj-dock-info">
+    <span class="material-symbols-outlined obj-dock-ico">deployed_code</span>
+    <span id="obj-dock-label">Selected Object</span>
+  </div>
+  <div class="obj-dock-btns">
+    <button class="obj-dock-btn active" id="btn-gizmo-move" title="Move Object (G)"><span class="material-symbols-outlined">open_with</span><span>Move</span></button>
+    <button class="obj-dock-btn" id="btn-gizmo-rotate" title="Rotate Object (R)"><span class="material-symbols-outlined">rotate_right</span><span>Rotate</span></button>
+    <button class="obj-dock-btn" id="btn-gizmo-scale" title="Scale Object (S)"><span class="material-symbols-outlined">aspect_ratio</span><span>Scale</span></button>
+    <div class="obj-dock-sep"></div>
+    <button class="obj-dock-btn danger" id="btn-gizmo-delete" title="Delete Object (Delete)"><span class="material-symbols-outlined">delete</span></button>
+    <button class="obj-dock-btn close" id="btn-gizmo-close" title="Deselect (Esc)"><span class="material-symbols-outlined">close</span></button>
+  </div>
+</div>
+
 <!-- ════════ THUMB-FRIENDLY POV SWITCHER (FPS | TPS | Orbit) ════════ -->
 <div id="pov-dock" class="tb-pov-switch">
   <button class="pov-btn" data-pov="fps" title="1st Person POV (FPS)"><span class="material-symbols-outlined">visibility</span><span>FPS</span></button>
