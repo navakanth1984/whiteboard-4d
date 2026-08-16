@@ -37,6 +37,231 @@ canvas#c{position:fixed;inset:0;touch-action:none;display:block;}
 }
 .tb-logo span{font-size:22px;filter:drop-shadow(0 0 10px rgba(56,189,248,0.6));}
 .tb-logo em{font-family:'JetBrains Mono',monospace;color:#94a3b8;font-style:normal;font-size:10px;font-weight:500;letter-spacing:1px;opacity:0.85;margin-top:2px;display:block;}
+/* POV Switcher */
+.tb-pov-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 3px 5px;
+}
+.pov-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pov-btn span.material-symbols-outlined { font-size: 16px; }
+.pov-btn:hover { color: #f8fafc; background: rgba(255, 255, 255, 0.08); }
+.pov-btn.active {
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  color: #020617;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+
+/* 3D Realtime Telemetry */
+.tb-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 14px;
+}
+.telem-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+.telem-ico { font-size: 14px; }
+
+/* Avatar Profile Button */
+.tb-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(56, 189, 248, 0.18));
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #f1f5f9;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  margin-left: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tb-avatar-btn:hover {
+  border-color: #c084fc;
+  box-shadow: 0 0 18px rgba(192, 132, 252, 0.4);
+  transform: translateY(-1px);
+}
+.avatar-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+/* Precision Gamer Reticle */
+#gamer-reticle {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 250;
+}
+.ret-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+.ret-ring {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+}
+
+/* Avatar Modal Styles */
+.avatar-modal-box {
+  background: #040c24;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 20px;
+  max-width: 580px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 0 70px rgba(0, 80, 255, 0.3);
+  color: #f8fafc;
+  font-family: 'Outfit', sans-serif;
+}
+.avatar-modal-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.avatar-modal-hdr h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  cursor: pointer;
+}
+.av-section { margin-bottom: 18px; }
+.av-sec-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #38bdf8;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.av-toggle-row, .av-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+.av-mode-btn, .av-pov-choice, .av-gender-choice {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  color: #cbd5e1;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+.av-mode-btn:hover, .av-pov-choice:hover, .av-gender-choice:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: #fff;
+}
+.av-mode-btn.active, .av-pov-choice.active, .av-gender-choice.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
+}
+.av-color-row {
+  display: flex;
+  gap: 10px;
+}
+.av-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.av-swatch:hover, .av-swatch.active {
+  transform: scale(1.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.6);
+}
+.av-help-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+.av-keys-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+.av-keys-grid kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: #38bdf8;
+  margin-right: 4px;
+}
+
 .tb-pickers{display:flex;align-items:center;gap:14px;padding:0 16px;margin-left:auto;flex-shrink:0;}
 .cpick{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
 .cpick label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:#64748b;letter-spacing:0.8px;text-transform:uppercase;pointer-events:none;}

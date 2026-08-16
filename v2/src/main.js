@@ -79,12 +79,51 @@ import {
   tickAuras
 } from './fx/aura.js';
 
+import {
+  initAvatarSystem,
+  avatarConfig,
+  performAvatarAction,
+  GENDERS,
+  setAvatarConfig
+} from './nav/character.js';
+
+import {
+  initGamerNav,
+  updateGamerNav,
+  setPOVMode,
+  focusOnObject,
+  povMode
+} from './nav/gamer_nav.js';
+
+import {
+  initTransformSystem,
+  selectObject,
+  deselectObject,
+  selectedObject,
+  transformControl
+} from './nav/transform.js';
+
+import {
+  initAvatarPickerUI,
+  updatePOVUI
+} from './ui/avatar_picker.js';
+
+import {
+  initHUDSystem,
+  updateHUD
+} from './ui/hud.js';
+
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
 initStrokeSystem();
 initTextSystem();
 initAuraSystem();
+initAvatarSystem();
+initGamerNav();
+initTransformSystem();
+initAvatarPickerUI();
+initHUDSystem();
 
 // Populate Spatial Cards in Palette
 function buildCardPalette() {
@@ -338,14 +377,28 @@ setupPointerEvents({
     const ink = document.getElementById('pick-ink')?.value || '#00ccff';
 
     if (currentMode === 'draw') {
+      if (avatarConfig.executionMode === 'avatar') {
+        const surf = hitToSurface(cx, cy);
+        if (surf) performAvatarAction('draw', surf.point, () => {}, 0.1);
+      }
       beginStroke(cx, cy);
     } else if (currentMode === 'card') {
       const surf = hitToSurface(cx, cy);
-      if (surf) addSpatialCard(curCard, surf, ink);
+      if (surf) {
+        performAvatarAction('place', surf.point, () => {
+          const o = addSpatialCard(curCard, surf, ink);
+          selectObject(o);
+        });
+      }
     } else if (currentMode === 'icon') {
       const surf = hitToSurface(cx, cy);
       const item = getActiveIconItem();
-      if (surf && item) addIconNode(item, surf, ink);
+      if (surf && item) {
+        performAvatarAction('place', surf.point, () => {
+          const o = addIconNode(item, surf, ink);
+          selectObject(o);
+        });
+      }
     } else if (currentMode === 'connect') {
       const { camera } = getSceneState();
       setMouse(cx, cy);
@@ -362,9 +415,12 @@ setupPointerEvents({
         if (clickedObj) {
           if (!pendingLinkSource) {
             pendingLinkSource = clickedObj;
+            selectObject(clickedObj);
           } else if (pendingLinkSource !== clickedObj) {
-            createLink(pendingLinkSource, clickedObj, ink);
-            pendingLinkSource = null;
+            performAvatarAction('link', clickedObj.root.position, () => {
+              createLink(pendingLinkSource, clickedObj, ink);
+              pendingLinkSource = null;
+            });
           }
         }
       }
@@ -376,7 +432,12 @@ setupPointerEvents({
         inp.accept = 'image/*';
         inp.onchange = e => {
           const file = e.target.files[0];
-          if (file) addImagePanel(URL.createObjectURL(file), surf.point, ink);
+          if (file) {
+            performAvatarAction('place', surf.point, () => {
+              const o = addImagePanel(URL.createObjectURL(file), surf.point, ink);
+              if (o) selectObject(o);
+            });
+          }
         };
         inp.click();
       }
@@ -388,7 +449,11 @@ setupPointerEvents({
         inp.accept = 'video/*';
         inp.onchange = e => {
           const file = e.target.files[0];
-          if (file) addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+          if (file) {
+            performAvatarAction('place', surf.point, () => {
+              addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+            });
+          }
         };
         inp.click();
       }
@@ -400,7 +465,11 @@ setupPointerEvents({
         inp.accept = 'audio/*';
         inp.onchange = e => {
           const file = e.target.files[0];
-          if (file) addSpatialAudio(URL.createObjectURL(file), surf, ink);
+          if (file) {
+            performAvatarAction('place', surf.point, () => {
+              addSpatialAudio(URL.createObjectURL(file), surf, ink);
+            });
+          }
         };
         inp.click();
       }
@@ -409,9 +478,23 @@ setupPointerEvents({
       const free = hitToFree(hit);
       showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
     } else if (currentMode === 'nav') {
-      const hit = getHit(cx, cy);
-      if (hit) {
-        window.__lastHit = { point: hit.point, name: hit.object.name };
+      const { camera } = getSceneState();
+      setMouse(cx, cy);
+      ray.setFromCamera(m2, camera);
+      const roots = objects.map(o => o.root);
+      const hits = ray.intersectObjects(roots, true);
+      if (hits.length > 0) {
+        let cur = hits[0].object;
+        let clickedObj = null;
+        while (cur && !clickedObj) {
+          clickedObj = objects.find(o => o.root === cur || o.collider === cur);
+          cur = cur.parent;
+        }
+        if (clickedObj) selectObject(clickedObj);
+      } else {
+        if (!transformControl || !transformControl.dragging) {
+          deselectObject();
+        }
       }
     }
   },
@@ -458,7 +541,9 @@ function animate() {
     window.__fpsStats.lastTime = now;
   }
 
-  if (controls) controls.update();
+  if (controls && povMode === 'orbit') controls.update();
+  updateGamerNav(dt);
+  updateHUD(currentMode);
   updateDust(dt);
   updateLive();
   tickLinks(dt);
