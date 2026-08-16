@@ -108,11 +108,12 @@ export function addSpatialCard(key, surf, ink = '#38bdf8') {
   const faceMat = new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
+    depthWrite: false,
     side: THREE.FrontSide
   });
   const faceGeo = new THREE.PlaneGeometry(5.2, 2.8);
   const faceMesh = new THREE.Mesh(faceGeo, faceMat);
-  faceMesh.position.z = 0.08;
+  faceMesh.position.z = 0.085;
 
   // 2. Physical 3D Translucent Glass Slab Body
   const slabCol = new THREE.Color(preset.hex || ink);

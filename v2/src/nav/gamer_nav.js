@@ -152,6 +152,14 @@ function setupOnScreenNavControls() {
   bindPadBtn('dpad-right', 'KeyD');
   bindPadBtn('dpad-elev-up', 'Space');
   bindPadBtn('dpad-elev-down', 'KeyC');
+
+  const toggleBtn = document.getElementById('btn-toggle-dpad');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = padWrap.classList.toggle('hidden');
+      toggleBtn.classList.toggle('active', !isHidden);
+    });
+  }
 }
 
 export function focusOnObject(obj) {
