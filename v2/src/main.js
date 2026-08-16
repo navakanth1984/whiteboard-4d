@@ -354,7 +354,8 @@ window.__sceneProbe = {
   get camera() { return getSceneState().camera; },
   get controls() { return getSceneState().controls; },
   get scene() { return getSceneState().scene; },
-  get composer() { return getSceneState().composer; }
+  get composer() { return getSceneState().composer; },
+  get renderer() { return getSceneState().renderer; }
 };
 
 window.__mediaProbe = {
