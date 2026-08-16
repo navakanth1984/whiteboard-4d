@@ -91,9 +91,9 @@ export function initScene(canvasEl) {
 
       bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.42,
         0.75,
-        0.72
+        0.65,
+        0.55
       );
       composer.addPass(bloomPass);
     } catch (e) {
@@ -102,49 +102,30 @@ export function initScene(canvasEl) {
     }
   }
 
-  // Lights
-  ambient = new THREE.AmbientLight(0x1a2a55, 2.8);
+  // Lights & Cyber Glow Studio Environment
+  ambient = new THREE.AmbientLight(0x0f172a, 3.2);
   scene.add(ambient);
 
-  sun = new THREE.DirectionalLight(0xffffff, 2.0);
-  sun.position.set(15, 30, 10);
+  sun = new THREE.DirectionalLight(0xffffff, 2.8);
+  sun.position.set(20, 35, 20);
   sun.castShadow = true;
   sun.target.position.copy(HOME_TGT);
   scene.add(sun.target);
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.far = 200;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -45;
-  sun.shadow.camera.right = sun.shadow.camera.top = 45;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -50;
+  sun.shadow.camera.right = sun.shadow.camera.top = 50;
+  sun.shadow.bias = -0.0005;
   scene.add(sun);
 
-  fill = new THREE.PointLight(0x4488ff, 1.2, 90);
-  fill.position.set(-10, 8, 5);
-  scene.add(fill);
+  // Key Rim Lighting (Electric Cyan & Neon Violet)
+  const rimCyan = new THREE.PointLight(0x38bdf8, 3.5, 120);
+  rimCyan.position.set(-18, 16, 8);
+  scene.add(rimCyan);
 
-  // Dust particles
-  dustGeo = new THREE.BufferGeometry();
-  dustPositions = new Float32Array(dustCount * 3);
-  dustVelocities = [];
-  for (let i = 0; i < dustCount; i++) {
-    dustPositions[i * 3] = (Math.random() - 0.5) * 60;
-    dustPositions[i * 3 + 1] = Math.random() * 20;
-    dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 60;
-    dustVelocities.push({
-      x: (Math.random() - 0.5) * 0.15,
-      y: 0.08 + Math.random() * 0.1,
-      z: (Math.random() - 0.5) * 0.15
-    });
-  }
-  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-  const dustMat = new THREE.PointsMaterial({
-    color: 0x44ffaa,
-    size: 0.14,
-    transparent: true,
-    opacity: 0.28,
-    blending: THREE.AdditiveBlending
-  });
-  const dustParticles = new THREE.Points(dustGeo, dustMat);
-  scene.add(dustParticles);
+  const rimViolet = new THREE.PointLight(0xa855f7, 3.0, 120);
+  rimViolet.position.set(18, 16, 8);
+  scene.add(rimViolet);
 
   // Surfaces
   // Studio Cyber Grid & Floor
