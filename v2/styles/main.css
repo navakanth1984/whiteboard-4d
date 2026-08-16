@@ -312,6 +312,38 @@ canvas#c{position:fixed;inset:0;touch-action:none;display:block;}
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
+/* 3D Text Overlay Input */
+#text-overlay {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(2, 6, 23, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  padding: 12px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.15);
+  z-index: 400;
+}
+#text-overlay.show {
+  display: flex;
+}
+#text-overlay input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #f8fafc;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+#text-overlay input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
 .tb-pickers{display:flex;align-items:center;gap:14px;padding:0 16px;margin-left:auto;flex-shrink:0;}
 .cpick{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
 .cpick label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:#64748b;letter-spacing:0.8px;text-transform:uppercase;pointer-events:none;}
