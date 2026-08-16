@@ -127,48 +127,65 @@ export function addSticker(ch, surf, ink = '#00ccff') {
   return o;
 }
 
-// ── Official Simple Icons SVG Rasterizer & 3D Node Creator ─
-export function createIconTexture(item) {
-  const S = 512;
+// ── Official Simple Icons SVG Rasterizer & 3D Glowing Node Creator ─
+export function createIconTexture(item, isRect = false) {
+  const W = isRect ? 680 : 512;
+  const H = isRect ? 440 : 512;
   const cv = document.createElement('canvas');
-  cv.width = cv.height = S;
+  cv.width = W;
+  cv.height = H;
   const ctx = cv.getContext('2d');
 
   function drawBackground() {
-    ctx.clearRect(0, 0, S, S);
+    ctx.clearRect(0, 0, W, H);
 
-    // Background Glassmorphic Rounded Pill
-    const rr = 56;
+    // Background Glassmorphic Rounded Slab
+    const rr = 44;
     ctx.beginPath();
     ctx.moveTo(rr, 0);
-    ctx.lineTo(S - rr, 0);
-    ctx.arcTo(S, 0, S, rr, rr);
-    ctx.lineTo(S, S - rr);
-    ctx.arcTo(S, S, S - rr, S, rr);
-    ctx.lineTo(rr, S);
-    ctx.arcTo(0, S, 0, S - rr, rr);
+    ctx.lineTo(W - rr, 0);
+    ctx.arcTo(W, 0, W, rr, rr);
+    ctx.lineTo(W, H - rr);
+    ctx.arcTo(W, H, W - rr, H, rr);
+    ctx.lineTo(rr, H);
+    ctx.arcTo(0, H, 0, H - rr, rr);
     ctx.lineTo(0, rr);
     ctx.arcTo(0, 0, rr, 0, rr);
     ctx.closePath();
 
-    // Dark slate background
-    ctx.fillStyle = '#040d21';
+    // Dark Obsidian Glass gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#040e28');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
     ctx.fill();
 
-    // Outer border with brand color glow
-    ctx.lineWidth = 10;
+    // Glowing Neon Accent Border
+    ctx.lineWidth = 8;
     ctx.strokeStyle = item.hex || '#38bdf8';
     ctx.stroke();
 
-    // Draw bottom label strip
-    ctx.fillStyle = 'rgba(2, 6, 23, 0.92)';
-    ctx.fillRect(0, S * 0.72, S, S * 0.28);
+    // Inner subtle circuit grid lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(24, 24, W - 48, H - 48);
 
-    ctx.font = '700 36px "Syne", "Outfit", sans-serif';
+    // Draw bottom label strip
+    const stripH = isRect ? 100 : 130;
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.95)';
+    ctx.fillRect(0, H - stripH, W, stripH);
+
+    ctx.font = '700 32px "Syne", "Outfit", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(item.label, S / 2, S * 0.86);
+    ctx.fillText(item.label, W / 2, H - stripH / 2);
+
+    // Mini Corner Status LED
+    ctx.fillStyle = item.hex || '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(W - 44, 44, 10, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   drawBackground();
@@ -189,9 +206,9 @@ export function createIconTexture(item) {
       const img = new Image();
       img.onload = () => {
         drawBackground();
-        const iconSize = 220;
-        const ix = (S - iconSize) / 2;
-        const iy = 56;
+        const iconSize = isRect ? 190 : 210;
+        const ix = (W - iconSize) / 2;
+        const iy = isRect ? 44 : 56;
         ctx.drawImage(img, ix, iy, iconSize, iconSize);
         tex.needsUpdate = true;
         URL.revokeObjectURL(blobUrl);
@@ -200,67 +217,104 @@ export function createIconTexture(item) {
     })
     .catch(() => {
       // Fallback: draw brand letter
-      ctx.font = '900 120px "Syne", sans-serif';
+      ctx.font = '900 110px "Syne", sans-serif';
       ctx.fillStyle = item.hex || '#38bdf8';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(item.label.slice(0, 2).toUpperCase(), S / 2, S * 0.4);
+      ctx.fillText(item.label.slice(0, 2).toUpperCase(), W / 2, isRect ? H * 0.35 : H * 0.4);
       tex.needsUpdate = true;
     });
 
   return tex;
 }
 
-export function addIconNode(item, surf, ink = '#00ccff') {
-  const tex = createIconTexture(item);
+export function addIconNode(item, surf, ink = '#00ccff', format = 'square') {
+  const isRect = (format === 'rect');
+  const width = isRect ? 3.4 : 2.8;
+  const height = isRect ? 2.2 : 2.8;
+  const depth = 0.22;
+
+  const tex = createIconTexture(item, isRect);
 
   // 1. Front High-DPI Vector Face
   const faceMat = new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
+    depthWrite: false,
     side: THREE.FrontSide
   });
-  const faceGeo = new THREE.PlaneGeometry(2.6, 2.6);
+  const faceGeo = new THREE.PlaneGeometry(width * 0.96, height * 0.96);
   const faceMesh = new THREE.Mesh(faceGeo, faceMat);
-  faceMesh.position.z = 0.08;
+  faceMesh.position.z = depth * 0.5 + 0.01;
 
-  // 2. Physical Glass Tile Body
+  // 2. Physical 3D Glowing Glass Chip Body
   const brandCol = new THREE.Color(item.hex || ink);
-  const tileMat = new THREE.MeshStandardMaterial({
+  const chipMat = new THREE.MeshStandardMaterial({
     color: 0x050d24,
-    emissive: brandCol.clone().multiplyScalar(0.3),
-    roughness: 0.18,
-    metalness: 0.8,
+    emissive: brandCol.clone().multiplyScalar(0.35),
+    roughness: 0.12,
+    metalness: 0.88,
     transparent: true,
-    opacity: 0.92
+    opacity: 0.94
   });
-  const tileGeo = new THREE.BoxGeometry(2.7, 2.7, 0.14);
-  const tileMesh = new THREE.Mesh(tileGeo, tileMat);
-  tileMesh.castShadow = true;
-  tileMesh.receiveShadow = true;
+  const chipGeo = new THREE.BoxGeometry(width, height, depth);
+  const chipMesh = new THREE.Mesh(chipGeo, chipMat);
+  chipMesh.castShadow = true;
+  chipMesh.receiveShadow = true;
 
-  // 3. Glowing Neon Accent Frame Wire
-  const edgeGeo = new THREE.EdgesGeometry(tileGeo);
+  // 3. Vibrant Glowing Neon Perimeter Wireframe
+  const edgeGeo = new THREE.EdgesGeometry(chipGeo);
   const edgeMat = new THREE.LineBasicMaterial({
     color: brandCol,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.9
   });
   const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
 
+  // 4. 4 Glowing Corner L-Brackets for 3D Cyber Depth
+  const bracketGroup = new THREE.Group();
+  const bSize = 0.35;
+  const bThick = 0.05;
+  const bDepth = depth + 0.03;
+  const bMat = new THREE.MeshStandardMaterial({
+    color: 0x020617,
+    emissive: brandCol.clone().multiplyScalar(0.6),
+    roughness: 0.2,
+    metalness: 0.9
+  });
+
+  const corners = [
+    { x: -width / 2, y: height / 2 },
+    { x: width / 2, y: height / 2 },
+    { x: -width / 2, y: -height / 2 },
+    { x: width / 2, y: -height / 2 }
+  ];
+
+  corners.forEach(c => {
+    const bH = new THREE.Mesh(new THREE.BoxGeometry(bSize, bThick, bDepth), bMat);
+    bH.position.set(c.x + (c.x > 0 ? -bSize / 2 : bSize / 2), c.y + (c.y > 0 ? -bThick / 2 : bThick / 2), 0);
+    bracketGroup.add(bH);
+
+    const bV = new THREE.Mesh(new THREE.BoxGeometry(bThick, bSize, bDepth), bMat);
+    bV.position.set(c.x + (c.x > 0 ? -bThick / 2 : bThick / 2), c.y + (c.y > 0 ? -bSize / 2 : bSize / 2), 0);
+    bracketGroup.add(bV);
+  });
+
   const root = new THREE.Group();
-  root.add(tileMesh);
+  root.add(chipMesh);
   root.add(faceMesh);
   root.add(edgeLines);
+  root.add(bracketGroup);
 
   const normal = surf.normal || new THREE.Vector3(0, 1, 0);
   const point = surf.point || surf;
   root.position.copy(point).addScaledVector(normal, 1.4);
   root.userData.billboardY = true;
+  root.userData.is3DIcon = true;
 
   const o = register(root, 'icon', item.label, item.hex || ink);
   o.iconItem = item;
-  o.collider = tileMesh;
-  placeTargets.push(tileMesh);
+  o.collider = chipMesh;
+  placeTargets.push(chipMesh);
   return o;
 }

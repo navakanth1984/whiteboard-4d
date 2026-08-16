@@ -376,6 +376,17 @@ window.__boardProbe = {
   setCurBoardStyle
 };
 
+window.__stickersProbe = {
+  addIconNode,
+  ICON_CATEGORIES,
+  getActiveIconItem
+};
+
+window.__modelsProbe = {
+  addSpatialCard,
+  CARD_PRESETS
+};
+
 window.__transformProbe = {
   selectObject,
   deselectObject,
@@ -546,16 +557,23 @@ setupPointerEvents({
       const { camera } = getSceneState();
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
-      const roots = objects.map(o => o.root);
+      const roots = objects.map(o => o.root).filter(Boolean);
       const hits = ray.intersectObjects(roots, true);
       if (hits.length > 0) {
-        let cur = hits[0].object;
-        let clickedObj = null;
-        while (cur && !clickedObj) {
-          clickedObj = objects.find(o => o.root === cur || o.collider === cur);
-          cur = cur.parent;
+        let hitObj = hits[0].object;
+        let clickedObj = objects.find(o => {
+          if (!o.root) return false;
+          if (o.root === hitObj || o.collider === hitObj) return true;
+          let found = false;
+          o.root.traverse(child => {
+            if (child === hitObj) found = true;
+          });
+          return found;
+        });
+
+        if (clickedObj) {
+          selectObject(clickedObj);
         }
-        if (clickedObj) selectObject(clickedObj);
       } else {
         if (!transformControl || !transformControl.dragging) {
           deselectObject();
