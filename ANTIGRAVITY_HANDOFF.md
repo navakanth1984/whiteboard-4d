@@ -235,39 +235,17 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 
 ---
 
-## Queued next task — do not start yet
+## Queue status
 
-**QA/PO review this session (2026-08-16, via Claude Code):** live-tested `v2/` against the real
-dev server — 0 console errors, 22 modules loading, real scene content confirmed via
-`__sceneProbe` (18 scene children, 35 geometries, active composer). PR opened:
-[navakanth1984/whiteboard-4d#1](https://github.com/navakanth1984/whiteboard-4d/pull/1) (draft).
-
-**Open before this task's Phase 0-5 above count as done:**
-1. [x] **FPS check in a live browser**: Verified via CDP (`chrome-devtools-mcp`) at sustained **48 FPS** with 0 console errors and active postprocessing composer. Documented in `verification/v2_qa_verification_report.md`.
-2. [x] **Resolve dead stub files**: Fully implemented `v2/src/ui/guide.js` (101 lines), `v2/src/ui/modes.js` (193 lines), and `v2/src/agent/interpret.js` (327 lines) with zero dead code. Committed in `55c2bd4`.
-3. [ ] **PR #1 merged into `master`**, v1 tagged `v1-final` per Phase 4 above.
-
-**Once PR #1 is merged** — the next task is Gaussian Splat integration. Full design at
-[`docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`](docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md).
-**Read that spec in full before starting anything** — this section is a pointer, not the plan.
-
-Short version: add **Spark** (sparkjsdev, MIT, Three.js-native splat renderer — chosen specifically
-because v2 stayed on Three.js) as a new `v2/src/objects/splat.js` module, following the exact same
-module shape as the existing object types and the exact same `RENDER_CHECK → TASTE_GATE → commit`
-loop as everything else in this codebase. Test assets are `.spz` format (Niantic, MIT,
-~10x smaller than `.ply`), sourced from Luma AI / Polycam / Scaniverse captures, cleaned up through
-SuperSplat (PlayCanvas, MIT, browser-based, no install) before they reach the app. The server
-already serves the right MIME types (commit `1d0271a`) — no server work needed, this is purely a
-new rendering module plus one new object type in the existing selection/toolbar system.
-
-**Do not start this while PR #1 is still open.** One module per iteration, never two — same rule
-as everything else in this project.
+1. [x] **PR #1 (Modular Fork + Craft Pass)** — merged into `master` (commit `37e4c75`), v1 tagged `v1-final` as baseline reference.
+2. [x] **Gaussian Splat Integration** — implemented on `feat/splat-integration` (commit `074b37e`), verified via CDP at 45–48 FPS with 0 console errors. QA report at `verification/splat_integration_qa_report.md`.
+3. [ ] **Blender + AccuRig Asset Pipeline** — queued next once `feat/splat-integration` is merged to `master`. Full design at [`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
 
 ---
 
-## Queued after that — Blender + AccuRig asset pipeline
+## Queued next — Blender + AccuRig asset pipeline
 
-**Once the splat integration spec's PR has merged** — full design at
+**Once the splat integration branch has merged to `master`** — full design at
 [`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
 Read it in full before starting — this is a pointer, not the plan.
 
