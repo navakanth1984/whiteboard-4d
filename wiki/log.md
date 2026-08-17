@@ -1,13 +1,14 @@
 # Execution Log
 
 ## 2026-08-17
-Resolved all three remaining stub files in `feat/bleuboard-v2` (`v2/src/ui/guide.js`, `v2/src/ui/modes.js`, `v2/src/agent/interpret.js`) with full production implementations per `docs/superpowers/specs/2026-08-15-bleuboard-v2-design.md`:
-- `v2/src/ui/guide.js` (101 lines): Onboarding step controller (`goGuideStep`), Next/Back/Start/Skip buttons, Escape dismiss, `localStorage` persistence.
-- `v2/src/ui/modes.js` (193 lines): Modular mode management (`setMode`, `currentMode`), palette builders (`card`, `icon`, `board`, `sticker`), and toolbar event binders.
-- `v2/src/agent/interpret.js` (327 lines): `SASCore` spatial intent scoring engine, modifier key overrides, telemetry recording buffer, `SASCard` semantic relationship UI, Lego-style snap positioning (`getLegoSnapPosition`), and dynamic move planes (`setMovePlaneFor`).
-- Live verification via Chrome DevTools Protocol (CDP) confirmed: 0 console errors, all 22 ES modules imported cleanly, 18 scene objects rendered, and sustained **48 FPS** (meeting the spec's ≥45 FPS requirement).
-- Committed in `55c2bd4` and pushed to PR #1 (`navakanth1984/whiteboard-4d#1`).
-- Created durable in-repo verification artifact at `verification/v2_qa_verification_report.md`.
+- **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
+- Implemented **Gaussian Splat Integration** on branch `feat/splat-integration` per `docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`:
+  - Added `@sparkjsdev/spark` v2.1.0 via ESM import map; upgraded Three.js to `0.180.0` with `TransformControls.getHelper()` support.
+  - Implemented `v2/src/objects/splat.js` with singleton `SparkRenderer`, `addSplatObject`, `loadSplatFile`, and `.spz` support.
+  - Added Splat toolbar button and `buildSplatPalette()` in `v2/src/ui/modes.js`.
+  - Sourced sample 4MB asset `v2/assets/splats/butterfly.spz`.
+  - Live CDP verification: 0 console errors, full gizmo raycasting/selection, and sustained **45–48 FPS** (meeting spec gate).
+  - QA report committed at `verification/splat_integration_qa_report.md`.
 
 ## 2026-08-15
 Scoped and specced **BleuBoard v2** (modular fork + visual craft pass). Design committed to
