@@ -242,6 +242,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 2. [x] **PR #2 (Gaussian Splat Integration)** — merged into `master` (commit `df12ca0`), Spark & `.spz` live in scene graph. Tagged `v2-splat-stable`.
 3. [x] **Blender + AccuRig Asset Pipeline** — implemented on `feat/blender-accurig-pipeline`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/blender_accurig_pipeline_qa_report.md`.
 4. [x] **Mobile Adaptive Performance & Touch Gestures** — implemented on `feat/mobile-adaptive-gestures`, verified via CDP at 44–48 FPS with 0 console errors. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
+5. [x] **WebCam & Mobile Hand Tracking (MediaPipe)** — implemented on `feat/hand-tracking-mediapipe`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/hand_tracking_mediapipe_qa_report.md`.
 
 ---
 
@@ -250,4 +251,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **Blender 3D Asset Prep Guide:** [`docs/superpowers/pipelines/blender-asset-prep-guide.md`](docs/superpowers/pipelines/blender-asset-prep-guide.md)
 - **AccuRig Avatar Rigging & SkinnedMesh System:** [`v2/src/nav/character.js`](v2/src/nav/character.js)
 - **Mobile Adaptive Tiering & Multi-Touch Gestures:** [`v2/src/core/device_tier.js`](v2/src/core/device_tier.js), [`v2/src/core/touch_gestures.js`](v2/src/core/touch_gestures.js)
+- **WebCam & Mobile Hand Tracking:** [`v2/src/input/hand_tracking.js`](v2/src/input/hand_tracking.js)
 - **QA Verification Reports:** [`verification/`](verification/)

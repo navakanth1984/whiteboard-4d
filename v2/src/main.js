@@ -163,6 +163,7 @@ import {
 
 import { detectDeviceTier, getDeviceBudget } from './core/device_tier.js';
 import { initTouchGestures } from './core/touch_gestures.js';
+import { initHandTrackingSystem, startHandTracking, stopHandTracking, isHandTrackingActive } from './input/hand_tracking.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -179,6 +180,7 @@ initGuide();
 initInterpretSystem();
 initModeSystem();
 initTouchGestures(canvasEl);
+initHandTrackingSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -302,6 +304,12 @@ window.__avatarProbe = {
 window.__deviceTierProbe = {
   detectDeviceTier,
   getDeviceBudget
+};
+
+window.__handTrackingProbe = {
+  startHandTracking,
+  stopHandTracking,
+  isHandTrackingActive
 };
 
 const btnWindow = document.getElementById('btn-window');

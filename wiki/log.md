@@ -8,6 +8,11 @@
   - Updated `v2/src/objects/splat.js` with 8MB asset size gating on mobile tier.
   - Created `v2/src/core/touch_gestures.js` for 1-finger translation and 2-finger twist rotation of selected objects, avoiding conflicts with `OrbitControls` or the Object Action Dock.
   - Live CDP verification: 0 console errors, sustained **44–48 FPS**. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
+- Implemented **WebCam & Mobile Hand Tracking** on branch `feat/hand-tracking-mediapipe`:
+  - Added `@mediapipe/tasks-vision` (v0.10.14) ESM import map.
+  - Created `v2/src/input/hand_tracking.js` with GPU delegate, front camera / webcam stream, pinch detection ($<0.065$ dist), holographic 3D hand cursor, and 60 FPS dual-rate vector interpolation.
+  - Added `HAND TRACK` toggle in topbar with real-time status dot and PIP webcam feed.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/hand_tracking_mediapipe_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
