@@ -267,3 +267,24 @@ new rendering module plus one new object type in the existing selection/toolbar 
 
 **Do not start this while PR #1 is still open.** One module per iteration, never two — same rule
 as everything else in this project.
+
+---
+
+## Queued after that — Blender + AccuRig asset pipeline
+
+**Once the splat integration spec's PR has merged** — full design at
+[`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
+Read it in full before starting — this is a pointer, not the plan.
+
+Short version, two independent pieces sharing one tool:
+1. **Blender** (free, GPL) — a documented retopology → UV unwrap → bake pipeline for any future
+   3D asset. Not a code change; upstream asset prep that feeds `v2/src/objects/models.js`'s
+   existing loading path.
+2. **AccuRig** (Reallusion, free) — re-rig an existing in-world avatar via AccuRig's auto-rig
+   (full body + fingers), export FBX/USD, wire into `v2/src/nav/character.js`.
+
+Both tools verified genuinely free with no commercial-use gate this session — unlike Tripo AI,
+whose free tier is CC BY 4.0 / no commercial use. Tripo and Patina (pricing unconfirmed) are
+explicitly excluded from this task; do not substitute them in without a separate decision.
+
+**Queue order is strict: PR #1 → splat integration → this. Do not start out of order.**
