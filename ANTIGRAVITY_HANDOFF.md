@@ -232,3 +232,38 @@ v2 difference is an improvement or a regression.
 
 Escalate to Navakanth rather than guessing on: any RENDER_CHECK failing 3×; any parity item you
 cannot reproduce in v2; anything requiring credentials; any deploy; any proposal to drop a feature.
+
+---
+
+## Queued next task — do not start yet
+
+**QA/PO review this session (2026-08-16, via Claude Code):** live-tested `v2/` against the real
+dev server — 0 console errors, 22 modules loading, real scene content confirmed via
+`__sceneProbe` (18 scene children, 35 geometries, active composer). PR opened:
+[navakanth1984/whiteboard-4d#1](https://github.com/navakanth1984/whiteboard-4d/pull/1) (draft).
+
+**Open before this task's Phase 0-5 above count as done:**
+1. Manual FPS check in a real foregrounded browser — `window.__fpsStats` exists in code but has
+   never actually been read with a live render loop running (confirms this handoff's own Phase 5
+   note above). The Claude Code Browser-pane harness can't produce this reading (backgrounded-tab
+   `requestAnimationFrame` throttling — same limitation already logged for `spatial-bridge` in
+   the superseded handoff).
+2. Decide the fate of three dead stub files: `v2/src/ui/guide.js`, `v2/src/ui/modes.js`,
+   `v2/src/agent/interpret.js` — each is a literal one-line placeholder, never imported anywhere.
+3. PR #1 merged into `master`, v1 tagged `v1-final` per Phase 4 above.
+
+**Once PR #1 is merged** — the next task is Gaussian Splat integration. Full design at
+[`docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`](docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md).
+**Read that spec in full before starting anything** — this section is a pointer, not the plan.
+
+Short version: add **Spark** (sparkjsdev, MIT, Three.js-native splat renderer — chosen specifically
+because v2 stayed on Three.js) as a new `v2/src/objects/splat.js` module, following the exact same
+module shape as the existing object types and the exact same `RENDER_CHECK → TASTE_GATE → commit`
+loop as everything else in this codebase. Test assets are `.spz` format (Niantic, MIT,
+~10x smaller than `.ply`), sourced from Luma AI / Polycam / Scaniverse captures, cleaned up through
+SuperSplat (PlayCanvas, MIT, browser-based, no install) before they reach the app. The server
+already serves the right MIME types (commit `1d0271a`) — no server work needed, this is purely a
+new rendering module plus one new object type in the existing selection/toolbar system.
+
+**Do not start this while PR #1 is still open.** One module per iteration, never two — same rule
+as everything else in this project.
