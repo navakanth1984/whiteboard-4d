@@ -8,7 +8,13 @@
   - Added Splat toolbar button and `buildSplatPalette()` in `v2/src/ui/modes.js`.
   - Sourced sample 4MB asset `v2/assets/splats/butterfly.spz`.
   - Live CDP verification: 0 console errors, full gizmo raycasting/selection, and sustained **45–48 FPS** (meeting spec gate).
-  - QA report committed at `verification/splat_integration_qa_report.md`.
+- **Merged PR #2 into master** (commit `df12ca0`), integrating 3D Gaussian Splatting via `@sparkjsdev/spark` and `.spz` assets.
+- Implemented **Blender Asset-Prep & AccuRig Avatar Pipeline** on branch `feat/blender-accurig-pipeline` per `docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`:
+  - Created canonical, reusable 3D asset optimization guide at `docs/superpowers/pipelines/blender-asset-prep-guide.md`.
+  - Added `GLTFLoader`, `loadCustomAvatar()`, and standard humanoid bone mapping (`mixamorig:*` and standard rig hierarchy) in `v2/src/nav/character.js`.
+  - Added AccuRig / glTF file import button and file listener to `v2/src/ui/avatar_picker.js`.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**, full gender/custom switching, and modal UI integration verified.
+  - QA report committed at `verification/blender_accurig_pipeline_qa_report.md`.
 
 ## 2026-08-15
 Scoped and specced **BleuBoard v2** (modular fork + visual craft pass). Design committed to

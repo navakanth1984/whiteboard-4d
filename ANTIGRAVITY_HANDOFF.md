@@ -239,26 +239,14 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 ## Queue status
 
 1. [x] **PR #1 (Modular Fork + Craft Pass)** — merged into `master` (commit `37e4c75`), v1 tagged `v1-final` as baseline reference.
-2. [x] **Gaussian Splat Integration** — implemented on `feat/splat-integration` (commit `074b37e`), verified via CDP at 45–48 FPS with 0 console errors. QA report at `verification/splat_integration_qa_report.md`.
-3. [ ] **Blender + AccuRig Asset Pipeline** — queued next once `feat/splat-integration` is merged to `master`. Full design at [`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
+2. [x] **PR #2 (Gaussian Splat Integration)** — merged into `master` (commit `df12ca0`), Spark & `.spz` live in scene graph.
+3. [x] **Blender + AccuRig Asset Pipeline** — implemented on `feat/blender-accurig-pipeline`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/blender_accurig_pipeline_qa_report.md`. Ready for Draft PR #3 & PO review per `MERGE_GATE`.
 
 ---
 
-## Queued next — Blender + AccuRig asset pipeline
+## Deliverables Summary
 
-**Once the splat integration branch has merged to `master`** — full design at
-[`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
-Read it in full before starting — this is a pointer, not the plan.
-
-Short version, two independent pieces sharing one tool:
-1. **Blender** (free, GPL) — a documented retopology → UV unwrap → bake pipeline for any future
-   3D asset. Not a code change; upstream asset prep that feeds `v2/src/objects/models.js`'s
-   existing loading path.
-2. **AccuRig** (Reallusion, free) — re-rig an existing in-world avatar via AccuRig's auto-rig
-   (full body + fingers), export FBX/USD, wire into `v2/src/nav/character.js`.
-
-Both tools verified genuinely free with no commercial-use gate this session — unlike Tripo AI,
-whose free tier is CC BY 4.0 / no commercial use. Tripo and Patina (pricing unconfirmed) are
-explicitly excluded from this task; do not substitute them in without a separate decision.
-
-**Queue order is strict: PR #1 → splat integration → this. Do not start out of order.**
+- **Blender 3D Asset Prep Guide:** [`docs/superpowers/pipelines/blender-asset-prep-guide.md`](docs/superpowers/pipelines/blender-asset-prep-guide.md)
+- **AccuRig Avatar Rigging & SkinnedMesh System:** [`v2/src/nav/character.js`](v2/src/nav/character.js)
+- **Avatar Engine Modal UI:** [`v2/src/ui/avatar_picker.js`](v2/src/ui/avatar_picker.js)
+- **QA Verification Report:** [`verification/blender_accurig_pipeline_qa_report.md`](verification/blender_accurig_pipeline_qa_report.md)

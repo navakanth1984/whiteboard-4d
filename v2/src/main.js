@@ -100,7 +100,9 @@ import {
   avatarConfig,
   performAvatarAction,
   GENDERS,
-  setAvatarConfig
+  setAvatarConfig,
+  loadCustomAvatar,
+  rebuildAvatar
 } from './nav/character.js';
 
 import {
@@ -283,6 +285,14 @@ window.__splatProbe = {
   curSplat: () => curSplat,
   setCurSplat,
   initSparkRenderer
+};
+
+window.__avatarProbe = {
+  avatarConfig,
+  setAvatarConfig,
+  loadCustomAvatar,
+  rebuildAvatar,
+  GENDERS
 };
 
 const btnWindow = document.getElementById('btn-window');
