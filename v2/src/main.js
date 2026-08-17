@@ -56,6 +56,15 @@ import {
 } from './objects/board.js';
 
 import {
+  SPLAT_PRESETS,
+  curSplat,
+  setCurSplat,
+  addSplatObject,
+  loadSplatFile,
+  initSparkRenderer
+} from './objects/splat.js';
+
+import {
   addImagePanel,
   addVideoPanel,
   addSpatialAudio,
@@ -267,6 +276,15 @@ window.__modeProbe = {
   buildStickerPalette
 };
 
+window.__splatProbe = {
+  addSplatObject,
+  loadSplatFile,
+  SPLAT_PRESETS,
+  curSplat: () => curSplat,
+  setCurSplat,
+  initSparkRenderer
+};
+
 const btnWindow = document.getElementById('btn-window');
 if (btnWindow) {
   btnWindow.addEventListener('click', () => {
@@ -347,6 +365,12 @@ setupPointerEvents({
           selectObject(o);
         });
       }
+    } else if (currentMode === 'splat') {
+      const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 0.5, -4), normal: new THREE.Vector3(0, 1, 0) };
+      performAvatarAction('place', surf.point, () => {
+        const o = addSplatObject({ presetKey: curSplat, surf, ink });
+        if (o) selectObject(o);
+      });
     } else if (currentMode === 'connect') {
       const { camera } = getSceneState();
       setMouse(cx, cy);

@@ -5,6 +5,7 @@ import { objects, removeObj } from '../core/history.js';
 import { SASCore, SASCard } from '../agent/interpret.js';
 
 export let transformControl = null;
+export let gizmoHelper = null;
 export let selectedObject = null;
 let dropLine = null;
 let floorShadowCircle = null;
@@ -14,7 +15,8 @@ export let gizmoMode = 'translate'; // 'translate', 'rotate', 'scale'
 export function isGizmoHit(raycaster) {
   if (!transformControl || !selectedObject) return false;
   try {
-    const hits = raycaster.intersectObject(transformControl, true);
+    const target = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
+    const hits = raycaster.intersectObject(target, true);
     return hits && hits.length > 0;
   } catch (e) {
     return false;
@@ -38,7 +40,8 @@ export function initTransformSystem() {
   transformControl = new TransformControls(camera, renderer.domElement);
   transformControl.size = 0.85;
   transformControl.setSpace('world');
-  scene.add(transformControl);
+  gizmoHelper = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
+  scene.add(gizmoHelper);
 
   // Disable orbit controls while dragging gizmo
   transformControl.addEventListener('dragging-changed', event => {

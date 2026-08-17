@@ -1,10 +1,13 @@
 // v2/src/ui/modes.js — Mode Selector, Palette Builders & Mode State Management
+import * as THREE from 'three';
 import { getSceneState } from '../core/scene.js';
 import { CARD_PRESETS, curCard, setCurCard } from '../objects/models.js';
 import { STICKERS, curSticker, setCurSticker, ICON_CATEGORIES, curIconCat, curIconKey, setIconCategory, setCurIconIndex } from '../objects/stickers.js';
 import { BOARD_STYLES, curBoardStyle, setCurBoardStyle } from '../objects/board.js';
+import { SPLAT_PRESETS, curSplat, setCurSplat, loadSplatFile } from '../objects/splat.js';
 import { setBrushStyle, setInkColor } from '../draw/strokes.js';
 import { povMode } from '../nav/gamer_nav.js';
+import { selectObject } from '../nav/transform.js';
 
 export let currentMode = 'nav';
 if (typeof window !== 'undefined') {
@@ -136,6 +139,57 @@ export function buildBoardPalette() {
   });
 }
 
+// Populate 3D Gaussian Splat Models in Palette
+export function buildSplatPalette() {
+  const pal = document.getElementById('palette');
+  const tabs = document.getElementById('pal-tabs');
+  const grid = document.getElementById('pal-grid');
+  const title = document.getElementById('pal-title');
+  if (!grid || !title || !tabs) return;
+
+  tabs.style.display = 'none';
+  title.textContent = 'Photorealistic 3D Gaussian Splats (.spz)';
+  grid.innerHTML = '';
+
+  SPLAT_PRESETS.forEach(item => {
+    const b = document.createElement('div');
+    b.className = 'pal-item' + (item.id === curSplat ? ' sel' : '');
+    b.innerHTML = `<span class="material-symbols-outlined">grain</span><span class="pal-lbl">${item.label}</span>`;
+    b.title = item.desc;
+    b.addEventListener('click', () => {
+      setCurSplat(item.id);
+      grid.querySelectorAll('.pal-item').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+    grid.appendChild(b);
+  });
+
+  // Custom SPZ Upload Tile
+  const upBtn = document.createElement('div');
+  upBtn.className = 'pal-item';
+  upBtn.innerHTML = `<span class="material-symbols-outlined">upload_file</span><span class="pal-lbl">Upload .SPZ</span>`;
+  upBtn.title = 'Upload custom .spz Gaussian Splat file';
+  upBtn.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.spz,.ply,.ksplat,.splat,.sog';
+    inp.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const ink = document.getElementById('pick-ink')?.value || '#38bdf8';
+        const surf = { point: new THREE.Vector3(0, 1, 0), normal: new THREE.Vector3(0, 1, 0) };
+        const o = loadSplatFile(file, surf, ink);
+        if (o) {
+          selectObject(o);
+          setMode('nav');
+        }
+      }
+    };
+    inp.click();
+  });
+  grid.appendChild(upBtn);
+}
+
 export function setMode(mode) {
   currentMode = mode;
   if (typeof window !== 'undefined') {
@@ -150,12 +204,13 @@ export function setMode(mode) {
   }
   const pal = document.getElementById('palette');
   if (pal) {
-    const isPaletteMode = (mode === 'card' || mode === 'icon' || mode === 'board' || mode === 'sticker');
+    const isPaletteMode = (mode === 'card' || mode === 'icon' || mode === 'board' || mode === 'sticker' || mode === 'splat');
     pal.classList.toggle('show', isPaletteMode);
     if (mode === 'card') buildCardPalette();
     else if (mode === 'icon') buildIconPalette();
     else if (mode === 'board') buildBoardPalette();
     else if (mode === 'sticker') buildStickerPalette();
+    else if (mode === 'splat') buildSplatPalette();
   }
   const { controls: liveControls } = getSceneState();
   if (liveControls) {
