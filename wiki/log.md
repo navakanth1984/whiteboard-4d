@@ -18,6 +18,10 @@
   - Added `#timeline-4d` UI bar with play/pause, range scrubber slider, speed toggle (1x, 2x, 4x), time readout, object counter, and LIVE button.
   - Hooked `recordTimelineEvent('create', o)` into `v2/src/core/history.js`.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/temporal_4d_scrubber_qa_report.md`.
+- Implemented **1-Click Full 3D Scene GLTF / GLB Exporter** on branch `feat/scene-glb-exporter`:
+  - Created `v2/src/export/scene_export.js` using Three.js `GLTFExporter`.
+  - Added `Export 3D .GLB` button in session modal.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/scene_glb_export_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

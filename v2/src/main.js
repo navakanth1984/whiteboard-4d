@@ -322,6 +322,19 @@ window.__timeline4DProbe = {
   jumpToLive
 };
 
+import { exportSceneToGLB } from './export/scene_export.js';
+
+window.__sceneExportProbe = {
+  exportSceneToGLB
+};
+
+const btnExportGLB = document.getElementById('btn-export-glb');
+if (btnExportGLB) {
+  btnExportGLB.addEventListener('click', () => {
+    exportSceneToGLB('bleuboard-3d-scene');
+  });
+}
+
 const btnWindow = document.getElementById('btn-window');
 if (btnWindow) {
   btnWindow.addEventListener('click', () => {
