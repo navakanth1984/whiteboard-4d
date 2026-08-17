@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { getSceneState } from '../core/scene.js';
 import { objects, removeObj } from '../core/history.js';
+import { SASCore, SASCard } from '../agent/interpret.js';
 
 export let transformControl = null;
 export let selectedObject = null;
@@ -42,11 +43,25 @@ export function initTransformSystem() {
   // Disable orbit controls while dragging gizmo
   transformControl.addEventListener('dragging-changed', event => {
     if (controls) controls.enabled = !event.value;
+    if (event.value && selectedObject) {
+      const interp = SASCore.interpret(selectedObject);
+      if (interp) {
+        SASCard.render(interp, selectedObject);
+        SASCore.record({ evt: 'drag-start', type: selectedObject.type, frame: interp.frame, id: selectedObject.id });
+      }
+    } else if (!event.value && selectedObject) {
+      const interp = SASCore.interpret(selectedObject);
+      SASCore.record({ evt: 'drag-end', type: selectedObject.type, frame: interp ? interp.frame : '?', id: selectedObject.id });
+    }
   });
 
   transformControl.addEventListener('change', () => {
     updateDropLine();
     if (boxHelper && selectedObject) boxHelper.update();
+    if (selectedObject) {
+      const interp = SASCore.interpret(selectedObject);
+      if (interp) SASCard.render(interp, selectedObject);
+    }
   });
 
   // Bounding Box Highlight Helper
@@ -180,6 +195,7 @@ export function selectObject(obj) {
 
   updateDropLine();
   updateActionDockUI();
+  SASCard.hover(obj);
 }
 
 export function deselectObject() {
@@ -192,6 +208,7 @@ export function deselectObject() {
   if (dropLine) dropLine.visible = false;
   if (floorShadowCircle) floorShadowCircle.visible = false;
   updateActionDockUI();
+  SASCard.hide();
 }
 
 export function updateDropLine() {
