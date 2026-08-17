@@ -9,12 +9,23 @@ const MIME_TYPES = {
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.spz': 'application/octet-stream',
+  '.splat': 'application/octet-stream',
+  '.ply': 'application/octet-stream',
+  '.sog': 'application/octet-stream',
+  '.ksplat': 'application/octet-stream',
+  '.bin': 'application/octet-stream',
+  '.wasm': 'application/wasm'
 };
 
 http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0]; // strip query string before comparing/joining
-  let filePath = path.join(__dirname, urlPath === '/' ? 'index.html' : urlPath);
+  let normalizedPath = urlPath === '/' ? 'index.html' : urlPath;
+  if (normalizedPath === '/v2' || normalizedPath === '/v2/' || normalizedPath === 'v2' || normalizedPath === 'v2/') {
+    normalizedPath = 'v2/index.html';
+  }
+  let filePath = path.join(__dirname, normalizedPath);
   let extname = path.extname(filePath);
 
   fs.readFile(filePath, (err, content) => {
