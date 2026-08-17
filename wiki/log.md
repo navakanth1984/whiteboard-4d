@@ -1,5 +1,14 @@
 # Execution Log
 
+## 2026-08-18
+- Tagged `v2-splat-stable` on `master` to preserve the verified Gaussian Splat milestone.
+- Implemented **Mobile Adaptive Performance & Touch Gestures** on branch `feat/mobile-adaptive-gestures` per `docs/superpowers/specs/2026-08-18-bleuboard-v2-mobile-adaptive-perf-design.md`:
+  - Created `v2/src/core/device_tier.js` with `detectDeviceTier()` and tiered pixel ratio / splat size budgets.
+  - Updated `v2/src/core/scene.js` with tier-aware DPR clamping (1.5 max on mobile, 2.0 on desktop).
+  - Updated `v2/src/objects/splat.js` with 8MB asset size gating on mobile tier.
+  - Created `v2/src/core/touch_gestures.js` for 1-finger translation and 2-finger twist rotation of selected objects, avoiding conflicts with `OrbitControls` or the Object Action Dock.
+  - Live CDP verification: 0 console errors, sustained **44–48 FPS**. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
+
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
 - Implemented **Gaussian Splat Integration** on branch `feat/splat-integration` per `docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`:

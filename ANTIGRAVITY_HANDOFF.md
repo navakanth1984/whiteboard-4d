@@ -239,8 +239,9 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 ## Queue status
 
 1. [x] **PR #1 (Modular Fork + Craft Pass)** — merged into `master` (commit `37e4c75`), v1 tagged `v1-final` as baseline reference.
-2. [x] **PR #2 (Gaussian Splat Integration)** — merged into `master` (commit `df12ca0`), Spark & `.spz` live in scene graph.
-3. [x] **Blender + AccuRig Asset Pipeline** — implemented on `feat/blender-accurig-pipeline`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/blender_accurig_pipeline_qa_report.md`. Ready for Draft PR #3 & PO review per `MERGE_GATE`.
+2. [x] **PR #2 (Gaussian Splat Integration)** — merged into `master` (commit `df12ca0`), Spark & `.spz` live in scene graph. Tagged `v2-splat-stable`.
+3. [x] **Blender + AccuRig Asset Pipeline** — implemented on `feat/blender-accurig-pipeline`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/blender_accurig_pipeline_qa_report.md`.
+4. [x] **Mobile Adaptive Performance & Touch Gestures** — implemented on `feat/mobile-adaptive-gestures`, verified via CDP at 44–48 FPS with 0 console errors. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
 
 ---
 
@@ -248,5 +249,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 
 - **Blender 3D Asset Prep Guide:** [`docs/superpowers/pipelines/blender-asset-prep-guide.md`](docs/superpowers/pipelines/blender-asset-prep-guide.md)
 - **AccuRig Avatar Rigging & SkinnedMesh System:** [`v2/src/nav/character.js`](v2/src/nav/character.js)
-- **Avatar Engine Modal UI:** [`v2/src/ui/avatar_picker.js`](v2/src/ui/avatar_picker.js)
-- **QA Verification Report:** [`verification/blender_accurig_pipeline_qa_report.md`](verification/blender_accurig_pipeline_qa_report.md)
+- **Mobile Adaptive Tiering & Multi-Touch Gestures:** [`v2/src/core/device_tier.js`](v2/src/core/device_tier.js), [`v2/src/core/touch_gestures.js`](v2/src/core/touch_gestures.js)
+- **QA Verification Reports:** [`verification/`](verification/)

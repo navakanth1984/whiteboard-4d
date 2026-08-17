@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 import { register } from '../core/history.js';
 import { placeTargets, getSceneState } from '../core/scene.js';
+import { getDeviceBudget } from '../core/device_tier.js';
 
 let sparkRenderer = null;
 
@@ -90,6 +91,15 @@ export function addSplatObject(options = {}) {
 
 export function loadSplatFile(file, surf, ink = '#38bdf8') {
   if (!file) return null;
+
+  const budget = getDeviceBudget();
+  const maxBytes = budget.maxSplatSizeMB * 1024 * 1024;
+  if (file.size && file.size > maxBytes) {
+    console.warn(`[DeviceTier] Splat asset ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds ${budget.tier} tier limit of ${budget.maxSplatSizeMB}MB.`);
+    alert(`File is too large for ${budget.tier} performance (${(file.size / (1024 * 1024)).toFixed(1)}MB). Max allowed: ${budget.maxSplatSizeMB}MB.`);
+    return null;
+  }
+
   const objectUrl = URL.createObjectURL(file);
   const cleanName = file.name.replace(/\.[^/.]+$/, '');
   return addSplatObject({

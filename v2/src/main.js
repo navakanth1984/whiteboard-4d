@@ -161,6 +161,9 @@ import {
   buildStickerPalette
 } from './ui/modes.js';
 
+import { detectDeviceTier, getDeviceBudget } from './core/device_tier.js';
+import { initTouchGestures } from './core/touch_gestures.js';
+
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
 initScene(canvasEl);
@@ -175,6 +178,7 @@ initHUDSystem();
 initGuide();
 initInterpretSystem();
 initModeSystem();
+initTouchGestures(canvasEl);
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -293,6 +297,11 @@ window.__avatarProbe = {
   loadCustomAvatar,
   rebuildAvatar,
   GENDERS
+};
+
+window.__deviceTierProbe = {
+  detectDeviceTier,
+  getDeviceBudget
 };
 
 const btnWindow = document.getElementById('btn-window');

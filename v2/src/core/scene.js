@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
+import { getDeviceBudget } from './device_tier.js';
 
 export const HOME_POS = new THREE.Vector3(0, 11, 24);
 export const HOME_TGT = new THREE.Vector3(0, 11, -9);
@@ -46,8 +47,9 @@ export function initScene(canvasEl) {
   canvas = canvasEl || document.getElementById('c');
 
   try {
+    const budget = getDeviceBudget();
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(budget.targetDPR);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
