@@ -13,6 +13,11 @@
   - Created `v2/src/input/hand_tracking.js` with GPU delegate, front camera / webcam stream, pinch detection ($<0.065$ dist), holographic 3D hand cursor, and 60 FPS dual-rate vector interpolation.
   - Added `HAND TRACK` toggle in topbar with real-time status dot and PIP webcam feed.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/hand_tracking_mediapipe_qa_report.md`.
+- Implemented **4D Temporal Time-Travel Scrubber** on branch `feat/4d-temporal-scrubber`:
+  - Created `v2/src/temporal/history4d.js` with `actionTimeline` recording, `seekToRatio()` scene reconstruction, and animated `playReplay()` time-lapse loop.
+  - Added `#timeline-4d` UI bar with play/pause, range scrubber slider, speed toggle (1x, 2x, 4x), time readout, object counter, and LIVE button.
+  - Hooked `recordTimelineEvent('create', o)` into `v2/src/core/history.js`.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/temporal_4d_scrubber_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

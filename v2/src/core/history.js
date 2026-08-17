@@ -1,4 +1,5 @@
 import { scene, placeTargets } from './scene.js';
+import { recordTimelineEvent } from '../temporal/history4d.js';
 
 export let idCtr = 0;
 export const objects = [];
@@ -59,6 +60,8 @@ export function register(rootOrObj, type, label, color, opts = {}) {
   if (scene) {
     scene.add(root);
   }
+
+  recordTimelineEvent('create', o);
 
   updateUndoRedoBtns();
   if (window.compassViewport && typeof window.compassViewport.markDirty === 'function') {

@@ -104,6 +104,18 @@
   <button class="pov-btn active" id="btn-toggle-dpad" title="Toggle 3D Flight D-Pad Controller"><span class="material-symbols-outlined">gamepad</span></button>
 </div>
 
+<!-- ════════ 4D TEMPORAL TIME-TRAVEL SCRUBBER ════════ -->
+<div id="timeline-4d" style="display:none;position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,6,23,0.85);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.35);border-radius:12px;padding:8px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);color:#fff;width:min(90vw,640px);">
+  <button id="tl-play-btn" style="background:rgba(56,189,248,0.2);border:1px solid rgba(56,189,248,0.4);border-radius:50%;width:32px;height:32px;color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+    <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+  </button>
+  <input type="range" id="tl-scrubber" min="0" max="100" value="100" style="flex:1;accent-color:#38bdf8;cursor:pointer;">
+  <span id="tl-time-lbl" style="font-family:monospace;font-size:12px;color:#94a3b8;min-width:85px;">00:00 / 00:10</span>
+  <span id="tl-count-lbl" style="font-family:monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px;">0/0 OBJS</span>
+  <button id="tl-speed-btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:3px 8px;font-size:11px;color:#fff;cursor:pointer;">1x</button>
+  <button id="tl-live-btn" style="background:#0284c7;border:none;border-radius:6px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer;font-weight:bold;">LIVE</button>
+</div>
+
 <!-- ════════ TOOL BAR (Professional Spatial Studio) ════════ -->
 <div id="bottombar">
   <button class="tb active" data-mode="nav"     title="Navigate — orbit 3D space, select and transform objects"><span class="material-symbols-outlined tb-icon">explore</span><span class="tb-label">Nav</span></button>

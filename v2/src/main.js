@@ -164,6 +164,7 @@ import {
 import { detectDeviceTier, getDeviceBudget } from './core/device_tier.js';
 import { initTouchGestures } from './core/touch_gestures.js';
 import { initHandTrackingSystem, startHandTracking, stopHandTracking, isHandTrackingActive } from './input/hand_tracking.js';
+import { init4DTimelineUI, actionTimeline, seekToRatio, playReplay, pauseReplay, jumpToLive } from './temporal/history4d.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -181,6 +182,7 @@ initInterpretSystem();
 initModeSystem();
 initTouchGestures(canvasEl);
 initHandTrackingSystem();
+init4DTimelineUI();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -310,6 +312,14 @@ window.__handTrackingProbe = {
   startHandTracking,
   stopHandTracking,
   isHandTrackingActive
+};
+
+window.__timeline4DProbe = {
+  actionTimeline,
+  seekToRatio,
+  playReplay,
+  pauseReplay,
+  jumpToLive
 };
 
 const btnWindow = document.getElementById('btn-window');
