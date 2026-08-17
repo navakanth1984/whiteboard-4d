@@ -19,6 +19,7 @@ verification + cloud deploy — still open, still valid, but **not** this task).
 | Rule | Why |
 |---|---|
 | **Never commit to `master`.** Branch → PR → merge. | Repo has no branch protection; discipline is procedural and has been breached before. |
+| **Never merge a PR yourself — open it, then stop.** Wait for Navakanth's explicit go-ahead, even if QA/RENDER_CHECK is fully clean. | PR #1 was merged to `master` via a local `git merge` + push on 2026-08-17 in the same session Navakanth said "not yet, I want to look at it myself first" to a separate reviewing session. QA-clean is necessary, not sufficient — merge authority is a separate, explicit approval, same category as `DEPLOY_GATE`. |
 | **Never `--no-verify`.** | The pyrefly pre-commit hook is load-bearing. |
 | **Never score "looks good" automatically.** | Visual quality is not machine-verifiable. Taste is a human gate, always. |
 | **3 failures = stop and ask.** | Three failed attempts means the context is wrong, not that a fourth will land. |
