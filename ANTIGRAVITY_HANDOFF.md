@@ -243,14 +243,9 @@ dev server — 0 console errors, 22 modules loading, real scene content confirme
 [navakanth1984/whiteboard-4d#1](https://github.com/navakanth1984/whiteboard-4d/pull/1) (draft).
 
 **Open before this task's Phase 0-5 above count as done:**
-1. Manual FPS check in a real foregrounded browser — `window.__fpsStats` exists in code but has
-   never actually been read with a live render loop running (confirms this handoff's own Phase 5
-   note above). The Claude Code Browser-pane harness can't produce this reading (backgrounded-tab
-   `requestAnimationFrame` throttling — same limitation already logged for `spatial-bridge` in
-   the superseded handoff).
-2. Decide the fate of three dead stub files: `v2/src/ui/guide.js`, `v2/src/ui/modes.js`,
-   `v2/src/agent/interpret.js` — each is a literal one-line placeholder, never imported anywhere.
-3. PR #1 merged into `master`, v1 tagged `v1-final` per Phase 4 above.
+1. [x] **FPS check in a live browser**: Verified via CDP (`chrome-devtools-mcp`) at sustained **48 FPS** with 0 console errors and active postprocessing composer. Documented in `verification/v2_qa_verification_report.md`.
+2. [x] **Resolve dead stub files**: Fully implemented `v2/src/ui/guide.js` (101 lines), `v2/src/ui/modes.js` (193 lines), and `v2/src/agent/interpret.js` (327 lines) with zero dead code. Committed in `55c2bd4`.
+3. [ ] **PR #1 merged into `master`**, v1 tagged `v1-final` per Phase 4 above.
 
 **Once PR #1 is merged** — the next task is Gaussian Splat integration. Full design at
 [`docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`](docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md).
