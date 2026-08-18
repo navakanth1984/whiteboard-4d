@@ -7,7 +7,7 @@ import { BOARD_STYLES, curBoardStyle, setCurBoardStyle } from '../objects/board.
 import { SPLAT_PRESETS, curSplat, setCurSplat, loadSplatFile } from '../objects/splat.js';
 import { setBrushStyle, setInkColor } from '../draw/strokes.js';
 import { povMode } from '../nav/gamer_nav.js';
-import { selectObject } from '../nav/transform.js';
+import { selectObject, deselectObject } from '../nav/transform.js';
 
 export let currentMode = 'nav';
 if (typeof window !== 'undefined') {
@@ -228,7 +228,16 @@ export function initModeSystem() {
   document.querySelectorAll('#bottombar .tb').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
-      if (mode) setMode(mode);
+      if (!mode) return;
+      if (currentMode === mode && mode !== 'nav') {
+        // Second click on active tool button -> deselect and revert to NAV mode!
+        setMode('nav');
+      } else if (currentMode === 'nav' && mode === 'nav') {
+        // Clicking nav while in nav mode deselects any active 3D object
+        deselectObject();
+      } else {
+        setMode(mode);
+      }
     });
   });
 

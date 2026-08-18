@@ -114,7 +114,8 @@ import {
   handlePointerUp,
   setPOVMode,
   povMode,
-  setPointerLocked
+  setPointerLocked,
+  resetNavigation
 } from './nav/gamer_nav.js';
 
 import {
@@ -224,15 +225,7 @@ function setupUIUtilities() {
   const btnReset = document.getElementById('btn-reset');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      const { camera, controls } = getSceneState();
-      if (camera) {
-        camera.position.set(0, 5, 12);
-        camera.lookAt(0, 1.5, 0);
-      }
-      if (controls) {
-        controls.target.set(0, 1.5, 0);
-        controls.update();
-      }
+      resetNavigation();
       playHapticSynth('whoosh');
       if (utilsDrawer) utilsDrawer.classList.remove('show');
     });
@@ -282,14 +275,43 @@ function setupUIUtilities() {
     });
   }
 
-  // Clear All Objects
+  // Clear All Objects (instant with haptic feedback)
   const btnClear = document.getElementById('btn-clear');
   if (btnClear) {
     btnClear.addEventListener('click', () => {
-      if (confirm('Clear all objects from the 3D scene?')) {
-        clearAllObjects();
-        playHapticSynth('whoosh');
-        if (utilsDrawer) utilsDrawer.classList.remove('show');
+      clearAllObjects();
+      playHapticSynth('whoosh');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
+
+  // Presentation & Screen Recording Toggle
+  const btnRec = document.getElementById('btn-rec');
+  let isPresenting = false;
+  if (btnRec) {
+    btnRec.addEventListener('click', async () => {
+      if (!isPresenting) {
+        try {
+          await startRecording(true, false, status => {
+            if (status === 'stopped') {
+              isPresenting = false;
+              btnRec.innerHTML = '<span class="material-symbols-outlined">videocam</span>🔴 Presentation';
+              btnRec.style.background = '';
+            }
+          });
+          isPresenting = true;
+          btnRec.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>⏹ Stop Presentation';
+          btnRec.style.background = 'rgba(239,68,68,0.4)';
+          playHapticSynth('pop');
+        } catch (err) {
+          console.warn('Presentation recording error:', err);
+        }
+      } else {
+        stopRecording();
+        isPresenting = false;
+        btnRec.innerHTML = '<span class="material-symbols-outlined">videocam</span>🔴 Presentation';
+        btnRec.style.background = '';
+        playHapticSynth('snap');
       }
     });
   }
@@ -491,12 +513,7 @@ setupPointerEvents({
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
 
-      // 1. If clicking on 3D Gizmo handles, let TransformControls drag without deselecting
-      if (isGizmoHit(ray)) {
-        return;
-      }
-
-      // 2. Raycast existing canvas objects
+      // 1. Raycast existing canvas objects
       const roots = objects.map(o => o.root).filter(Boolean);
       const hits = ray.intersectObjects(roots, true);
       if (hits.length > 0) {
@@ -512,9 +529,18 @@ setupPointerEvents({
         });
 
         if (clickedObj) {
-          selectObject(clickedObj);
+          if (selectedObject === clickedObj) {
+            deselectObject();
+          } else {
+            selectObject(clickedObj);
+          }
           return;
         }
+      }
+
+      // 2. If clicking on 3D Gizmo handles outside object body, let TransformControls drag
+      if (isGizmoHit(ray)) {
+        return;
       }
 
       // 3. If clicking empty background, deselect and enable camera look

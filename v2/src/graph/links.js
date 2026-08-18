@@ -16,13 +16,14 @@ export function center(o) {
 
 function makeArrowHead(col) {
   const { scene } = getSceneState();
-  const geo = new THREE.ConeGeometry(0.22, 0.55, 16);
+  const geo = new THREE.ConeGeometry(0.35, 0.75, 16);
   geo.rotateX(Math.PI / 2);
   const mat = new THREE.MeshStandardMaterial({
     color: col,
     emissive: col,
-    emissiveIntensity: 0.8,
-    roughness: 0.2
+    emissiveIntensity: 1.2,
+    roughness: 0.1,
+    metalness: 0.5
   });
   const mesh = new THREE.Mesh(geo, mat);
   if (scene) scene.add(mesh);
@@ -31,9 +32,12 @@ function makeArrowHead(col) {
 
 function makeLinkParticle(col, scale = 1.0) {
   const { scene } = getSceneState();
-  const geo = new THREE.SphereGeometry(0.14 * scale, 12, 12);
-  const mat = new THREE.MeshBasicMaterial({
+  const geo = new THREE.SphereGeometry(0.18 * scale, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({
     color: col,
+    emissive: col,
+    emissiveIntensity: 1.5,
+    roughness: 0.1,
     transparent: true,
     opacity: 0.95
   });
@@ -49,16 +53,16 @@ export function createLink(a, b, ink = '#38bdf8') {
   const mid = pa.clone().lerp(pb, 0.5).add(new THREE.Vector3(0, 2.2, 0));
   const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
 
-  const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.08, 8, false);
+  const tubeGeo = new THREE.TubeGeometry(curve, 36, 0.14, 10, false);
   const lineCol = new THREE.Color(ink);
   const mat = new THREE.MeshStandardMaterial({
     color: lineCol,
     emissive: lineCol,
-    emissiveIntensity: 0.6,
-    roughness: 0.2,
-    metalness: 0.4,
+    emissiveIntensity: 1.1,
+    roughness: 0.15,
+    metalness: 0.6,
     transparent: true,
-    opacity: 0.85
+    opacity: 0.92
   });
   const lineMesh = new THREE.Mesh(tubeGeo, mat);
   if (scene) scene.add(lineMesh);
@@ -71,8 +75,10 @@ export function createLink(a, b, ink = '#38bdf8') {
 
   const particles = [
     makeLinkParticle(lineCol, 1.4),
+    makeLinkParticle(lineCol, 1.2),
     makeLinkParticle(lineCol, 1.0),
-    makeLinkParticle(lineCol, 0.7)
+    makeLinkParticle(lineCol, 0.8),
+    makeLinkParticle(lineCol, 0.6)
   ];
 
   const link = {
@@ -105,7 +111,7 @@ export function refreshLinks() {
 
     if (lk.line && lk.line.geometry) {
       lk.line.geometry.dispose();
-      lk.line.geometry = new THREE.TubeGeometry(lk.curve, 32, 0.08, 8, false);
+      lk.line.geometry = new THREE.TubeGeometry(lk.curve, 36, 0.14, 10, false);
     }
     if (lk.arrowHead) {
       const tangent = lk.curve.getTangent(lk.flowDir > 0 ? 0.95 : 0.05);
@@ -119,10 +125,10 @@ export function refreshLinks() {
 export function tickLinks(dt) {
   if (!flowMotionEnabled) return;
   links.forEach(lk => {
-    lk.flowT = (lk.flowT + dt * 0.45 * lk.flowDir + 1) % 1;
+    lk.flowT = (lk.flowT + dt * 0.55 * lk.flowDir + 1) % 1;
     if (lk.curve && lk.particles) {
       lk.particles.forEach((pt, idx) => {
-        const offsetT = (lk.flowT + idx * 0.25) % 1;
+        const offsetT = (lk.flowT + idx * 0.20) % 1;
         const pos = lk.curve.getPoint(offsetT);
         pt.position.copy(pos);
       });
