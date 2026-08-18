@@ -252,6 +252,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 12. [x] **3D Handwriting-to-Typography AI OCR Engine** — implemented on `feat/ocr-handwriting-recognition`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ocr_engine_qa_report.md`.
 13. [x] **WebXR Spatial VR/AR Headset Mode** — implemented on `feat/webxr-spatial-headset`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/webxr_spatial_headset_qa_report.md`.
 14. [x] **Real-Time WebRTC Spatial Multiplayer** — implemented on `feat/multiplayer-webrtc`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/multiplayer_webrtc_qa_report.md`.
+15. [x] **3D Positional Audio Spatializer** — implemented on `feat/3d-spatial-audio`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/spatial_audio_qa_report.md`.
 
 ---
 
@@ -270,4 +271,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **3D AI OCR Engine:** [`v2/src/agent/ocr_engine.js`](v2/src/agent/ocr_engine.js)
 - **WebXR Spatial VR/AR Engine:** [`v2/src/xr/webxr_engine.js`](v2/src/xr/webxr_engine.js)
 - **WebRTC Multiplayer Collaboration:** [`v2/src/net/multiplayer.js`](v2/src/net/multiplayer.js)
+- **3D Positional Audio Spatializer:** [`v2/src/audio/spatial_audio.js`](v2/src/audio/spatial_audio.js)
 - **QA Verification Reports:** [`verification/`](verification/)

@@ -52,6 +52,9 @@
   - Added `peerjs` (v1.5.4) ESM import map.
   - Created `v2/src/net/multiplayer.js` with 20Hz avatar pose broadcast and holographic wireframe peer mesh synchronization.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/multiplayer_webrtc_qa_report.md`.
+- Implemented **3D Positional Audio Spatializer** on branch `feat/3d-spatial-audio`:
+  - Created `v2/src/audio/spatial_audio.js` with `THREE.AudioListener` and `PositionalAudio` inverse distance attenuation and 180° directional cones.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/spatial_audio_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

@@ -172,6 +172,7 @@ import { initVRMSystem, updateVRM, loadVRMAvatar, getActiveVRM, setVRMExpression
 import { initOCREngine, convertHandwritingTo3DText, renderStrokesToCanvas } from './agent/ocr_engine.js';
 import { initWebXRSystem, isWebXRActive, isWebXRSupported } from './xr/webxr_engine.js';
 import { initMultiplayerSystem, updateMultiplayer, connectRoom, getConnectedPeers, broadcastAction } from './net/multiplayer.js';
+import { initSpatialAudioSystem, attachPositionalAudio, getAudioListener, checkAudioContextStatus } from './audio/spatial_audio.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -196,6 +197,7 @@ initVRMSystem();
 initOCREngine();
 initWebXRSystem();
 initMultiplayerSystem();
+initSpatialAudioSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -384,6 +386,11 @@ window.__multiplayerProbe = {
   connectRoom,
   getConnectedPeers,
   broadcastAction
+};
+
+window.__spatialAudioProbe = {
+  attachPositionalAudio,
+  checkAudioContextStatus
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
