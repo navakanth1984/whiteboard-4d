@@ -293,8 +293,8 @@ export function updateDirectObjectDrag(cx, cy, raycaster) {
     selectedObject.root.position.y = Math.max(0.2, Math.min(30, selectedObject.root.position.y));
     selectedObject.root.position.z = Math.max(-50, Math.min(50, selectedObject.root.position.z));
 
-    if (transformControl) {
-      transformControl.updateMatrixWorld();
+    if (gizmoHelper && typeof gizmoHelper.updateMatrixWorld === 'function') {
+      gizmoHelper.updateMatrixWorld();
     }
     if (boxHelper) {
       boxHelper.update();
