@@ -237,3 +237,12 @@ export function render(interp, o) {
     renderer.render(scene, camera);
   }
 }
+
+if (typeof window !== 'undefined') {
+  window.__sceneProbe = {
+    get camera() { return camera; },
+    get scene() { return scene; },
+    get renderer() { return renderer; },
+    get controls() { return controls; }
+  };
+}

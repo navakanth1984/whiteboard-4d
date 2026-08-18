@@ -4,12 +4,13 @@ import { getSceneState } from '../core/scene.js';
 import { objects, removeObj } from '../core/history.js';
 import { SASCore, SASCard } from '../agent/interpret.js';
 
+import { refreshLinks } from '../graph/links.js';
+
 export let transformControl = null;
 export let gizmoHelper = null;
 export let selectedObject = null;
 let dropLine = null;
 let floorShadowCircle = null;
-let boxHelper = null;
 export let gizmoMode = 'translate'; // 'translate', 'rotate', 'scale'
 
 export function isGizmoHit(raycaster) {
@@ -72,18 +73,16 @@ export function initTransformSystem() {
   });
 
   transformControl.addEventListener('change', () => {
+    if (selectedObject && selectedObject.root) {
+      selectedObject.root.updateMatrixWorld(true);
+    }
     updateDropLine();
-    if (boxHelper && selectedObject) boxHelper.update();
+    refreshLinks();
     if (selectedObject) {
       const interp = SASCore.interpret(selectedObject);
       if (interp) SASCard.render(interp, selectedObject);
     }
   });
-
-  // Bounding Box Highlight Helper
-  boxHelper = new THREE.BoxHelper(new THREE.Mesh(), 0x38bdf8);
-  boxHelper.visible = false;
-  scene.add(boxHelper);
 
   // Create Floor Elevation Drop Line Helper
   const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
@@ -204,14 +203,12 @@ export function selectObject(obj) {
     transformControl.setMode(gizmoMode);
   }
 
-  if (boxHelper) {
-    boxHelper.setFromObject(obj.root);
-    boxHelper.visible = true;
-  }
-
   updateDropLine();
   updateActionDockUI();
   SASCard.hover(obj);
+}
+if (typeof window !== 'undefined') {
+  window.__selectObject = selectObject;
 }
 
 export function deselectObject() {
@@ -220,7 +217,6 @@ export function deselectObject() {
   if (transformControl) {
     transformControl.detach();
   }
-  if (boxHelper) boxHelper.visible = false;
   if (dropLine) dropLine.visible = false;
   if (floorShadowCircle) floorShadowCircle.visible = false;
   updateActionDockUI();
@@ -293,13 +289,12 @@ export function updateDirectObjectDrag(cx, cy, raycaster) {
     selectedObject.root.position.y = Math.max(0.2, Math.min(30, selectedObject.root.position.y));
     selectedObject.root.position.z = Math.max(-50, Math.min(50, selectedObject.root.position.z));
 
+    selectedObject.root.updateMatrixWorld(true);
     if (gizmoHelper && typeof gizmoHelper.updateMatrixWorld === 'function') {
-      gizmoHelper.updateMatrixWorld();
-    }
-    if (boxHelper) {
-      boxHelper.update();
+      gizmoHelper.updateMatrixWorld(true);
     }
     updateDropLine();
+    refreshLinks();
   }
 }
 

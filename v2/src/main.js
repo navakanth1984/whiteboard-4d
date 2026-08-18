@@ -555,6 +555,8 @@ setupPointerEvents({
     setMouse(cx, cy);
     if (mode === 'nav') {
       if (isDirectDragging) {
+        const { camera } = getSceneState();
+        if (camera) ray.setFromCamera(m2, camera);
         updateDirectObjectDrag(cx, cy, ray);
         return;
       }
