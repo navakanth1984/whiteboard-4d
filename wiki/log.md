@@ -68,6 +68,9 @@
 - Implemented **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** on branch `feat/isometric-holomap-radar`:
   - Created `v2/src/ui/holomap.js` with real-time 2D Canvas orthographic radar sweep, object blips, player heading tracking, and 1-click spatial teleportation.
   - Live CDP verification: 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
+- Implemented **Selective Neon Bloom Post-Processing FX Pipeline** on branch `feat/neon-bloom-postprocessing`:
+  - Created `v2/src/fx/postprocessing.js` with Three.js r180 `EffectComposer`, `UnrealBloomPass`, and adaptive mobile resolution scaling.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

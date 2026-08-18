@@ -177,6 +177,7 @@ import { create3DCodeCard, executeCodeOnCard, getActiveCodeCards } from './objec
 import { initHapticsAudioSystem, playHoverSound, playClickSound, playWhoosh, playSnapChime, triggerHaptic } from './audio/haptics.js';
 import { initOrbitalMenuSystem, openOrbitalMenu, closeOrbitalMenu, updateOrbitalMenu, triggerOrbitalAction, isOrbitalMenuOpen } from './ui/orbital_menu.js';
 import { initHolomapSystem, updateHolomap, teleportToSector, toggleRadarVisibility, getRadarObjectCount } from './ui/holomap.js';
+import { initPostProcessingSystem, setBloomEnabled, setBloomStrength, isBloomEnabled, getBloomParams } from './fx/postprocessing.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -205,6 +206,7 @@ initSpatialAudioSystem();
 initHapticsAudioSystem();
 initOrbitalMenuSystem();
 initHolomapSystem();
+initPostProcessingSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -425,6 +427,13 @@ window.__holomapProbe = {
   teleportToSector,
   getRadarObjectCount,
   toggleRadarVisibility
+};
+
+window.__bloomProbe = {
+  setBloomEnabled,
+  setBloomStrength,
+  isBloomEnabled,
+  getBloomParams
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');

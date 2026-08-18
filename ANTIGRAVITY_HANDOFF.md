@@ -257,6 +257,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 17. [x] **Procedural Synthesized Cyber Micro-Audio & Mobile Haptics** — implemented on `feat/spatial-haptics-audio`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/spatial_haptics_qa_report.md`.
 18. [x] **VisionOS 3D Holographic Orbital Action Ring Menu** — implemented on `feat/visionos-orbital-menu`, verified via CDP with 0 console errors. QA report at `verification/visionos_orbital_menu_qa_report.md`.
 19. [x] **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** — implemented on `feat/isometric-holomap-radar`, verified via CDP with 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
+20. [x] **Selective Neon Bloom Post-Processing FX Pipeline** — implemented on `feat/neon-bloom-postprocessing`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
 
 ---
 
@@ -280,4 +281,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **Procedural Cyber Audio & Haptics Engine:** [`v2/src/audio/haptics.js`](v2/src/audio/haptics.js)
 - **VisionOS 3D Orbital Action Menu:** [`v2/src/ui/orbital_menu.js`](v2/src/ui/orbital_menu.js)
 - **Isometric 3D Holomap Radar HUD:** [`v2/src/ui/holomap.js`](v2/src/ui/holomap.js)
+- **Selective Neon Bloom FX Pipeline:** [`v2/src/fx/postprocessing.js`](v2/src/fx/postprocessing.js)
 - **QA Verification Reports:** [`verification/`](verification/)
