@@ -62,6 +62,9 @@
 - Implemented **Procedural Synthesized Cyber Micro-Audio & Mobile Haptics** on branch `feat/spatial-haptics-audio`:
   - Created `v2/src/audio/haptics.js` with zero-cost procedural Web Audio oscillator synthesis (hover pop, click, vacuum whoosh, crystal snap chime) and mobile hardware vibration.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/spatial_haptics_qa_report.md`.
+- Implemented **VisionOS 3D Holographic Orbital Action Ring Menu** on branch `feat/visionos-orbital-menu`:
+  - Created `v2/src/ui/orbital_menu.js` with 6 radial spring action buttons (Duplicate, Physics Toss, Connect, Tint, OCR, Dissolve) hovering around selected 3D objects.
+  - Live CDP verification: 0 console errors. QA report at `verification/visionos_orbital_menu_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

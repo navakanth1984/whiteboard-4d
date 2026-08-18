@@ -175,6 +175,7 @@ import { initMultiplayerSystem, updateMultiplayer, connectRoom, getConnectedPeer
 import { initSpatialAudioSystem, attachPositionalAudio, getAudioListener, checkAudioContextStatus } from './audio/spatial_audio.js';
 import { create3DCodeCard, executeCodeOnCard, getActiveCodeCards } from './objects/code_card.js';
 import { initHapticsAudioSystem, playHoverSound, playClickSound, playWhoosh, playSnapChime, triggerHaptic } from './audio/haptics.js';
+import { initOrbitalMenuSystem, openOrbitalMenu, closeOrbitalMenu, updateOrbitalMenu, triggerOrbitalAction, isOrbitalMenuOpen } from './ui/orbital_menu.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -201,6 +202,7 @@ initWebXRSystem();
 initMultiplayerSystem();
 initSpatialAudioSystem();
 initHapticsAudioSystem();
+initOrbitalMenuSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -408,6 +410,13 @@ window.__hapticsProbe = {
   playWhoosh,
   playSnapChime,
   triggerHaptic
+};
+
+window.__orbitalMenuProbe = {
+  openOrbitalMenu,
+  closeOrbitalMenu,
+  triggerOrbitalAction,
+  isOrbitalMenuOpen
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -678,6 +687,7 @@ function animate() {
   updatePhysics(dt);
   updateVRM(dt, camera?.position);
   updateMultiplayer(dt, avatarRoot?.position, avatarRoot?.quaternion);
+  updateOrbitalMenu(camera);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {
