@@ -176,6 +176,7 @@ import { initSpatialAudioSystem, attachPositionalAudio, getAudioListener, checkA
 import { create3DCodeCard, executeCodeOnCard, getActiveCodeCards } from './objects/code_card.js';
 import { initHapticsAudioSystem, playHoverSound, playClickSound, playWhoosh, playSnapChime, triggerHaptic } from './audio/haptics.js';
 import { initOrbitalMenuSystem, openOrbitalMenu, closeOrbitalMenu, updateOrbitalMenu, triggerOrbitalAction, isOrbitalMenuOpen } from './ui/orbital_menu.js';
+import { initHolomapSystem, updateHolomap, teleportToSector, toggleRadarVisibility, getRadarObjectCount } from './ui/holomap.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -203,6 +204,7 @@ initMultiplayerSystem();
 initSpatialAudioSystem();
 initHapticsAudioSystem();
 initOrbitalMenuSystem();
+initHolomapSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -417,6 +419,12 @@ window.__orbitalMenuProbe = {
   closeOrbitalMenu,
   triggerOrbitalAction,
   isOrbitalMenuOpen
+};
+
+window.__holomapProbe = {
+  teleportToSector,
+  getRadarObjectCount,
+  toggleRadarVisibility
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -688,6 +696,7 @@ function animate() {
   updateVRM(dt, camera?.position);
   updateMultiplayer(dt, avatarRoot?.position, avatarRoot?.quaternion);
   updateOrbitalMenu(camera);
+  updateHolomap(camera, avatarRoot?.position, dt);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

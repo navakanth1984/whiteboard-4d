@@ -65,6 +65,9 @@
 - Implemented **VisionOS 3D Holographic Orbital Action Ring Menu** on branch `feat/visionos-orbital-menu`:
   - Created `v2/src/ui/orbital_menu.js` with 6 radial spring action buttons (Duplicate, Physics Toss, Connect, Tint, OCR, Dissolve) hovering around selected 3D objects.
   - Live CDP verification: 0 console errors. QA report at `verification/visionos_orbital_menu_qa_report.md`.
+- Implemented **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** on branch `feat/isometric-holomap-radar`:
+  - Created `v2/src/ui/holomap.js` with real-time 2D Canvas orthographic radar sweep, object blips, player heading tracking, and 1-click spatial teleportation.
+  - Live CDP verification: 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
