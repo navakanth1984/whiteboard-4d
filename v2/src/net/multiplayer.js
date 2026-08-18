@@ -189,3 +189,21 @@ function initMultiplayerUI() {
 export function getConnectedPeers() {
   return Array.from(activeConnections.keys());
 }
+
+export function broadcastObjectCreation(obj) {
+  if (!obj || !activeConnections.size) return;
+  const payload = {
+    type: 'create_object',
+    id: obj.id,
+    label: obj.label,
+    objType: obj.type,
+    color: obj.color,
+    pos: obj.root?.position?.toArray() || [0, 0, 0]
+  };
+  activeConnections.forEach(conn => {
+    if (conn.open) conn.send(payload);
+  });
+}
+
+export const initMultiplayer = initMultiplayerSystem;
+

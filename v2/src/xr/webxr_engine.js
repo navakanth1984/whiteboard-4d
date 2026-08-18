@@ -141,3 +141,7 @@ export function isWebXRActive() {
 export function isWebXRSupported() {
   return ('xr' in navigator);
 }
+
+export const initWebXREngine = initWebXRSystem;
+export const isXRSessionActive = isWebXRActive;
+

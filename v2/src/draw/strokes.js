@@ -123,11 +123,23 @@ export function endStroke(onComplete) {
   }
 
   const lastPt = drawPts[drawPts.length - 1].clone();
-  const smoothedPts = smoothPointsCatmullRom(drawPts, 0.45);
+  let smoothedPts = smoothPointsCatmullRom(drawPts, 0.45);
+  // Ensure at least 2 distinct points
+  smoothedPts = smoothedPts.filter((pt, idx) => {
+    if (idx === 0) return true;
+    return pt.distanceTo(smoothedPts[idx - 1]) > 0.02;
+  });
+  if (smoothedPts.length < 2) {
+    drawPts = [];
+    return null;
+  }
+  if (smoothedPts.length === 2) {
+    smoothedPts.splice(1, 0, smoothedPts[0].clone().lerp(smoothedPts[1], 0.5));
+  }
   const curve = new THREE.CatmullRomCurve3(smoothedPts);
-  const seg = Math.min(400, Math.max(24, smoothedPts.length * 6));
+  const seg = Math.min(300, Math.max(16, smoothedPts.length * 4));
   const b = BRUSHES[brushStyle] || BRUSHES.pen;
-  const geo = new THREE.TubeGeometry(curve, seg, b.radius, b.radSeg, false);
+  const geo = new THREE.TubeGeometry(curve, seg, b.radius, b.radSeg || 6, false);
   const col = new THREE.Color(inkColor);
 
   const mat = new THREE.MeshStandardMaterial({

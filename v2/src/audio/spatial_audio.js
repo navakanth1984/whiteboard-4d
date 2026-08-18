@@ -93,3 +93,21 @@ export function getPositionalSourcesCount() {
 export function checkAudioContextStatus() {
   return audioListener?.context?.state || 'inactive';
 }
+
+export function playSpatialSynthTone(pos = null, freq = 440, dur = 0.2) {
+  if (!audioListener || !audioListener.context) return;
+  try {
+    const ctx = audioListener.context;
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  } catch (err) {}
+}
+

@@ -164,3 +164,7 @@ function attachUIHoverListeners() {
     btn.addEventListener('click', () => playClickSound());
   });
 }
+
+export const playHapticSynth = playClickSound;
+export const vibrateDevice = triggerHaptic;
+

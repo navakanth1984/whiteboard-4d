@@ -248,3 +248,7 @@ export function isOrbitalMenuOpen() {
 export function getOrbitalTarget() {
   return currentTarget;
 }
+
+export const dismissOrbitalMenu = closeOrbitalMenu;
+export const summonOrbitalMenu = openOrbitalMenu;
+

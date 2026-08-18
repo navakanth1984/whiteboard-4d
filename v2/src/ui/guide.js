@@ -114,3 +114,7 @@ export function initGuide() {
     }
   } catch (err) {}
 }
+
+export const initGuideSystem = initGuide;
+
+

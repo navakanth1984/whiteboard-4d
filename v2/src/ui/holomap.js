@@ -192,3 +192,6 @@ export function toggleRadarVisibility() {
 export function getRadarObjectCount() {
   return objects.length;
 }
+
+export const toggleHolomap = toggleRadarVisibility;
+

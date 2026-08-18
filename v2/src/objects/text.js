@@ -11,12 +11,12 @@ export let cursiveMode = false;
 export let pendingTextPos = null;
 
 export function initTextSystem() {
-  // Load standard typeface for 3D extruded text
+  // Load standard typeface for 3D extruded text (Three.js 0.180.0)
   new FontLoader().load(
-    'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
+    'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/fonts/helvetiker_bold.typeface.json',
     f => { FONT = f; },
     undefined,
-    e => console.warn('Typeface font load failed:', e)
+    e => console.warn('Typeface font load failed, using high-res canvas 3D typography fallback:', e)
   );
 
   // Load cursive TTF for handwriting tube text via opentype.js
@@ -24,13 +24,13 @@ export function initTextSystem() {
     window.opentype.load(
       'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/caveat/Caveat%5Bwght%5D.ttf',
       (err, f) => {
-        if (err) console.error('Cursive font failed to load:', err);
+        if (err) console.warn('Cursive font failed to load:', err);
         else CURSIVE_FONT = f;
       }
     );
   }
 
-  // Load 10,000 common English words for mobile thumb / keypad prediction
+  // Load common English words for mobile thumb / keypad prediction
   fetch('https://cdn.jsdelivr.net/gh/first20hours/google-10000-english@master/google-10000-english-no-swears.txt')
     .then(r => r.text())
     .then(txt => {
@@ -89,13 +89,15 @@ export function showTextInput(cx, cy, pos) {
   if (!el || !inp) return;
 
   el.style.display = 'flex';
-  el.style.left = Math.min(cx, window.innerWidth - 240) + 'px';
-  el.style.top = Math.min(cy, window.innerHeight - 80) + 'px';
+  const left = Math.max(16, Math.min(cx || window.innerWidth / 2, window.innerWidth - 320));
+  const top = Math.max(70, Math.min(cy || window.innerHeight / 2, window.innerHeight - 180));
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
   inp.value = '';
   const row = document.getElementById('word-predict-row');
   if (row) row.style.display = 'none';
 
-  requestAnimationFrame(() => inp.focus());
+  setTimeout(() => inp.focus(), 50);
 }
 
 export function hideTextInput() {
@@ -109,18 +111,18 @@ export function setCursiveMode(on) {
   const btn = document.getElementById('btn-text-cursive');
   const hint = document.getElementById('text-hint');
   if (btn) {
-    btn.style.background = on ? 'rgba(80,190,255,.85)' : 'rgba(20,90,140,.7)';
-    btn.style.color = on ? '#001a26' : '#9ef';
-    btn.style.fontWeight = on ? '700' : '400';
+    btn.style.background = on ? 'rgba(56,189,248,.85)' : 'rgba(15,23,42,.7)';
+    btn.style.color = on ? '#020617' : '#93c5fd';
+    btn.style.fontWeight = on ? '700' : '500';
   }
   if (hint) {
     hint.textContent = on
-      ? 'Enter = ✒️ Cursive · Shift+Enter = 🔵 Ring'
-      : 'Enter = 3D text · Shift+Enter = 🔵 Ring';
+      ? 'Press Enter = ✒️ Cursive · Shift+Enter = 🔵 Ring · Esc = Cancel'
+      : 'Press Enter = 3D Solid · Shift+Enter = 🔵 Ring · Esc = Cancel';
   }
 }
 
-function flattenOpentypePath(path, curveSamples) {
+function flattenOpentypePath(path, curveSamples = 8) {
   const subpaths = [];
   let current = null, cx = 0, cy = 0;
   for (const cmd of path.commands) {
@@ -150,7 +152,60 @@ function flattenOpentypePath(path, curveSamples) {
       cx = cmd.x; cy = cmd.y;
     }
   }
-  return subpaths.filter(sp => sp.length >= 2);
+
+  // Filter subpaths to ensure at least 2 distinct points with positive distance
+  return subpaths.map(sp => {
+    const cleaned = [];
+    sp.forEach(p => {
+      if (!cleaned.length || Math.hypot(p.x - cleaned[cleaned.length - 1].x, p.y - cleaned[cleaned.length - 1].y) > 0.05) {
+        cleaned.push(p);
+      }
+    });
+    return cleaned;
+  }).filter(sp => sp.length >= 2);
+}
+
+export function addCanvasText3D(text, pos, hex) {
+  const cvs = document.createElement('canvas');
+  const ctx = cvs.getContext('2d');
+  cvs.width = 1024;
+  cvs.height = 320;
+
+  // Background Glass Card
+  ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
+  ctx.roundRect(16, 16, 992, 288, 36);
+  ctx.fill();
+
+  // Neon Border
+  ctx.strokeStyle = hex || '#38bdf8';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+
+  // Text with Glow
+  ctx.font = 'bold 84px Outfit, "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = hex || '#38bdf8';
+  ctx.shadowBlur = 24;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, 512, 160);
+
+  const texture = new THREE.CanvasTexture(cvs);
+  texture.minFilter = THREE.LinearFilter;
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+
+  const geo = new THREE.PlaneGeometry(5.2, 1.6);
+  const mesh = new THREE.Mesh(geo, mat);
+  const root = new THREE.Group();
+  root.position.copy(pos);
+  root.add(mesh);
+  root.userData.billboardY = true;
+
+  return register(root, 'text', text, hex);
 }
 
 export function addCursiveText3D(text, pos, hex) {
@@ -160,7 +215,7 @@ export function addCursiveText3D(text, pos, hex) {
   const fontSize = 6.5;
   const path = CURSIVE_FONT.getPath(text, 0, 0, fontSize);
   const subpaths = flattenOpentypePath(path, 8);
-  if (!subpaths.length) return null;
+  if (!subpaths.length) return addCanvasText3D(text, pos, hex);
 
   const bbox = path.getBoundingBox();
   const ox = (bbox.x1 + bbox.x2) / 2, oy = (bbox.y1 + bbox.y2) / 2;
@@ -171,16 +226,20 @@ export function addCursiveText3D(text, pos, hex) {
 
   for (const sp of subpaths) {
     const pts = sp.map(p => new THREE.Vector3(p.x - ox, -(p.y - oy), 0));
+    if (pts.length < 2) continue;
+    // Ensure at least 3 points for smooth CatmullRom
+    if (pts.length === 2) {
+      pts.splice(1, 0, pts[0].clone().lerp(pts[1], 0.5));
+    }
     const curve = new THREE.CatmullRomCurve3(pts);
-    const seg = Math.min(400, Math.max(20, pts.length * 4));
-    const geo = new THREE.TubeGeometry(curve, seg, b.radius, b.radSeg, false);
+    const seg = Math.min(240, Math.max(16, pts.length * 4));
+    const geo = new THREE.TubeGeometry(curve, seg, b.radius * 1.4, 6, false);
     const mat = new THREE.MeshStandardMaterial({
       color: col,
-      emissive: col.clone().multiplyScalar(b.emissive),
-      roughness: b.roughness,
-      opacity: b.opacity,
-      transparent: b.transparent,
-      depthWrite: !b.transparent,
+      emissive: col.clone().multiplyScalar(0.4),
+      roughness: 0.4,
+      opacity: 1.0,
+      transparent: false
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = mesh.receiveShadow = true;
@@ -192,41 +251,48 @@ export function addCursiveText3D(text, pos, hex) {
 }
 
 export function addText3D(text, pos, hex) {
-  if (!FONT) return null;
-  const geo = new TextGeometry(text, {
-    font: FONT,
-    size: 1.1,
-    height: 0.28,
-    curveSegments: 6,
-    bevelEnabled: true,
-    bevelThickness: 0.04,
-    bevelSize: 0.03,
-    bevelSegments: 2
-  });
-  geo.computeBoundingBox();
-  const w = geo.boundingBox.max.x - geo.boundingBox.min.x;
-  const h = geo.boundingBox.max.y - geo.boundingBox.min.y;
-  const d = geo.boundingBox.max.z - geo.boundingBox.min.z;
-  geo.translate(-w / 2, -h / 2, -d / 2);
+  if (!FONT) {
+    return addCanvasText3D(text, pos, hex);
+  }
+  try {
+    const geo = new TextGeometry(text, {
+      font: FONT,
+      size: 1.1,
+      depth: 0.28,
+      curveSegments: 6,
+      bevelEnabled: true,
+      bevelThickness: 0.04,
+      bevelSize: 0.03,
+      bevelSegments: 2
+    });
+    geo.computeBoundingBox();
+    const w = geo.boundingBox.max.x - geo.boundingBox.min.x;
+    const h = geo.boundingBox.max.y - geo.boundingBox.min.y;
+    const d = geo.boundingBox.max.z - geo.boundingBox.min.z;
+    geo.translate(-w / 2, -h / 2, -d / 2);
 
-  const col = new THREE.Color(hex);
-  const mat = new THREE.MeshStandardMaterial({
-    color: col,
-    emissive: col.clone().multiplyScalar(0.18),
-    roughness: 0.35,
-    metalness: 0.25
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = mesh.receiveShadow = true;
-  const root = new THREE.Group();
-  root.position.copy(pos);
-  root.add(mesh);
-  root.userData.billboardY = true;
-  return register(root, 'text', text, hex);
+    const col = new THREE.Color(hex);
+    const mat = new THREE.MeshStandardMaterial({
+      color: col,
+      emissive: col.clone().multiplyScalar(0.22),
+      roughness: 0.35,
+      metalness: 0.25
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = mesh.receiveShadow = true;
+    const root = new THREE.Group();
+    root.position.copy(pos);
+    root.add(mesh);
+    root.userData.billboardY = true;
+    return register(root, 'text', text, hex);
+  } catch (err) {
+    console.warn('TextGeometry generation failed, falling back to canvas text:', err);
+    return addCanvasText3D(text, pos, hex);
+  }
 }
 
 export function addTextRing(text, pos, hex, ringR) {
-  if (!FONT) return null;
+  if (!FONT) return addCanvasText3D(text, pos, hex);
   const chars = [...text.replace(/\s/g, '')];
   if (!chars.length) return null;
   const radius = ringR || Math.max(2.0, chars.length * 0.28);
@@ -236,63 +302,99 @@ export function addTextRing(text, pos, hex, ringR) {
   const step = (Math.PI * 2) / chars.length;
 
   chars.forEach((ch, i) => {
-    const geo = new TextGeometry(ch, {
-      font: FONT,
-      size: 0.75,
-      height: 0.18,
-      curveSegments: 5,
-      bevelEnabled: true,
-      bevelThickness: 0.03,
-      bevelSize: 0.02,
-      bevelSegments: 1
-    });
-    geo.computeBoundingBox();
-    const cw = geo.boundingBox.max.x - geo.boundingBox.min.x;
-    const ch_h = geo.boundingBox.max.y - geo.boundingBox.min.y;
-    const ch_d = geo.boundingBox.max.z - geo.boundingBox.min.z;
-    geo.translate(-cw / 2, -ch_h / 2, -ch_d / 2);
+    try {
+      const geo = new TextGeometry(ch, {
+        font: FONT,
+        size: 0.75,
+        depth: 0.18,
+        curveSegments: 5,
+        bevelEnabled: true,
+        bevelThickness: 0.03,
+        bevelSize: 0.02,
+        bevelSegments: 1
+      });
+      geo.computeBoundingBox();
+      const cw = geo.boundingBox.max.x - geo.boundingBox.min.x;
+      const ch_h = geo.boundingBox.max.y - geo.boundingBox.min.y;
+      const ch_d = geo.boundingBox.max.z - geo.boundingBox.min.z;
+      geo.translate(-cw / 2, -ch_h / 2, -ch_d / 2);
 
-    const mat = new THREE.MeshStandardMaterial({
-      color: col,
-      emissive: col.clone().multiplyScalar(0.2),
-      roughness: 0.35
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    const angle = i * step;
-    mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-    mesh.rotation.y = -angle + Math.PI / 2;
-    root.add(mesh);
+      const mat = new THREE.MeshStandardMaterial({
+        color: col,
+        emissive: col.clone().multiplyScalar(0.2),
+        roughness: 0.35
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      const angle = i * step;
+      mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+      mesh.rotation.y = -angle + Math.PI / 2;
+      root.add(mesh);
+    } catch (e) {}
   });
 
   root.userData.spin = true;
   return register(root, 'text-ring', text, hex);
 }
 
+function submitText() {
+  const inp = document.getElementById('text-input');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) {
+    hideTextInput();
+    return;
+  }
+  const hex = document.getElementById('pick-ink')?.value || '#00ccff';
+  const pos = pendingTextPos || new THREE.Vector3(0, 11, -9);
+
+  if (cursiveMode) {
+    addCursiveText3D(val, pos, hex);
+  } else {
+    addText3D(val, pos, hex);
+  }
+  hideTextInput();
+}
+
 function setupTextOverlayEvents() {
   const inp = document.getElementById('text-input');
+  const btnSubmit = document.getElementById('btn-text-submit');
+  const btnClose = document.getElementById('btn-text-close');
   const btnCursive = document.getElementById('btn-text-cursive');
   const btnRing = document.getElementById('btn-text-ring');
 
   if (inp) {
     inp.addEventListener('input', updateWordPredictions);
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.target.value.trim() && pendingTextPos) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
         const val = e.target.value.trim();
         const hex = document.getElementById('pick-ink')?.value || '#00ccff';
-        if (e.shiftKey) {
-          addTextRing(val, pendingTextPos, hex);
-        } else if (cursiveMode) {
-          addCursiveText3D(val, pendingTextPos, hex);
-        } else {
-          addText3D(val, pendingTextPos, hex);
+        const pos = pendingTextPos || new THREE.Vector3(0, 11, -9);
+        if (val) {
+          if (e.shiftKey) {
+            addTextRing(val, pos, hex);
+          } else if (cursiveMode) {
+            addCursiveText3D(val, pos, hex);
+          } else {
+            addText3D(val, pos, hex);
+          }
         }
         hideTextInput();
-      }
-      if (e.key === 'Escape') {
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         hideTextInput();
       }
-      e.stopPropagation();
     });
+  }
+
+  if (btnSubmit) {
+    btnSubmit.addEventListener('click', submitText);
+  }
+
+  if (btnClose) {
+    btnClose.addEventListener('click', hideTextInput);
   }
 
   if (btnCursive) {
@@ -303,8 +405,9 @@ function setupTextOverlayEvents() {
     btnRing.addEventListener('click', () => {
       const val = inp?.value.trim();
       const hex = document.getElementById('pick-ink')?.value || '#00ccff';
-      if (val && pendingTextPos) {
-        addTextRing(val, pendingTextPos, hex);
+      const pos = pendingTextPos || new THREE.Vector3(0, 11, -9);
+      if (val) {
+        addTextRing(val, pos, hex);
         hideTextInput();
       }
     });

@@ -124,3 +124,6 @@ export function getBloomParams() {
     params: BLOOM_PARAMS
   };
 }
+
+export const initPostprocessing = initPostProcessingSystem;
+

@@ -130,3 +130,6 @@ export function togglePhysics(enable) {
 export function isPhysicsEnabled() {
   return isPhysicsActive;
 }
+
+export const initPhysics = initRapierPhysics;
+

@@ -138,3 +138,6 @@ function initVRMUploadListener() {
     });
   }
 }
+
+export const initVRMLoader = initVRMSystem;
+

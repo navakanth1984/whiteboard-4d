@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { scene, placeTargets } from './scene.js';
 import { recordTimelineEvent } from '../temporal/history4d.js';
 import { registerPhysicsBody } from '../physics/rapier_engine.js';
@@ -220,3 +221,13 @@ export function removeObj(o) {
   if (moveTarget === o) moveTarget = null;
   updateUndoRedoBtns();
 }
+
+export function clearAllObjects() {
+  while (objects.length > 0) {
+    removeObj(objects[0]);
+  }
+  undoStack.length = 0;
+  redoStack.length = 0;
+  updateUndoRedoBtns();
+}
+

@@ -301,3 +301,8 @@ export function updateGamerNav(dt) {
     isSprinting
   };
 }
+
+export function setPointerLocked(val) {
+  // Optional pointer lock hook
+}
+

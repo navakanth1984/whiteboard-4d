@@ -104,6 +104,19 @@ export function setAvatarConfig(cfg) {
   rebuildFPHand();
 }
 
+export function setExecutionMode(mode) {
+  setAvatarConfig({ executionMode: mode });
+}
+
+export function setAvatarPreset(gender) {
+  setAvatarConfig({ gender });
+}
+
+export function setAvatarSkinTone(skinTone) {
+  setAvatarConfig({ skinTone });
+}
+
+
 export function initAvatarSystem() {
   const { scene } = getSceneState();
   if (!scene) return;
@@ -576,8 +589,9 @@ export function updateAvatar(dt, velocity = new THREE.Vector3(), isMoving = fals
 }
 
 export function performAvatarAction(type, targetPos, onComplete, duration = 0.35) {
+  if (typeof onComplete === 'function') onComplete();
+
   if (avatarConfig.executionMode !== 'avatar') {
-    if (typeof onComplete === 'function') onComplete();
     return;
   }
 
@@ -591,7 +605,7 @@ export function performAvatarAction(type, targetPos, onComplete, duration = 0.35
     type,
     targetPos: targetPos ? targetPos.clone() : null,
     duration,
-    onComplete
+    onComplete: null
   };
   actionTimer = 0;
 }
@@ -652,3 +666,6 @@ export function loadCustomAvatar(source, onLoad, onError) {
     if (typeof onError === 'function') onError(err);
   });
 }
+
+export const loadCustomAccuRigModel = loadCustomAvatar;
+

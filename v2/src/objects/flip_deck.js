@@ -5,6 +5,11 @@ import { playWhoosh, playSnapChime, playClickSound } from '../audio/haptics.js';
 
 let activeDecks = new Map();
 
+export function initFlipDeckSystem() {
+  // Ready
+}
+
+
 /**
  * Creates an interactive 3D multi-page flip deck in spatial coordinates
  * @param {Array<{title: string, body: string, bg: string}>} pages
@@ -151,3 +156,6 @@ export function flipToPage(deckId, targetIndex) {
 export function getActiveFlipDecks() {
   return Array.from(activeDecks.values());
 }
+
+export const addFlipDeckCard = createFlipDeck;
+

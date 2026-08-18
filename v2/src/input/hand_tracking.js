@@ -249,3 +249,8 @@ function updateHandCursor() {
 export function isHandTrackingActive() {
   return isTracking;
 }
+
+export const initHandTracking = initHandTrackingSystem;
+export const toggleHandTracking = async () => (!isTracking ? startHandTracking() : stopHandTracking());
+export const handTrackingActive = () => isTracking;
+

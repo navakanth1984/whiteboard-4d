@@ -206,3 +206,7 @@ function updateScrubberDisplay() {
     countLbl.textContent = `${visibleCount}/${objects.length} OBJS`;
   }
 }
+
+export const initHistory4D = init4DTimelineUI;
+
+

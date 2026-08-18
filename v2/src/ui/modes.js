@@ -218,6 +218,11 @@ export function setMode(mode) {
   }
 }
 
+export function getCurrentMode() {
+  return currentMode;
+}
+
+
 export function initModeSystem() {
   // Connect Bottombar mode buttons
   document.querySelectorAll('#bottombar .tb').forEach(btn => {

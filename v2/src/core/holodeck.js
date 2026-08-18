@@ -53,6 +53,8 @@ export const ENVIRONMENTS = {
   }
 };
 
+export const HOLODECK_PRESETS = ENVIRONMENTS;
+
 let currentEnvId = 'cyber';
 let skyMesh = null;
 
@@ -139,3 +141,8 @@ function initHolodeckUI() {
     });
   }
 }
+
+export const initHolodeck = initHolodeckSystem;
+export const setHolodeckAtmosphere = setEnvironment;
+export function toggleHolodeckMenu() {}
+

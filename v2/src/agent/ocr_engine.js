@@ -165,3 +165,6 @@ function initOCRUI() {
     });
   }
 }
+
+export const runOCRFromPoints = convertHandwritingTo3DText;
+

@@ -5,6 +5,11 @@ import { getSceneState } from '../core/scene.js';
 
 let codeCards = new Map();
 
+export function initCodeSandboxSystem() {
+  // Ready
+}
+
+
 /**
  * Creates an interactive 3D Code Sandbox card with real-time execution in the spatial whiteboard
  * @param {string} code Initial source code string
@@ -215,3 +220,6 @@ function renderCodeCardCanvas(card) {
 export function getActiveCodeCards() {
   return Array.from(codeCards.keys());
 }
+
+export const addCodeSandboxCard = create3DCodeCard;
+

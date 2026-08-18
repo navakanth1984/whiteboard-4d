@@ -247,3 +247,7 @@ function initCopilotUI() {
     });
   }
 }
+
+export const initCopilot = initCopilotSystem;
+export const toggleCopilot = () => (!isListening ? startVoiceControl() : stopVoiceControl());
+
