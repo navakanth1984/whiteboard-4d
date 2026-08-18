@@ -44,6 +44,10 @@
   - Created `v2/src/agent/ocr_engine.js` integrating Tesseract.js with 3D stroke vertex canvas projection.
   - Automatically replaces rough handwriting sketches with clean 3D extruded typography at original spatial center.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/ocr_engine_qa_report.md`.
+- Implemented **WebXR Spatial VR/AR Mode** on branch `feat/webxr-spatial-headset`:
+  - Created `v2/src/xr/webxr_engine.js` with Apple Vision Pro / Meta Quest 3 6DoF motion controllers and laser pointer rays.
+  - Mounted dynamic immersive VR / AR entrance buttons in bottombar.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/webxr_spatial_headset_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

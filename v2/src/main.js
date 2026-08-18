@@ -169,6 +169,7 @@ import { initCopilotSystem, updateCopilot, executeDirective, startVoiceControl, 
 import { initHolodeckSystem, setEnvironment, getCurrentEnvironment, getAvailableEnvironments } from './core/holodeck.js';
 import { initVRMSystem, updateVRM, loadVRMAvatar, getActiveVRM, setVRMExpression } from './nav/vrm_loader.js';
 import { initOCREngine, convertHandwritingTo3DText, renderStrokesToCanvas } from './agent/ocr_engine.js';
+import { initWebXRSystem, isWebXRActive, isWebXRSupported } from './xr/webxr_engine.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -191,6 +192,7 @@ initCopilotSystem();
 initHolodeckSystem();
 initVRMSystem();
 initOCREngine();
+initWebXRSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -368,6 +370,11 @@ window.__vrmProbe = {
 window.__ocrProbe = {
   convertHandwritingTo3DText,
   renderStrokesToCanvas
+};
+
+window.__webxrProbe = {
+  isWebXRActive,
+  isWebXRSupported
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
