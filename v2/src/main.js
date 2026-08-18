@@ -178,6 +178,7 @@ import { initHapticsAudioSystem, playHoverSound, playClickSound, playWhoosh, pla
 import { initOrbitalMenuSystem, openOrbitalMenu, closeOrbitalMenu, updateOrbitalMenu, triggerOrbitalAction, isOrbitalMenuOpen } from './ui/orbital_menu.js';
 import { initHolomapSystem, updateHolomap, teleportToSector, toggleRadarVisibility, getRadarObjectCount } from './ui/holomap.js';
 import { initPostProcessingSystem, setBloomEnabled, setBloomStrength, isBloomEnabled, getBloomParams } from './fx/postprocessing.js';
+import { createFlipDeck, flipToPage, getActiveFlipDecks } from './objects/flip_deck.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -434,6 +435,12 @@ window.__bloomProbe = {
   setBloomStrength,
   isBloomEnabled,
   getBloomParams
+};
+
+window.__flipDeckProbe = {
+  createFlipDeck,
+  flipToPage,
+  getActiveFlipDecks
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');

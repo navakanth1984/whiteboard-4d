@@ -71,6 +71,9 @@
 - Implemented **Selective Neon Bloom Post-Processing FX Pipeline** on branch `feat/neon-bloom-postprocessing`:
   - Created `v2/src/fx/postprocessing.js` with Three.js r180 `EffectComposer`, `UnrealBloomPass`, and adaptive mobile resolution scaling.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
+- Implemented **3D Multi-Page Interactive Flip Deck & Document Carousel** on branch `feat/3d-flip-deck`:
+  - Created `v2/src/objects/flip_deck.js` with realistic 3D spine curl/pivot rotation, custom multi-page canvas textures, and procedural audio.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/3d_flip_deck_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
