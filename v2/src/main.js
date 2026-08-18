@@ -330,11 +330,21 @@ window.__sceneExportProbe = {
   exportSceneToGLB
 };
 
+import { initRapierPhysics, updatePhysics, setGravityMode, applyImpulse, togglePhysics, isPhysicsEnabled } from './physics/rapier_engine.js';
+
 window.__copilotProbe = {
   executeDirective,
   startVoiceControl,
   stopVoiceControl,
   flyTo
+};
+
+window.__physicsProbe = {
+  initRapierPhysics,
+  setGravityMode,
+  applyImpulse,
+  togglePhysics,
+  isPhysicsEnabled
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -602,6 +612,7 @@ function animate() {
   refreshLinks();
   tickAuras(t);
   updateCopilot(t, dt);
+  updatePhysics(dt);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

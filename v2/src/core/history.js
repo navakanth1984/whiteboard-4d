@@ -1,5 +1,6 @@
 import { scene, placeTargets } from './scene.js';
 import { recordTimelineEvent } from '../temporal/history4d.js';
+import { registerPhysicsBody } from '../physics/rapier_engine.js';
 
 export let idCtr = 0;
 export const objects = [];
@@ -62,6 +63,7 @@ export function register(rootOrObj, type, label, color, opts = {}) {
   }
 
   recordTimelineEvent('create', o);
+  registerPhysicsBody(o);
 
   updateUndoRedoBtns();
   if (window.compassViewport && typeof window.compassViewport.markDirty === 'function') {

@@ -27,6 +27,10 @@
   - Built spatial directives engine for radial circles, planar grids, automatic Signal Flow connections, and guided 3D tours.
   - Integrated Web Speech API voice control and topbar `#btn-copilot`.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/ai_spatial_copilot_qa_report.md`.
+- Implemented **Rapier.js 3D Physics Engine** on branch `feat/rapier-3d-physics`:
+  - Added `@dimforge/rapier3d-compat` (v0.14.0) ESM import map.
+  - Created `v2/src/physics/rapier_engine.js` with rigid body bounding colliders, zero-g / earth / moon gravity modes, physical impulse tossing, and 60 FPS transform synchronization.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/rapier_3d_physics_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
