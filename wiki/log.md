@@ -55,6 +55,10 @@
 - Implemented **3D Positional Audio Spatializer** on branch `feat/3d-spatial-audio`:
   - Created `v2/src/audio/spatial_audio.js` with `THREE.AudioListener` and `PositionalAudio` inverse distance attenuation and 180° directional cones.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/spatial_audio_qa_report.md`.
+- Implemented **Interactive 3D Live Code Sandbox Cards** on branch `feat/3d-code-sandbox`:
+  - Created `v2/src/objects/code_card.js` with syntax-highlighted 2D canvas texture and isolated async JavaScript sandbox execution.
+  - Displays real-time output console tray with return values and timing (0.8ms).
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/code_sandbox_card_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

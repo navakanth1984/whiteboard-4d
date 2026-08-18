@@ -173,6 +173,7 @@ import { initOCREngine, convertHandwritingTo3DText, renderStrokesToCanvas } from
 import { initWebXRSystem, isWebXRActive, isWebXRSupported } from './xr/webxr_engine.js';
 import { initMultiplayerSystem, updateMultiplayer, connectRoom, getConnectedPeers, broadcastAction } from './net/multiplayer.js';
 import { initSpatialAudioSystem, attachPositionalAudio, getAudioListener, checkAudioContextStatus } from './audio/spatial_audio.js';
+import { create3DCodeCard, executeCodeOnCard, getActiveCodeCards } from './objects/code_card.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -391,6 +392,12 @@ window.__multiplayerProbe = {
 window.__spatialAudioProbe = {
   attachPositionalAudio,
   checkAudioContextStatus
+};
+
+window.__codeCardProbe = {
+  create3DCodeCard,
+  executeCodeOnCard,
+  getActiveCodeCards
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');

@@ -253,6 +253,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 13. [x] **WebXR Spatial VR/AR Headset Mode** — implemented on `feat/webxr-spatial-headset`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/webxr_spatial_headset_qa_report.md`.
 14. [x] **Real-Time WebRTC Spatial Multiplayer** — implemented on `feat/multiplayer-webrtc`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/multiplayer_webrtc_qa_report.md`.
 15. [x] **3D Positional Audio Spatializer** — implemented on `feat/3d-spatial-audio`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/spatial_audio_qa_report.md`.
+16. [x] **Interactive 3D Live Code Sandbox Cards** — implemented on `feat/3d-code-sandbox`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/code_sandbox_card_qa_report.md`.
 
 ---
 
@@ -272,4 +273,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **WebXR Spatial VR/AR Engine:** [`v2/src/xr/webxr_engine.js`](v2/src/xr/webxr_engine.js)
 - **WebRTC Multiplayer Collaboration:** [`v2/src/net/multiplayer.js`](v2/src/net/multiplayer.js)
 - **3D Positional Audio Spatializer:** [`v2/src/audio/spatial_audio.js`](v2/src/audio/spatial_audio.js)
+- **Interactive 3D Live Code Sandbox Cards:** [`v2/src/objects/code_card.js`](v2/src/objects/code_card.js)
 - **QA Verification Reports:** [`verification/`](verification/)
