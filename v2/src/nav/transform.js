@@ -38,10 +38,13 @@ export function initTransformSystem() {
   if (!scene || !camera || !renderer) return;
 
   transformControl = new TransformControls(camera, renderer.domElement);
-  transformControl.size = 0.85;
+  transformControl.size = 1.15;
   transformControl.setSpace('world');
   gizmoHelper = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
   scene.add(gizmoHelper);
+  if (typeof window !== 'undefined') {
+    window.__transformControl = transformControl;
+  }
 
   // Disable orbit controls while dragging gizmo
   transformControl.addEventListener('dragging-changed', event => {
