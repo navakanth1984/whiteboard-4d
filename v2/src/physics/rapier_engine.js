@@ -8,6 +8,7 @@ let world = null;
 let isPhysicsInitialized = false;
 let isPhysicsActive = false;
 const bodyMap = new Map(); // objectId -> { rigidBody, collider, mesh }
+let draggingObjectId = null; // object currently being manually moved (gizmo or direct-body drag)
 
 /**
  * Initializes Rapier.js WASM and creates the 3D Physics World
@@ -89,6 +90,10 @@ export function updatePhysics(dt) {
   bodyMap.forEach(({ rigidBody, obj }) => {
     if (!obj.root || !rigidBody) return;
 
+    // Skip physics->visual sync for the object currently being manually dragged —
+    // otherwise this overwrites the user's drag with the rigid body's stale transform.
+    if (obj.id === draggingObjectId) return;
+
     // Sync position
     const t = rigidBody.translation();
     obj.root.position.set(t.x, t.y, t.z);
@@ -97,6 +102,30 @@ export function updatePhysics(dt) {
     const r = rigidBody.rotation();
     obj.root.quaternion.set(r.x, r.y, r.z, r.w);
   });
+}
+
+/**
+ * Marks an object as under manual control (gizmo or direct-body drag) so the
+ * physics step stops overwriting its transform. Call with null to release.
+ */
+export function setDraggingObject(objectId) {
+  draggingObjectId = objectId ?? null;
+}
+
+/**
+ * Pushes a manually-dragged object's current Three.js transform into its
+ * Rapier rigid body, keeping physics in sync while the user is moving it
+ * (and zeroing velocity so it doesn't drift once released).
+ */
+export function syncBodyTransform(objectId, position, quaternion) {
+  const item = bodyMap.get(objectId);
+  if (!item || !item.rigidBody) return;
+  item.rigidBody.setTranslation({ x: position.x, y: position.y, z: position.z }, true);
+  if (quaternion) {
+    item.rigidBody.setRotation({ x: quaternion.x, y: quaternion.y, z: quaternion.z, w: quaternion.w }, true);
+  }
+  item.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+  item.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
 }
 
 /**

@@ -3,6 +3,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { getSceneState } from '../core/scene.js';
 import { objects, removeObj } from '../core/history.js';
 import { SASCore, SASCard } from '../agent/interpret.js';
+import { setDraggingObject, syncBodyTransform } from '../physics/rapier_engine.js';
 
 import { refreshLinks } from '../graph/links.js';
 
@@ -61,12 +62,15 @@ export function initTransformSystem() {
   transformControl.addEventListener('dragging-changed', event => {
     if (controls) controls.enabled = !event.value;
     if (event.value && selectedObject) {
+      setDraggingObject(selectedObject.id);
       const interp = SASCore.interpret(selectedObject);
       if (interp) {
         SASCard.render(interp, selectedObject);
         SASCore.record({ evt: 'drag-start', type: selectedObject.type, frame: interp.frame, id: selectedObject.id });
       }
     } else if (!event.value && selectedObject) {
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+      setDraggingObject(null);
       const interp = SASCore.interpret(selectedObject);
       SASCore.record({ evt: 'drag-end', type: selectedObject.type, frame: interp ? interp.frame : '?', id: selectedObject.id });
     }
@@ -75,6 +79,9 @@ export function initTransformSystem() {
   transformControl.addEventListener('change', () => {
     if (selectedObject && selectedObject.root) {
       selectedObject.root.updateMatrixWorld(true);
+      if (transformControl.dragging) {
+        syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+      }
     }
     updateDropLine();
     refreshLinks();
@@ -214,6 +221,7 @@ if (typeof window !== 'undefined') {
 export function deselectObject() {
   selectedObject = null;
   window.__selectedObject = null;
+  setDraggingObject(null);
   if (transformControl) {
     transformControl.detach();
   }
@@ -262,6 +270,7 @@ export function startDirectObjectDrag(obj, hitPoint) {
   isDirectDragging = true;
   if (typeof window !== 'undefined') window.__isDirectDragging = true;
   if (controls) controls.enabled = false;
+  setDraggingObject(obj.id);
 
   // Create a plane facing the camera coplanar with the object position
   const camDir = new THREE.Vector3();
@@ -293,6 +302,7 @@ export function updateDirectObjectDrag(cx, cy, raycaster) {
     if (gizmoHelper && typeof gizmoHelper.updateMatrixWorld === 'function') {
       gizmoHelper.updateMatrixWorld(true);
     }
+    syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
     updateDropLine();
     refreshLinks();
   }
@@ -302,6 +312,10 @@ export function endDirectObjectDrag() {
   if (isDirectDragging) {
     isDirectDragging = false;
     if (typeof window !== 'undefined') window.__isDirectDragging = false;
+    if (selectedObject) {
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+    }
+    setDraggingObject(null);
     const { controls } = getSceneState();
     if (controls && window.__currentMode === 'nav') {
       controls.enabled = true;
