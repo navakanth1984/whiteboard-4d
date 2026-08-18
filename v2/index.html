@@ -207,7 +207,7 @@
 <div id="size-hud">
   <button class="sz-btn" id="sz-minus">−</button>
   <span id="sz-val">100%</span>
-  <input type="range" id="sz-range" min="5" max="500" step="5" value="100">
+  <input type="range" id="sz-range" aria-label="Object Scale Size" min="5" max="500" step="5" value="100">
   <button class="sz-btn" id="sz-plus">+</button>
 </div>
 
@@ -224,7 +224,7 @@
   </div>
   <div class="op-radius">
     <span>r</span>
-    <input type="range" id="orbit-radius" min="0.5" max="8" step="0.5" value="2.5">
+    <input type="range" id="orbit-radius" aria-label="Orbit Pattern Radius" min="0.5" max="8" step="0.5" value="2.5">
     <span id="orbit-radius-val">2.5</span>
   </div>
 </div>
@@ -243,9 +243,9 @@
     <button class="ubtn" id="btn-reset"><span class="material-symbols-outlined">videocam</span>⟳ Reset Camera View</button>
     <button class="ubtn" id="btn-scene"><span class="material-symbols-outlined">palette</span>🎨 Scene Colors</button>
     <div id="scene-panel" style="display:none;flex-direction:column;gap:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:10px;">
-      <div class="srow"><span>Wall</span><input type="color" id="pick-wall" value="#0c1e3a"></div>
-      <div class="srow"><span>Floor</span><input type="color" id="pick-floor" value="#08182e"></div>
-      <div class="srow"><span>Board BG</span><input type="color" id="pick-bg2" value="#00000d"></div>
+      <div class="srow"><label for="pick-wall">Wall</label><input type="color" id="pick-wall" value="#0c1e3a"></div>
+      <div class="srow"><label for="pick-floor">Floor</label><input type="color" id="pick-floor" value="#08182e"></div>
+      <div class="srow"><label for="pick-bg2">Board BG</label><input type="color" id="pick-bg2" value="#00000d"></div>
     </div>
     <button class="ubtn" id="btn-rec"><span class="material-symbols-outlined">videocam</span>🔴 Presentation</button>
     <button class="ubtn" id="btn-audio-rec"><span class="material-symbols-outlined">mic</span>🎙️ Audio Recording</button>
