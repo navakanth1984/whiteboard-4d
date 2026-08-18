@@ -410,6 +410,7 @@ setupPointerEvents({
       const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 3.5, -6), normal: new THREE.Vector3(0, 0, 1) };
       performAvatarAction('place', surf.point, () => {
         const o = addSpatialCard(curCard, surf, ink);
+        setMode('nav');
         if (o) selectObject(o);
       });
     } else if (mode === 'board') {
@@ -417,6 +418,7 @@ setupPointerEvents({
       const pos = surf.point.clone().add(new THREE.Vector3(0, 2.5, 0));
       performAvatarAction('place', pos, () => {
         const o = addMiniBoard({ styleKey: curBoardStyle, position: pos, colorHex: ink });
+        setMode('nav');
         if (o) selectObject(o);
       });
     } else if (mode === 'icon') {
@@ -425,6 +427,7 @@ setupPointerEvents({
       if (item) {
         performAvatarAction('place', surf.point, () => {
           const o = addIconNode(item, surf, ink);
+          setMode('nav');
           if (o) selectObject(o);
         });
       }
@@ -432,6 +435,7 @@ setupPointerEvents({
       const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 0.5, -4), normal: new THREE.Vector3(0, 1, 0) };
       performAvatarAction('place', surf.point, () => {
         const o = addSplatObject({ presetKey: curSplat, surf, ink });
+        setMode('nav');
         if (o) selectObject(o);
       });
     } else if (mode === 'connect') {
@@ -470,6 +474,7 @@ setupPointerEvents({
           if (file) {
             performAvatarAction('place', surf.point, () => {
               const o = addImagePanel(URL.createObjectURL(file), surf.point, ink);
+              setMode('nav');
               if (o) selectObject(o);
             });
           }
@@ -486,7 +491,9 @@ setupPointerEvents({
           const file = ev.target.files[0];
           if (file) {
             performAvatarAction('place', surf.point, () => {
-              addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+              const o = addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+              setMode('nav');
+              if (o) selectObject(o);
             });
           }
         };
@@ -502,7 +509,9 @@ setupPointerEvents({
           const file = ev.target.files[0];
           if (file) {
             performAvatarAction('place', surf.point, () => {
-              addSpatialAudio(URL.createObjectURL(file), surf, ink);
+              const o = addSpatialAudio(URL.createObjectURL(file), surf, ink);
+              setMode('nav');
+              if (o) selectObject(o);
             });
           }
         };
