@@ -181,6 +181,9 @@ export function redoLast() {
 
 export function removeObj(o) {
   if (!o) return;
+  if (typeof window !== 'undefined' && window.__selectedObject === o && typeof window.__deselectObject === 'function') {
+    window.__deselectObject();
+  }
   if (scene && o.root) {
     scene.remove(o.root);
   }
@@ -223,6 +226,9 @@ export function removeObj(o) {
 }
 
 export function clearAllObjects() {
+  if (typeof window !== 'undefined' && typeof window.__deselectObject === 'function') {
+    window.__deselectObject();
+  }
   while (objects.length > 0) {
     removeObj(objects[0]);
   }

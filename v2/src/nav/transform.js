@@ -213,6 +213,9 @@ export function deselectObject() {
   updateActionDockUI();
   SASCard.hide();
 }
+if (typeof window !== 'undefined') {
+  window.__deselectObject = deselectObject;
+}
 
 export function updateDropLine() {
   if (!selectedObject || !dropLine || !floorShadowCircle) {
