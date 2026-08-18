@@ -124,7 +124,11 @@ import {
   deselectObject,
   selectedObject,
   isGizmoHit,
-  setGizmoMode
+  setGizmoMode,
+  startDirectObjectDrag,
+  updateDirectObjectDrag,
+  endDirectObjectDrag,
+  isDirectDragging
 } from './nav/transform.js';
 
 import { initAvatarPickerUI } from './ui/avatar_picker.js';
@@ -513,7 +517,12 @@ setupPointerEvents({
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
 
-      // 1. Raycast existing canvas objects
+      // 1. If clicking on 3D Gizmo handles, let TransformControls handle axis drag
+      if (isGizmoHit(ray)) {
+        return;
+      }
+
+      // 2. Raycast existing canvas objects
       const roots = objects.map(o => o.root).filter(Boolean);
       const hits = ray.intersectObjects(roots, true);
       if (hits.length > 0) {
@@ -529,21 +538,14 @@ setupPointerEvents({
         });
 
         if (clickedObj) {
-          if (selectedObject === clickedObj) {
-            deselectObject();
-          } else {
-            selectObject(clickedObj);
-          }
+          // Select object (or keep selected) and initiate direct body drag
+          selectObject(clickedObj);
+          startDirectObjectDrag(clickedObj, hits[0].point);
           return;
         }
       }
 
-      // 2. If clicking on 3D Gizmo handles outside object body, let TransformControls drag
-      if (isGizmoHit(ray)) {
-        return;
-      }
-
-      // 3. If clicking empty background, deselect and enable camera look
+      // 3. If clicking empty background, deselect active object and enable camera look
       deselectObject();
       handlePointerDown(e || { clientX: cx, clientY: cy, button: 0 });
     }
@@ -552,6 +554,10 @@ setupPointerEvents({
     const mode = getCurrentMode();
     setMouse(cx, cy);
     if (mode === 'nav') {
+      if (isDirectDragging) {
+        updateDirectObjectDrag(cx, cy, ray);
+        return;
+      }
       handlePointerMove(e || { clientX: cx, clientY: cy });
     }
     if (mode === 'draw' && drawing) {
@@ -561,6 +567,9 @@ setupPointerEvents({
   onUp: (cx, cy, e) => {
     const mode = getCurrentMode();
     if (mode === 'nav') {
+      if (isDirectDragging) {
+        endDirectObjectDrag();
+      }
       handlePointerUp();
     }
     if (mode === 'draw') {

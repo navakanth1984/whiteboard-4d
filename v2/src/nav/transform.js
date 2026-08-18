@@ -14,9 +14,19 @@ export let gizmoMode = 'translate'; // 'translate', 'rotate', 'scale'
 
 export function isGizmoHit(raycaster) {
   if (!transformControl || !selectedObject) return false;
+  if (transformControl.dragging || (transformControl.axis && transformControl.axis !== 'null')) {
+    return true;
+  }
   try {
     const target = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
-    const hits = raycaster.intersectObject(target, true);
+    const visibleMeshes = [];
+    target.traverse(c => {
+      if (c.isMesh && c.visible && c.name && ['X', 'Y', 'Z', 'XY', 'YZ', 'XZ', 'XYZ', 'E', 'START', 'END'].includes(c.name)) {
+        visibleMeshes.push(c);
+      }
+    });
+    if (visibleMeshes.length === 0) return false;
+    const hits = raycaster.intersectObjects(visibleMeshes, true);
     return hits && hits.length > 0;
   } catch (e) {
     return false;
@@ -241,4 +251,65 @@ export function updateDropLine() {
 
   floorShadowCircle.position.copy(floorPos);
   floorShadowCircle.visible = (rootPos.y > 0.2);
+}
+
+// ════════ DIRECT OBJECT BODY DRAGGING ════════
+export let isDirectDragging = false;
+const directDragPlane = new THREE.Plane();
+const directDragOffset = new THREE.Vector3();
+
+export function startDirectObjectDrag(obj, hitPoint) {
+  if (!obj || !obj.root) return;
+  const { camera, controls } = getSceneState();
+  if (!camera) return;
+
+  isDirectDragging = true;
+  if (typeof window !== 'undefined') window.__isDirectDragging = true;
+  if (controls) controls.enabled = false;
+
+  // Create a plane facing the camera coplanar with the object position
+  const camDir = new THREE.Vector3();
+  camera.getWorldDirection(camDir);
+  directDragPlane.setFromNormalAndCoplanarPoint(camDir.negate(), obj.root.position);
+
+  // Offset from hit point to object root position
+  if (hitPoint) {
+    directDragOffset.copy(obj.root.position).sub(hitPoint);
+  } else {
+    directDragOffset.set(0, 0, 0);
+  }
+}
+
+export function updateDirectObjectDrag(cx, cy, raycaster) {
+  if (!isDirectDragging || !selectedObject || !selectedObject.root) return;
+  const { camera } = getSceneState();
+  if (!camera || !raycaster) return;
+
+  const planeHit = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(directDragPlane, planeHit)) {
+    selectedObject.root.position.copy(planeHit.add(directDragOffset));
+    // Clamp within world coordinates
+    selectedObject.root.position.x = Math.max(-50, Math.min(50, selectedObject.root.position.x));
+    selectedObject.root.position.y = Math.max(0.2, Math.min(30, selectedObject.root.position.y));
+    selectedObject.root.position.z = Math.max(-50, Math.min(50, selectedObject.root.position.z));
+
+    if (transformControl) {
+      transformControl.updateMatrixWorld();
+    }
+    if (boxHelper) {
+      boxHelper.update();
+    }
+    updateDropLine();
+  }
+}
+
+export function endDirectObjectDrag() {
+  if (isDirectDragging) {
+    isDirectDragging = false;
+    if (typeof window !== 'undefined') window.__isDirectDragging = false;
+    const { controls } = getSceneState();
+    if (controls && window.__currentMode === 'nav') {
+      controls.enabled = true;
+    }
+  }
 }
