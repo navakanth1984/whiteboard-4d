@@ -174,6 +174,7 @@ import { initWebXRSystem, isWebXRActive, isWebXRSupported } from './xr/webxr_eng
 import { initMultiplayerSystem, updateMultiplayer, connectRoom, getConnectedPeers, broadcastAction } from './net/multiplayer.js';
 import { initSpatialAudioSystem, attachPositionalAudio, getAudioListener, checkAudioContextStatus } from './audio/spatial_audio.js';
 import { create3DCodeCard, executeCodeOnCard, getActiveCodeCards } from './objects/code_card.js';
+import { initHapticsAudioSystem, playHoverSound, playClickSound, playWhoosh, playSnapChime, triggerHaptic } from './audio/haptics.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -199,6 +200,7 @@ initOCREngine();
 initWebXRSystem();
 initMultiplayerSystem();
 initSpatialAudioSystem();
+initHapticsAudioSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -398,6 +400,14 @@ window.__codeCardProbe = {
   create3DCodeCard,
   executeCodeOnCard,
   getActiveCodeCards
+};
+
+window.__hapticsProbe = {
+  playHoverSound,
+  playClickSound,
+  playWhoosh,
+  playSnapChime,
+  triggerHaptic
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
