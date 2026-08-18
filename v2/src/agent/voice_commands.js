@@ -12,6 +12,7 @@ import { clearAllObjects, undo, redo, removeObj, objects } from '../core/history
 import { setPOVMode, resetNavigation, povMode } from '../nav/gamer_nav.js';
 import { startRecording, stopRecording, isRecording } from '../capture/record.js';
 import { showGuide } from '../ui/guide.js';
+import { syncBodyTransform } from '../physics/rapier_engine.js';
 
 let recognition = null;
 let isListening = false;
@@ -216,6 +217,7 @@ export function parseAndExecuteVoiceCommand(raw) {
       else if (text.includes('forward') || text.includes('closer')) selectedObject.root.position.z += step;
       else if (text.includes('back') || text.includes('farther')) selectedObject.root.position.z -= step;
       selectedObject.root.updateMatrixWorld(true);
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
       actionTaken = `Moved Object ${text.includes('left') ? 'Left' : text.includes('right') ? 'Right' : text.includes('up') ? 'Up' : text.includes('down') ? 'Down' : 'in 3D'}`;
     } else {
       actionTaken = 'Select an object first to move';
@@ -228,6 +230,7 @@ export function parseAndExecuteVoiceCommand(raw) {
       const factor = (text.includes('bigger') || text.includes('up') || text.includes('enlarge')) ? 1.25 : 0.8;
       selectedObject.root.scale.multiplyScalar(factor);
       selectedObject.root.updateMatrixWorld(true);
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
       actionTaken = `Scaled Object: ${factor > 1 ? '+25%' : '-20%'}`;
     } else {
       actionTaken = 'Select an object first to scale';
@@ -239,6 +242,7 @@ export function parseAndExecuteVoiceCommand(raw) {
     if (selectedObject && selectedObject.root) {
       selectedObject.root.rotation.y += Math.PI / 4;
       selectedObject.root.updateMatrixWorld(true);
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
       actionTaken = 'Rotated Object 45°';
     } else {
       actionTaken = 'Select an object first to rotate';

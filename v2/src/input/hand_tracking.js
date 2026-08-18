@@ -8,6 +8,7 @@ import { selectObject, deselectObject, selectedObject } from '../nav/transform.j
 import { objects, removeObj } from '../core/history.js';
 import { addSpatialCard, setCurCard } from '../objects/models.js';
 import { showVoiceHUD } from '../agent/voice_commands.js';
+import { setDraggingObject, syncBodyTransform } from '../physics/rapier_engine.js';
 
 let handLandmarker = null;
 let isTracking = false;
@@ -292,6 +293,7 @@ function processDualHandLandmarks(allLandmarks) {
   if (count >= 2 && handState[0].isPinching && handState[1].isPinching) {
     handleTwoHandTransform();
   } else {
+    if (isTwoHandTransforming) setDraggingObject(null);
     isTwoHandTransforming = false;
     // ════════ SINGLE-HAND GESTURES (MOVE, DRAW, TAP, PALM DELETE) ════════
     if (count >= 1) {
@@ -319,6 +321,7 @@ function handleTwoHandTransform() {
     initialTwoHandAngle = currentAngle;
     initialObjScale.copy(selectedObject.root.scale);
     initialObjRotY = selectedObject.root.rotation.y;
+    setDraggingObject(selectedObject.id);
     return;
   }
 
@@ -333,6 +336,7 @@ function handleTwoHandTransform() {
   const deltaAngle = currentAngle - initialTwoHandAngle;
   selectedObject.root.rotation.y = initialObjRotY + deltaAngle * 1.5;
   selectedObject.root.updateMatrixWorld(true);
+  syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
 }
 
 function handleSingleHandGestures(state) {
@@ -400,6 +404,7 @@ function handleSingleHandGestures(state) {
         if (clickedObj) {
           selectObject(clickedObj);
           state.activeDragObj = clickedObj;
+          setDraggingObject(clickedObj.id);
         }
       } else {
         deselectObject();
@@ -414,8 +419,13 @@ function handleSingleHandGestures(state) {
         obj.root.position.y = Math.max(0.2, Math.min(30, obj.root.position.y));
         obj.root.position.z = Math.max(-50, Math.min(50, obj.root.position.z));
         obj.root.updateMatrixWorld(true);
+        syncBodyTransform(obj.id, obj.root.position, obj.root.quaternion);
       }
     } else if (!state.isPinching && state.wasPinching) {
+      if (state.activeDragObj) {
+        syncBodyTransform(state.activeDragObj.id, state.activeDragObj.root.position, state.activeDragObj.root.quaternion);
+      }
+      setDraggingObject(null);
       state.activeDragObj = null;
     }
   }
@@ -425,6 +435,11 @@ function resetHandStates() {
   if (handState[0].wasPinching && drawing) {
     endStroke();
   }
+  if (handState[0].activeDragObj) {
+    syncBodyTransform(handState[0].activeDragObj.id, handState[0].activeDragObj.root.position, handState[0].activeDragObj.root.quaternion);
+    handState[0].activeDragObj = null;
+  }
+  setDraggingObject(null);
   handState[0].wasPinching = false;
   handState[0].isPinching = false;
   handState[1].wasPinching = false;
