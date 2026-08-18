@@ -5,19 +5,27 @@ import { avatarConfig } from '../nav/character.js';
 let hudCoordsEl = null;
 let hudSpeedEl = null;
 let hudModeEl = null;
+let hudMobileEl = null;
 let reticleEl = null;
 
 export function initHUDSystem() {
   hudCoordsEl = document.getElementById('hud-coords');
   hudSpeedEl = document.getElementById('hud-speed');
   hudModeEl = document.getElementById('hud-desktop');
+  hudMobileEl = document.getElementById('hud');
   reticleEl = document.getElementById('gamer-reticle');
 }
 
 export function updateHUD(currentMode = 'nav') {
+  const execTag = avatarConfig.executionMode === 'avatar' ? '🤖 AVATAR' : '⚡ DIRECT';
+  const hudFullText = `${currentMode.toUpperCase()} · ${objects.length} objs · ${links.length} links · ${execTag} · ${povMode.toUpperCase()}`;
+  const hudShortText = `${currentMode.toUpperCase()} · ${objects.length} objs · ${links.length} links`;
+
   if (hudModeEl) {
-    const execTag = avatarConfig.executionMode === 'avatar' ? '🤖 AVATAR' : '⚡ DIRECT';
-    hudModeEl.textContent = `${currentMode.toUpperCase()} · ${objects.length} objs · ${links.length} links · ${execTag} · ${povMode.toUpperCase()}`;
+    hudModeEl.textContent = hudFullText;
+  }
+  if (hudMobileEl) {
+    hudMobileEl.textContent = hudShortText;
   }
 
   const telemetry = window.__gamerTelemetry;
