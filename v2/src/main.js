@@ -167,6 +167,7 @@ import { initHandTrackingSystem, startHandTracking, stopHandTracking, isHandTrac
 import { init4DTimelineUI, actionTimeline, seekToRatio, playReplay, pauseReplay, jumpToLive } from './temporal/history4d.js';
 import { initCopilotSystem, updateCopilot, executeDirective, startVoiceControl, stopVoiceControl, flyTo } from './agent/copilot.js';
 import { initHolodeckSystem, setEnvironment, getCurrentEnvironment, getAvailableEnvironments } from './core/holodeck.js';
+import { initVRMSystem, updateVRM, loadVRMAvatar, getActiveVRM, setVRMExpression } from './nav/vrm_loader.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -187,6 +188,7 @@ initHandTrackingSystem();
 init4DTimelineUI();
 initCopilotSystem();
 initHolodeckSystem();
+initVRMSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -353,6 +355,12 @@ window.__holodeckProbe = {
   setEnvironment,
   getCurrentEnvironment,
   getAvailableEnvironments
+};
+
+window.__vrmProbe = {
+  loadVRMAvatar,
+  getActiveVRM,
+  setVRMExpression
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -621,6 +629,7 @@ function animate() {
   tickAuras(t);
   updateCopilot(t, dt);
   updatePhysics(dt);
+  updateVRM(dt, camera?.position);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

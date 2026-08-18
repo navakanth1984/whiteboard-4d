@@ -35,6 +35,11 @@
   - Created `v2/src/core/holodeck.js` with 360° skydome geometry and dynamic atmosphere presets (Cyber Void, Vaporwave Sunset, Architect Studio, Deep Space Nebula).
   - Built real-time lighting and atmosphere re-tinting engine (`setEnvironment`).
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/holodeck_environments_qa_report.md`.
+- Implemented **VRM Anime & Cyberpunk Avatar Loader** on branch `feat/vrm-avatar-loader`:
+  - Added `@pixiv/three-vrm` (v3.3.4) ESM import map.
+  - Created `v2/src/nav/vrm_loader.js` with SpringBone secondary physics, procedural eye blinking, and look-at IK targeting.
+  - Unified `.vrm` file parsing into Avatar Engine modal.
+  - Live CDP verification: 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

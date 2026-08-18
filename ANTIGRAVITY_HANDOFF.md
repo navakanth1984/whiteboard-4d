@@ -248,6 +248,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 8. [x] **Autonomous In-World AI Spatial Copilot** — implemented on `feat/ai-spatial-copilot`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ai_spatial_copilot_qa_report.md`.
 9. [x] **Rapier.js 3D Physics Engine** — implemented on `feat/rapier-3d-physics`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/rapier_3d_physics_qa_report.md`.
 10. [x] **360° Procedural Skybox & Holodeck Environments** — implemented on `feat/holodeck-environments`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/holodeck_environments_qa_report.md`.
+11. [x] **VRM Anime & Cyberpunk Avatar Loader** — implemented on `feat/vrm-avatar-loader`, verified via CDP with 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
 
 ---
 
@@ -262,4 +263,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **Autonomous In-World AI Spatial Copilot:** [`v2/src/agent/copilot.js`](v2/src/agent/copilot.js)
 - **Rapier.js 3D Physics Engine:** [`v2/src/physics/rapier_engine.js`](v2/src/physics/rapier_engine.js)
 - **360° Holodeck Environments:** [`v2/src/core/holodeck.js`](v2/src/core/holodeck.js)
+- **VRM Humanoid Avatar Loader:** [`v2/src/nav/vrm_loader.js`](v2/src/nav/vrm_loader.js)
 - **QA Verification Reports:** [`verification/`](verification/)
