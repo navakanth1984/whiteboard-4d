@@ -1,15 +1,14 @@
-// v2/src/ui/guide.js — Studio Onboarding & Feature Guide Overlay
+// v2/src/ui/guide.js — Master Spatial Studio Guide & Interactive User Manual
+import { playHoverSound, playClickSound, playWhoosh } from '../audio/haptics.js';
 
 let guideStep = 0;
-const GUIDE_TOTAL = 4;
+const GUIDE_TOTAL = 6;
 
 export function goGuideStep(next, direction = 'fwd') {
-  const steps = [
-    document.getElementById('gstep-0'),
-    document.getElementById('gstep-1'),
-    document.getElementById('gstep-2'),
-    document.getElementById('gstep-3')
-  ];
+  const steps = [];
+  for (let i = 0; i < GUIDE_TOTAL; i++) {
+    steps.push(document.getElementById(`gstep-${i}`));
+  }
   const dots = document.querySelectorAll('.gdot');
 
   if (!steps[guideStep] || !steps[next]) return;
@@ -30,6 +29,8 @@ export function goGuideStep(next, direction = 'fwd') {
 
   if (guideNav) guideNav.style.display = isLast ? 'none' : 'flex';
   if (guideBack) guideBack.style.visibility = guideStep === 0 ? 'hidden' : 'visible';
+
+  playHoverSound();
 }
 
 export function showGuide() {
@@ -44,6 +45,7 @@ export function hideGuide() {
   const overlay = document.getElementById('guide-overlay');
   if (overlay) {
     overlay.style.display = 'none';
+    playWhoosh();
   }
 }
 
@@ -55,10 +57,16 @@ export function initGuide() {
   const btnGuide = document.getElementById('btn-guide');
 
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => goGuideStep(guideStep + 1, 'fwd'));
+    nextBtn.addEventListener('click', () => {
+      playClickSound();
+      goGuideStep(guideStep + 1, 'fwd');
+    });
   }
   if (backBtn) {
-    backBtn.addEventListener('click', () => goGuideStep(guideStep - 1, 'back'));
+    backBtn.addEventListener('click', () => {
+      playClickSound();
+      goGuideStep(guideStep - 1, 'back');
+    });
   }
   if (startBtn) {
     startBtn.addEventListener('click', () => {
@@ -81,6 +89,14 @@ export function initGuide() {
       showGuide();
     });
   }
+
+  // Click direct dots to jump to any chapter
+  document.querySelectorAll('.gdot').forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      goGuideStep(idx, idx < guideStep ? 'back' : 'fwd');
+    });
+    dot.style.cursor = 'pointer';
+  });
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
