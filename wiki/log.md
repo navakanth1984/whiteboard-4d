@@ -40,6 +40,10 @@
   - Created `v2/src/nav/vrm_loader.js` with SpringBone secondary physics, procedural eye blinking, and look-at IK targeting.
   - Unified `.vrm` file parsing into Avatar Engine modal.
   - Live CDP verification: 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
+- Implemented **3D Handwriting-to-Typography AI OCR Engine** on branch `feat/ocr-handwriting-recognition`:
+  - Created `v2/src/agent/ocr_engine.js` integrating Tesseract.js with 3D stroke vertex canvas projection.
+  - Automatically replaces rough handwriting sketches with clean 3D extruded typography at original spatial center.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/ocr_engine_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

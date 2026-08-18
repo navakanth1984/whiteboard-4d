@@ -137,6 +137,18 @@ export function undoLast() {
   return o;
 }
 
+export function removeObject(o) {
+  if (!o) return;
+  if (scene && o.root) {
+    scene.remove(o.root);
+  }
+  const i = objects.indexOf(o);
+  if (i > -1) objects.splice(i, 1);
+  const ui = undoStack.indexOf(o);
+  if (ui > -1) undoStack.splice(ui, 1);
+  updateUndoRedoBtns();
+}
+
 export function redoLast() {
   const o = redoStack.pop();
   if (!o) return null;

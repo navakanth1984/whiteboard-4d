@@ -249,6 +249,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 9. [x] **Rapier.js 3D Physics Engine** — implemented on `feat/rapier-3d-physics`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/rapier_3d_physics_qa_report.md`.
 10. [x] **360° Procedural Skybox & Holodeck Environments** — implemented on `feat/holodeck-environments`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/holodeck_environments_qa_report.md`.
 11. [x] **VRM Anime & Cyberpunk Avatar Loader** — implemented on `feat/vrm-avatar-loader`, verified via CDP with 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
+12. [x] **3D Handwriting-to-Typography AI OCR Engine** — implemented on `feat/ocr-handwriting-recognition`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ocr_engine_qa_report.md`.
 
 ---
 
@@ -264,4 +265,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **Rapier.js 3D Physics Engine:** [`v2/src/physics/rapier_engine.js`](v2/src/physics/rapier_engine.js)
 - **360° Holodeck Environments:** [`v2/src/core/holodeck.js`](v2/src/core/holodeck.js)
 - **VRM Humanoid Avatar Loader:** [`v2/src/nav/vrm_loader.js`](v2/src/nav/vrm_loader.js)
+- **3D AI OCR Engine:** [`v2/src/agent/ocr_engine.js`](v2/src/agent/ocr_engine.js)
 - **QA Verification Reports:** [`verification/`](verification/)

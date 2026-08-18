@@ -168,6 +168,7 @@ import { init4DTimelineUI, actionTimeline, seekToRatio, playReplay, pauseReplay,
 import { initCopilotSystem, updateCopilot, executeDirective, startVoiceControl, stopVoiceControl, flyTo } from './agent/copilot.js';
 import { initHolodeckSystem, setEnvironment, getCurrentEnvironment, getAvailableEnvironments } from './core/holodeck.js';
 import { initVRMSystem, updateVRM, loadVRMAvatar, getActiveVRM, setVRMExpression } from './nav/vrm_loader.js';
+import { initOCREngine, convertHandwritingTo3DText, renderStrokesToCanvas } from './agent/ocr_engine.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -189,6 +190,7 @@ init4DTimelineUI();
 initCopilotSystem();
 initHolodeckSystem();
 initVRMSystem();
+initOCREngine();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -361,6 +363,11 @@ window.__vrmProbe = {
   loadVRMAvatar,
   getActiveVRM,
   setVRMExpression
+};
+
+window.__ocrProbe = {
+  convertHandwritingTo3DText,
+  renderStrokesToCanvas
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
