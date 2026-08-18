@@ -48,6 +48,10 @@
   - Created `v2/src/xr/webxr_engine.js` with Apple Vision Pro / Meta Quest 3 6DoF motion controllers and laser pointer rays.
   - Mounted dynamic immersive VR / AR entrance buttons in bottombar.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/webxr_spatial_headset_qa_report.md`.
+- Implemented **Real-Time Multi-User WebRTC Collaboration Engine** on branch `feat/multiplayer-webrtc`:
+  - Added `peerjs` (v1.5.4) ESM import map.
+  - Created `v2/src/net/multiplayer.js` with 20Hz avatar pose broadcast and holographic wireframe peer mesh synchronization.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/multiplayer_webrtc_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

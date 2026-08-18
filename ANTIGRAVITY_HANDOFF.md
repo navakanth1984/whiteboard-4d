@@ -251,6 +251,7 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 11. [x] **VRM Anime & Cyberpunk Avatar Loader** — implemented on `feat/vrm-avatar-loader`, verified via CDP with 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
 12. [x] **3D Handwriting-to-Typography AI OCR Engine** — implemented on `feat/ocr-handwriting-recognition`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ocr_engine_qa_report.md`.
 13. [x] **WebXR Spatial VR/AR Headset Mode** — implemented on `feat/webxr-spatial-headset`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/webxr_spatial_headset_qa_report.md`.
+14. [x] **Real-Time WebRTC Spatial Multiplayer** — implemented on `feat/multiplayer-webrtc`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/multiplayer_webrtc_qa_report.md`.
 
 ---
 
@@ -268,4 +269,5 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 - **VRM Humanoid Avatar Loader:** [`v2/src/nav/vrm_loader.js`](v2/src/nav/vrm_loader.js)
 - **3D AI OCR Engine:** [`v2/src/agent/ocr_engine.js`](v2/src/agent/ocr_engine.js)
 - **WebXR Spatial VR/AR Engine:** [`v2/src/xr/webxr_engine.js`](v2/src/xr/webxr_engine.js)
+- **WebRTC Multiplayer Collaboration:** [`v2/src/net/multiplayer.js`](v2/src/net/multiplayer.js)
 - **QA Verification Reports:** [`verification/`](verification/)

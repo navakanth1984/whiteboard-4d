@@ -102,7 +102,8 @@ import {
   GENDERS,
   setAvatarConfig,
   loadCustomAvatar,
-  rebuildAvatar
+  rebuildAvatar,
+  avatarRoot
 } from './nav/character.js';
 
 import {
@@ -170,6 +171,7 @@ import { initHolodeckSystem, setEnvironment, getCurrentEnvironment, getAvailable
 import { initVRMSystem, updateVRM, loadVRMAvatar, getActiveVRM, setVRMExpression } from './nav/vrm_loader.js';
 import { initOCREngine, convertHandwritingTo3DText, renderStrokesToCanvas } from './agent/ocr_engine.js';
 import { initWebXRSystem, isWebXRActive, isWebXRSupported } from './xr/webxr_engine.js';
+import { initMultiplayerSystem, updateMultiplayer, connectRoom, getConnectedPeers, broadcastAction } from './net/multiplayer.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -193,6 +195,7 @@ initHolodeckSystem();
 initVRMSystem();
 initOCREngine();
 initWebXRSystem();
+initMultiplayerSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -375,6 +378,12 @@ window.__ocrProbe = {
 window.__webxrProbe = {
   isWebXRActive,
   isWebXRSupported
+};
+
+window.__multiplayerProbe = {
+  connectRoom,
+  getConnectedPeers,
+  broadcastAction
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -644,6 +653,7 @@ function animate() {
   updateCopilot(t, dt);
   updatePhysics(dt);
   updateVRM(dt, camera?.position);
+  updateMultiplayer(dt, avatarRoot?.position, avatarRoot?.quaternion);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {
