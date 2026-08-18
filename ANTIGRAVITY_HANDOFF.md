@@ -1,3 +1,38 @@
+# Update — 2026-08-18 (Claude Code QA + fix, read this first)
+
+A separate Claude Code session ran three rounds of live QA against
+`https://bleuboard-dev.vercel.app/v2/` (this branch, `feat/3d-flip-deck`) while you were shipping
+Dual-Hand Tracking + Voice Commands, found and reported several bugs which you fixed correctly
+(the `ray` crash, text placement, HUD counter, toolbar overflow, Flow-link visibility, sky-click
+placement, tool double-click, Reset Camera View, select/deselect toggle — all re-verified
+working), then found one you hadn't: **manual object movement silently reverted after release**
+("frame moves, object doesn't").
+
+**That session diagnosed and fixed it directly rather than just reporting it.** Full root cause,
+evidence, and fix are written up in `wiki/whiteboard-4d_gbrain.md` under
+**"v2 — Current State"** — read that section before touching drag/physics code again. One-line
+summary: `updatePhysics()` in `rapier_engine.js` unconditionally overwrote every object's
+position from its (unmoved) Rapier rigid body every frame, because no edit path ever told
+physics about a manual move. Fixed in commits `1e13a63` and `a074be6` on this branch
+(`setDraggingObject`/`syncBodyTransform` in `rapier_engine.js`, wired into all four edit paths:
+mouse drag, gizmo drag, hand-tracking pinch, voice commands). **User-confirmed working live**
+after redeploy. Tagged `v2-physics-drag-fixed`.
+
+**Two follow-up gaps from that same fix are now on you, not urgent, see wiki Known Gaps:**
+1. `syncBodyTransform` doesn't resize the Rapier collider when an object's Three.js scale
+   changes (gizmo-scale / two-hand pinch-scale / voice "bigger"/"smaller") — collision volume
+   can silently mismatch visual size for a rescaled object.
+2. `applyImpulse` (the physics "toss on release" function) exists in `rapier_engine.js` but
+   nothing calls it — no drag-end code computes velocity from drag motion and applies it, so
+   objects just stop dead on release instead of tossing. If a toss feel was intended, it needs
+   wiring up; if not, consider whether `applyImpulse` is dead code to remove.
+
+Also: confirm your deploy targets the branch you think it does before your next session —
+`master` is currently 20 commits behind `feat/3d-flip-deck`, and the live site has previously
+been caught serving code that didn't match what a session's local `master` checkout showed.
+
+---
+
 # Handoff to Antigravity — 2026-08-15
 
 **Task:** BleuBoard v2 — fork the single-file app into ES modules, then apply the visual craft pass.
@@ -259,6 +294,10 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 19. [x] **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** — implemented on `feat/isometric-holomap-radar`, verified via CDP with 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
 20. [x] **Selective Neon Bloom Post-Processing FX Pipeline** — implemented on `feat/neon-bloom-postprocessing`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
 21. [x] **3D Multi-Page Interactive Flip Deck & Document Carousel** — implemented on `feat/3d-flip-deck`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/3d_flip_deck_qa_report.md`.
+22. [x] **Dual-Hand Tracking (2-hand gestures) & Continuous Voice Command Assistant** — implemented (commit `c9daa8c`). Verified working but shipped with the same unsynced-physics bug as item 23 in its four new gesture/voice edit paths — patched in the same fix, see item 23.
+23. [x] **Fix: manual drag reverted by Rapier physics** — diagnosed and fixed by a separate Claude Code QA session, not by Antigravity, after 3 rounds of live QA (commits `1e13a63`, `a074be6`). User-confirmed working live. Tagged `v2-physics-drag-fixed`. Full writeup: `wiki/whiteboard-4d_gbrain.md` → "v2 — Current State".
+24. [ ] **Physics collider scale sync** — `syncBodyTransform` doesn't resize the Rapier collider on Three.js scale changes. Not reported as a symptom yet; flagged as a latent gap from item 23's fix.
+25. [ ] **Wire up `applyImpulse` toss-on-release, or remove it** — exists in `rapier_engine.js`, unused. Decide intent before next drag/physics work.
 
 ---
 

@@ -152,25 +152,104 @@ project would accidentally become the rejected option B.
 - v2 module/function inventory (spec §4) — extracted by grep over function declarations and
   element ids, 2026-08-15. Not recalled from any prior session.
 
-### Known Gaps
-- **Nothing in this section has been implemented.** No v2 directory exists. The spec is a plan.
-- `index.html` and `server.cjs` carry **uncommitted WIP** on branch `master`. This was initially
-  mis-described as "the postprocessing/hologram pass" — **false**, corrected 2026-08-15 by reading
-  `git diff`. It is a **915-deletion / 102-insertion mass removal** of shipped features
-  (post-processing chain, handwriting/OCR stack, Share & Export Hub modal, Spatial Bridge UI panel,
-  GSAP, lz-string, WCAG motion toggle). **`index.html` must not be committed** — doing so would
-  delete ~900 lines of committed features on the branch Vercel deploys. `server.cjs` is a separate,
-  additive, safe change (Gaussian splat + WASM MIME types). Recommended: commit `server.cjs`, stash
-  `index.html`. Awaiting Navakanth; spec Phase 0 still blocks.
-- ~~Unanswered: whether any v1 feature may be dropped in v2.~~ **Resolved 2026-08-15: drop nothing,
-  port everything.** Rationale: features cannot be judged before they have been seen in the app.
-  Spec §4's Phase 2 blocker is closed.
+### Known Gaps (as of 2026-08-15 spec — superseded, see below)
 - The ≥45fps threshold is an **assumed** target, never measured against v1. v1's actual baseline
   frame rate on this machine is unknown — the threshold may prove wrong in either direction.
-- Two pre-existing bugs are to be ported **as-is**, deliberately, so parity stays honest:
+- Two pre-existing bugs were to be ported **as-is**, deliberately, so parity stays honest:
   `recognizeStroke()` star-vs-square misclassification, and stroke groups never getting an explicit
   `root.position` (which breaks "To Text"; a `lastStrokeCentroid` workaround exists but was never
-  backported).
+  backported). **Not re-verified whether these landed in v2** — flagging as unconfirmed, not fixed.
 - Mobbin MCP is **not connected** to the Claude Code session (absent from the server list). Figma
   MCP is present but **unauthorized** (needs OAuth via claude.ai connector settings or `/mcp` in an
   interactive terminal). The spec assumes neither is available.
+
+---
+
+## v2 — Current State (superseding the section above)
+
+**Status**: Verified 2026-08-18
+
+The section above is **stale** — it describes v2 as unimplemented/spec-only. That is no longer
+true. v2 is built, deployed, and has been through three rounds of live QA + bug-fix cycles
+(a separate agent, "Antigravity," does the implementation; this Claude Code session does QA and
+one significant physics fix, see below).
+
+- **Live URL**: `https://bleuboard-dev.vercel.app/v2/` (Vercel alias, re-pointed on every deploy
+  via `npx vercel alias set <preview-url> bleuboard-dev.vercel.app`).
+- **Source branch actually served**: `feat/3d-flip-deck` on `github.com/navakanth1984/whiteboard-4d`
+  — **not** `master`. `master` is 20 commits behind at last check. Confirm branch before assuming
+  local `master` reflects what's live; it does not.
+- **Local checkout**: `C:\Users\navka\navakanth001\whiteboard-4d`, ES modules under `v2/src/`, no
+  bundler (matches the "no build step" principle from the original spec).
+- **Feature surface** (all placed and functionally tested live, not just visually inspected):
+  6-chapter onboarding guide, FPS/TPS/Orbit camera + WASD flight + D-pad, Ink/Text/Nodes/Cards/
+  Boards/Splat/Image/Video/Audio/Flow placement tools, object select/move/rotate/scale via
+  TransformControls gizmo AND direct-body drag, Flow links between objects (glowing tube +
+  arrowhead), 4D temporal scrubber (accurate live object-count tracking, scrub/rewind/replay),
+  Rapier.js physics (zero-G by default, per-object rigid bodies), dual-hand MediaPipe tracking
+  (pinch-grab, two-hand pinch scale/rotate, open-palm delete, V-sign quick-spawn), continuous
+  Web Speech voice commands (create/move/scale/rotate/delete/camera/mode by voice), Save/Load
+  Session (JSON blob download — confirmed via network tab, not just UI click), GLB export,
+  Utilities drawer (Scene Colors, Presentation, Audio Recording, Clear All — the last gated by a
+  real native `confirm()` dialog, not broken as an earlier QA pass mistakenly concluded).
+
+### Verified
+- Deployed app loads with 0 console errors on fresh load — verified live via Browser tool,
+  multiple sessions, 2026-08-18.
+- Object counter (top HUD "N objs · M links") and the 4D scrubber's own count stay in sync with
+  actual scene contents through 8+ sequential heterogeneous placements (text/node/card/board/
+  splat/ink) — verified by placing objects and reading the count after each, not just once.
+- **Fixed and verified: manual object movement (drag/gizmo/hand-tracking/voice) was silently
+  reverted by the physics engine.** Root cause: `v2/src/physics/rapier_engine.js`'s
+  `updatePhysics(dt)` unconditionally overwrote every registered object's `root.position` /
+  `quaternion` from its Rapier rigid body on every animation frame. Nothing in any of the four
+  edit paths (mouse direct-body drag, native TransformControls gizmo drag, MediaPipe hand-pinch
+  grab/scale/rotate, voice move/scale/rotate commands) ever told the rigid body about the edit —
+  so the very next physics tick snapped the object back to its stale, unmoved rigid-body
+  position. Confirmed by direct console inspection (not inference): dispatched real, correctly
+  page-scaled `PointerEvent`s at `window.__historyProbe`-exposed objects, read
+  `object.root.position` immediately after a `pointermove` (showed the new dragged position),
+  then again after `pointerup` (reverted to the exact original value, byte-for-byte). This also
+  explains the earlier confusing report "worked for the newly-inserted object, not for older
+  ones" — Rapier's WASM (`RAPIER.init()`) loads **asynchronously**, so a drag performed before
+  physics finished initializing hit no stomping at all; every drag after was affected equally
+  regardless of object age.
+  - **Fix**: `setDraggingObject(id)` / `syncBodyTransform(id, pos, quat)` added to
+    `rapier_engine.js`; `updatePhysics` now skips the physics→visual sync for whichever object id
+    is currently marked as dragging, and every edit path pushes its live transform into the rigid
+    body (zeroing velocity) during and at the end of the edit.
+  - Commits (branch `feat/3d-flip-deck`): `1e13a63` (mouse/gizmo drag), `a074be6` (hand-tracking
+    + voice commands — same bug, same fix, four call sites total).
+  - Deployed and confirmed working live by the project owner after redeploy, 2026-08-18.
+- Earlier same-day QA rounds (documented only in chat, reconstructed here for the record) also
+  verified fixed: uncaught `ReferenceError: ray is not defined` on background clicks; 3D text
+  tool not placing text on Enter; stale object counter; toolbar-overflow making Save/Load/Export/
+  Compass/Utilities unreachable at narrower viewports (now collected into a working "Utilities"
+  drawer); Flow-link connector visibility (upgraded to a much thicker, brighter, arrow-headed
+  tube); "Reset Camera View" recovering a lost/off-scene camera; select↔deselect toggle on
+  re-clicking the same object; tool-button double-click reverting to NAV mode.
+
+### Known Gaps
+- **Deployment/branch drift risk is real and already happened once.** The live site has been
+  caught running code that didn't match what was checked out locally on `master` — always
+  confirm the actual served branch/commit (`git log` on `feat/3d-flip-deck`, not `master`)
+  before reasoning about "current" behavior from the local checkout alone.
+- **Cosmetic, non-blocking**: a recurring `THREE.WebGLProgram: ... signed/unsigned mismatch,
+  unsigned assumed` shader compiler warning fires on scene load. Not investigated — low priority.
+- **Physics scale sync**: `syncBodyTransform` pushes position/rotation into the Rapier rigid body
+  but does **not** resize the collider when an object's Three.js scale changes (via gizmo-scale,
+  two-hand pinch-scale, or voice "bigger"/"smaller"). This means a resized object's collision
+  volume can silently mismatch its visual size. Not yet a reported symptom, but flagged as a
+  latent gap from the same fix session — worth a follow-up if collision-based features (toss,
+  object-to-object collisions) are relied on for a visibly-rescaled object.
+- **`applyImpulse` / physics "toss on release" feature exists in `rapier_engine.js` but nothing
+  currently calls it** — no drag-release code computes a velocity from drag motion and applies
+  it. The zero-G default plus `syncBodyTransform` zeroing velocity on every sync means dragged
+  objects currently just stop dead on release; a "toss" feel was evidently intended but is not
+  wired up.
+- QA in this session was done through an automated browser tool with its own occasional
+  flakiness (backgrounded/zero-size render states, coordinate-space mismatches between
+  screenshot-space and real page pixels). Where this caused a false reading, it was caught by
+  cross-checking with direct JS/console inspection rather than trusting a single screenshot —
+  but it means **live visual QA by a human is still worth doing periodically**, not fully
+  supersedable by this workflow.

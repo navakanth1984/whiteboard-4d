@@ -1,5 +1,42 @@
 # Execution Log
 
+## 2026-08-18 (QA session — separate from the Antigravity implementation session logged below)
+A Claude Code session ran three rounds of live QA against `https://bleuboard-dev.vercel.app/v2/`
+(branch `feat/3d-flip-deck`, deployed by a separate agent, "Antigravity") using a browser
+automation tool plus direct console/JS inspection — not just visual screenshots.
+
+**Round 1** found and reported: uncaught `ReferenceError: ray is not defined` on background
+clicks; 3D text tool not placing text on Enter; a stale/duplicate object counter; toolbar
+overflow at narrower viewports making Save/Load/Export/Compass/Utilities completely unreachable;
+non-fatal `BufferGeometry: Buffer size too small` shader warnings on splat/text placement;
+deployment drift between the live site and the local `master` checkout.
+
+**Round 2** (after Antigravity's fix pass) re-verified each: `ray` crash fixed, text placement
+fixed, toolbar overflow fixed (new "Utilities" drawer), Flow-link visibility fixed. Also
+retracted a false-positive from round 1 — "Clear All Objects" was never broken, it correctly
+triggers a native `confirm()` dialog that the browser automation tool silently declines,
+misread as non-functional. Found one still-broken item ("Reset Camera View" appeared inert)
+and flagged select/move/deselect as not yet independently re-verified.
+
+**Round 3**, prompted by "act as a trainer building a real Cloud Computing session" (i.e. test
+combined/realistic usage, not isolated clicks), found: select↔deselect toggle now works,
+tool-button double-click→NAV works, sky-click placement fallback now works (previously silently
+no-op'd above the floor plane), "Reset Camera View" now works, Flow-link visuals dramatically
+improved (thick glowing arrow tube vs. a faint line before).
+
+**Then a user-reported regression**: manual object dragging appeared broken — "frame moves, but
+the object doesn't." This Claude Code session diagnosed and fixed it directly (not just
+reported it) — see the `v2 — Current State` section of `whiteboard-4d_gbrain.md` for full root
+cause and evidence. Summary: `updatePhysics()` in `rapier_engine.js` was reverting every manual
+position edit on the next animation frame because no edit path told the Rapier rigid body about
+the change. Fixed and deployed in two commits on `feat/3d-flip-deck` (`1e13a63`, `a074be6`),
+covering mouse/gizmo drag, MediaPipe hand-tracking pinch/scale/rotate, and voice move/scale/
+rotate commands. **User-confirmed working after redeploy.**
+
+Also caught mid-session: Antigravity shipped Dual-Hand Tracking + Continuous Voice Commands
+(`c9daa8c`) with the *same* unsynced-physics pattern in four new call sites — patched
+proactively in the same fix commit rather than waiting for them to be reported separately.
+
 ## 2026-08-18
 - Tagged `v2-splat-stable` on `master` to preserve the verified Gaussian Splat milestone.
 - Implemented **Mobile Adaptive Performance & Touch Gestures** on branch `feat/mobile-adaptive-gestures` per `docs/superpowers/specs/2026-08-18-bleuboard-v2-mobile-adaptive-perf-design.md`:
