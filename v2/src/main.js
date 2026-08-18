@@ -165,6 +165,7 @@ import { detectDeviceTier, getDeviceBudget } from './core/device_tier.js';
 import { initTouchGestures } from './core/touch_gestures.js';
 import { initHandTrackingSystem, startHandTracking, stopHandTracking, isHandTrackingActive } from './input/hand_tracking.js';
 import { init4DTimelineUI, actionTimeline, seekToRatio, playReplay, pauseReplay, jumpToLive } from './temporal/history4d.js';
+import { initCopilotSystem, updateCopilot, executeDirective, startVoiceControl, stopVoiceControl, flyTo } from './agent/copilot.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -183,6 +184,7 @@ initModeSystem();
 initTouchGestures(canvasEl);
 initHandTrackingSystem();
 init4DTimelineUI();
+initCopilotSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -326,6 +328,13 @@ import { exportSceneToGLB } from './export/scene_export.js';
 
 window.__sceneExportProbe = {
   exportSceneToGLB
+};
+
+window.__copilotProbe = {
+  executeDirective,
+  startVoiceControl,
+  stopVoiceControl,
+  flyTo
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
@@ -592,6 +601,7 @@ function animate() {
   tickLinks(dt);
   refreshLinks();
   tickAuras(t);
+  updateCopilot(t, dt);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {
