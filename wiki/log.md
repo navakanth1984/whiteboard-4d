@@ -31,6 +31,10 @@
   - Added `@dimforge/rapier3d-compat` (v0.14.0) ESM import map.
   - Created `v2/src/physics/rapier_engine.js` with rigid body bounding colliders, zero-g / earth / moon gravity modes, physical impulse tossing, and 60 FPS transform synchronization.
   - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/rapier_3d_physics_qa_report.md`.
+- Implemented **360° Procedural Skybox & Holodeck Environments** on branch `feat/holodeck-environments`:
+  - Created `v2/src/core/holodeck.js` with 360° skydome geometry and dynamic atmosphere presets (Cyber Void, Vaporwave Sunset, Architect Studio, Deep Space Nebula).
+  - Built real-time lighting and atmosphere re-tinting engine (`setEnvironment`).
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/holodeck_environments_qa_report.md`.
 
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.

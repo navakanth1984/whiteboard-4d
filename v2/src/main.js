@@ -166,6 +166,7 @@ import { initTouchGestures } from './core/touch_gestures.js';
 import { initHandTrackingSystem, startHandTracking, stopHandTracking, isHandTrackingActive } from './input/hand_tracking.js';
 import { init4DTimelineUI, actionTimeline, seekToRatio, playReplay, pauseReplay, jumpToLive } from './temporal/history4d.js';
 import { initCopilotSystem, updateCopilot, executeDirective, startVoiceControl, stopVoiceControl, flyTo } from './agent/copilot.js';
+import { initHolodeckSystem, setEnvironment, getCurrentEnvironment, getAvailableEnvironments } from './core/holodeck.js';
 
 // Boot scene & render loop
 const canvasEl = document.getElementById('c');
@@ -185,6 +186,7 @@ initTouchGestures(canvasEl);
 initHandTrackingSystem();
 init4DTimelineUI();
 initCopilotSystem();
+initHolodeckSystem();
 
 // Connect UI Undo / Redo buttons
 const btnUndo = document.getElementById('btn-undo');
@@ -345,6 +347,12 @@ window.__physicsProbe = {
   applyImpulse,
   togglePhysics,
   isPhysicsEnabled
+};
+
+window.__holodeckProbe = {
+  setEnvironment,
+  getCurrentEnvironment,
+  getAvailableEnvironments
 };
 
 const btnExportGLB = document.getElementById('btn-export-glb');
