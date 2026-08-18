@@ -155,6 +155,7 @@ import { initPostprocessing, setBloomEnabled, setBloomStrength } from './fx/post
 import { initFlipDeckSystem, addFlipDeckCard } from './objects/flip_deck.js';
 import { exportSceneToGLB } from './export/scene_export.js';
 import { initPhysics, updatePhysics, registerPhysicsBody } from './physics/rapier_engine.js';
+import { initVoiceCommandsSystem } from './agent/voice_commands.js';
 
 // Setup Diagnostic Probes for Browser Verification
 window.__historyProbe = { objects, links, undoStack, redoStack };
@@ -190,6 +191,8 @@ initGuideSystem();
 initWritingAssistEvents();
 initModeSystem();
 initTouchGestures();
+initHandTracking();
+initVoiceCommandsSystem();
 initHistory4D();
 initCopilot();
 initPhysics();

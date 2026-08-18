@@ -677,7 +677,69 @@ input[type=color]:hover{border-color:#38bdf8;box-shadow:0 0 14px rgba(56,189,248
 @keyframes sasPulse{0%{transform:translate(-50%,0) scale(1);}45%{transform:translate(-50%,0) scale(1.035);}100%{transform:translate(-50%,0) scale(1);}}
 
 /* draw button icon updates with brush */
-#draw-icon{font-size:20px;line-height:1;}
+/* ════════ VOICE COMMANDS HUD & PULSE ════════ */
+#voice-hud {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 9500;
+  pointer-events: none;
+  background: rgba(2, 6, 23, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 24px;
+  padding: 8px 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(56, 189, 248, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#voice-hud.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.vh-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vh-mic-icon {
+  font-size: 14px;
+  animation: micPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 6px #38bdf8); }
+}
+
+.vh-heard {
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.vh-action {
+  color: #a7f3d0;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+#btn-voice-control.active {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
+}
 
 /* ════════ HUD ════════ */
 #hud{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;

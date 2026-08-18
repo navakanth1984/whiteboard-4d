@@ -237,3 +237,6 @@ export function clearAllObjects() {
   updateUndoRedoBtns();
 }
 
+export const undo = undoLast;
+export const redo = redoLast;
+

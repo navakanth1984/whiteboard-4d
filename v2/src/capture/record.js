@@ -112,3 +112,5 @@ export function stopRecording() {
   if (camVideoEl) camVideoEl.style.display = 'none';
   if (recTimer) clearInterval(recTimer);
 }
+
+export const isRecording = () => recActive;

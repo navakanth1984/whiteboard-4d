@@ -48,10 +48,17 @@
   </button>
 
   <!-- WebCam Hand Tracking Toggle -->
-  <button id="btn-hand-tracking" class="tb-avatar-btn" title="Toggle WebCam 3D Hand Tracking (Pinch to Draw & Move)">
+  <button id="btn-hand-tracking" class="tb-avatar-btn" title="Toggle WebCam Dual-Hand 3D Tracking (Pinch Move • 2-Hand Scale/Rotate • Palm Delete)">
     <span class="material-symbols-outlined">front_hand</span>
-    <span id="hand-tracking-lbl">HAND TRACK</span>
+    <span id="hand-tracking-lbl">HANDS TRACK</span>
     <span class="avatar-status-dot" id="hand-status-dot" style="background:#64748b;"></span>
+  </button>
+
+  <!-- Continuous Voice Commands Toggle -->
+  <button id="btn-voice-control" class="tb-avatar-btn" title="Toggle Continuous Hands-Free Voice Commands Assistant">
+    <span class="material-symbols-outlined">mic</span>
+    <span id="voice-status-lbl">VOICE</span>
+    <span class="avatar-status-dot" id="voice-status-dot" style="background:#64748b;"></span>
   </button>
 
   <!-- Autonomous AI Copilot Toggle -->
@@ -74,10 +81,19 @@
   <div class="tb-hud" id="hud-desktop">NAV · 0 objects</div>
 </div>
 
+<!-- Floating Real-Time Voice Command HUD -->
+<div id="voice-hud">
+  <div class="vh-header">
+    <span class="vh-mic-icon">🎙️</span>
+    <span class="vh-heard">Listening...</span>
+  </div>
+  <div class="vh-action">Voice Commands Ready</div>
+</div>
+
 <!-- WebCam Hand Tracking Feed PIP -->
-<div id="hand-cam-container" style="display:none;position:fixed;bottom:80px;right:20px;width:160px;height:120px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(56,189,248,0.5);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:9000;background:#000;">
+<div id="hand-cam-container" style="display:none;position:fixed;bottom:80px;right:20px;width:170px;height:128px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(56,189,248,0.5);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:9000;background:#000;">
   <video id="hand-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
-  <div id="hand-hud" style="position:absolute;bottom:4px;left:6px;font-size:10px;color:#38bdf8;font-family:monospace;pointer-events:none;">VISION · READY</div>
+  <div id="hand-hud" style="position:absolute;bottom:4px;left:6px;font-size:10px;color:#38bdf8;font-family:monospace;pointer-events:none;">DUAL HANDS · ACTIVE</div>
 </div>
 
 <!-- Central Gamer Precision Reticle -->
