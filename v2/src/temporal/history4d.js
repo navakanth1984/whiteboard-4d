@@ -131,6 +131,7 @@ export function init4DTimelineUI() {
       container.classList.toggle('show', isShowing);
       container.style.display = isShowing ? 'flex' : 'none';
       btn4D.classList.toggle('active', isShowing);
+      btn4D.setAttribute('aria-pressed', isShowing ? 'true' : 'false');
       if (!isShowing) jumpToLive();
     });
   }
