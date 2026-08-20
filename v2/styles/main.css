@@ -792,7 +792,10 @@ input[type=color]:hover{border-color:#38bdf8;box-shadow:0 0 14px rgba(56,189,248
 
 /* ════════ GUIDE ════════ */
 #guide-overlay{
-  position:fixed;inset:0;z-index:1000;
+  /* Must stay above every other fixed overlay (avatar-modal/export-hub-modal use z-index:9999,
+     timeline-4d/hand-cam-container use 9000) so the onboarding guide is never click-through-able
+     by a panel left open behind it — see wiki/whiteboard-4d_gbrain.md 2026-08-20 QA sweep. */
+  position:fixed;inset:0;z-index:10000;
   background:linear-gradient(175deg,rgba(0,2,18,.97) 0%,rgba(0,8,36,.94) 100%);
   display:none;align-items:center;justify-content:center;
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);

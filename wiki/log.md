@@ -22,10 +22,19 @@ play/pause button, the 4D timeline scrubber, the 4D object-count status region, 
 PR opened against `feat/gemini-copilot-backend`, not merged (awaiting review per standing rule).
 
 Confirmed-but-deferred: Copilot AI is voice/mic-only with no text-input fallback (backend itself
-verified fully working via direct HTTP); onboarding guide Next/Back button lands on the wrong
-control when another panel is open (corroborated by 2 independent agents, root cause not yet
-triaged); "V-sign quick-spawn" gesture undocumented in-app; "Clear All Objects" confirm() gate
-possibly missing (low-confidence, needs clean re-check).
+verified fully working via direct HTTP); "V-sign quick-spawn" gesture undocumented in-app;
+"Clear All Objects" confirm() gate possibly missing (low-confidence, needs clean re-check).
+
+**Same-day follow-up, two items closed out:**
+1. **Physics drag-persistence regression test (2026-08-18 fix) re-run in a working session — PASS.**
+   Real trusted drags (direct-body + gizmo), position confirmed unchanged via direct JS inspection
+   across 1.5s/multiple physics ticks for both edit paths. No regression.
+2. **Onboarding guide Next/Back button bug — root-caused and fixed.** `#avatar-modal` /
+   `#export-hub-modal` use inline `z-index:9999` (and `#timeline-4d`/`#hand-cam-container` use
+   `9000`), all above `#guide-overlay`'s `z-index:1000` — any of those panels left open behind the
+   guide swallows its clicks. Verified with an A/B `elementFromPoint` test before fixing. Fixed by
+   raising `#guide-overlay` to `z-index:10000` in `v2/styles/main.css`. Both changes pushed as a
+   second commit on `fix/qa-accessibility-labels` (still unmerged, awaiting review).
 
 ## 2026-08-18 (QA session — separate from the Antigravity implementation session logged below)
 A Claude Code session ran three rounds of live QA against `https://bleuboard-dev.vercel.app/v2/`

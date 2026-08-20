@@ -336,11 +336,16 @@ verified live (local `server.cjs`) via DOM inspection after each addition, 0 new
   UI's Copilot control only opens a static telemetry-card panel; there is no chat/text box, so the
   feature is unusable/untestable without real microphone hardware. Worth a text-input fallback for
   both accessibility and testability.
-- **Onboarding guide Next/Back navigation instability** when another panel (e.g. Avatar Engine) is
-  open simultaneously — clicks intended for the guide's "Next →" land on an unrelated toolbar
-  button instead. **Corroborated independently by 2 separate QA agents** in the same session — not
-  a one-off flake. Root cause not yet triaged (likely overlapping z-index/layout state between the
-  guide overlay and other panels); worth a follow-up look at `v2/src/ui/guide.js`.
+- ~~Onboarding guide Next/Back navigation instability~~ — **ROOT-CAUSED AND FIXED, 2026-08-20.**
+  `#avatar-modal` and `#export-hub-modal` (`v2/index.html`) both set inline `z-index:9999`, and
+  `#timeline-4d`/`#hand-cam-container` use `9000` — all above `#guide-overlay`'s `z-index:1000`
+  (`v2/styles/main.css`). If any of those panels is visible while the guide overlay is also
+  showing, it renders on top and swallows clicks meant for the guide, invisibly (semi-transparent
+  backdrops make it easy to miss on a screenshot) — exactly what both QA agents saw. **Verified
+  root cause with an A/B `elementFromPoint` test**: forcing `#avatar-modal` open alongside the
+  guide, a click at the Next button's screen position resolved to `#avatar-modal` at the old
+  z-index (1000) and to `#guide-card` after raising `#guide-overlay` to `z-index:10000`. Fixed by
+  raising `#guide-overlay`'s z-index above every other fixed overlay in the app.
 - **"V-sign quick-spawn" hand gesture is undocumented in-app** — the tooltip and onboarding guide
   cover pinch-move/2-hand-scale-rotate/palm-delete but no V-sign content was found (guide
   navigation instability above may have hidden it in an unreached chapter — not conclusively
@@ -348,4 +353,17 @@ verified live (local `server.cjs`) via DOM inspection after each addition, 0 new
 - Cosmetic-only, unconfirmed: "Clear All Objects" may be missing its native `confirm()` gate — one
   agent saw no confirm/suppression log, but flagged it as low-confidence given the same session's
   broader flakiness. Needs a clean re-check.
+
+### Physics drag-persistence regression test — RE-RUN, PASS (2026-08-20)
+Re-ran the one test the sweep above couldn't complete (compositor issue blocked all 6 QA
+sessions' canvas interaction). This session's Browser pane rendered correctly. Placed a real
+object (Databricks node card) via the actual UI flow, then:
+- **Direct-body drag** (real trusted `left_click_drag` on the mesh, not synthetic events):
+  position went `[7.57, 5.83, -10.6] → [3.49, 1.66, -10.58]`, held exactly steady across a 1.5s
+  wait (many physics ticks) — no snap-back.
+- **Gizmo drag** (Y-axis translate handle): `Y: 1.66 → 5.02`, again held steady across 1.5s.
+- Verified via direct `window.__selectedObject.root.position` inspection before/after, not just
+  visual screenshot. Zero console errors throughout.
+- **Conclusion: the 2026-08-18 physics drag-snap-back fix (commits `1e13a63`/`a074be6`) has NOT
+  regressed.** Both edit paths confirmed independently.
    - Added `:focus-visible` focus ring styles (`outline: 2px solid #38bdf8`) in `v2/styles/main.css`.
