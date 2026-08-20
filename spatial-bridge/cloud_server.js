@@ -33,9 +33,8 @@ const { GoogleGenAI } = require('@google/genai');
 
 const PROJECT = process.env.GCP_PROJECT || 'nthdim-academy-v2';
 const REGION  = process.env.REGION      || 'us-central1';
-const MODEL   = 'gemini-2.0-flash';
+const MODEL   = 'gemini-2.5-flash';
 const API_KEY = process.env.GEMINI_API_KEY;
-
 
 const SYSTEM_PROMPT = `You are the spatial intelligence layer for BleuuBoard — a 4D creative
 whiteboard with a Three.js scene graph. Translate the user's natural language utterance into a
@@ -66,7 +65,7 @@ async function geminiInterpret(utterance, sceneContext) {
   if (API_KEY) {
     if (!_genAI) _genAI = new GoogleGenAI({ apiKey: API_KEY });
     const response = await _genAI.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: MODEL,
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_PROMPT,
@@ -80,7 +79,7 @@ async function geminiInterpret(utterance, sceneContext) {
   // Path B: Vertex AI ADC
   if (!_vertexModel) {
     const vAI = new VertexAI({ project: PROJECT, location: REGION });
-    _vertexModel = vAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    _vertexModel = vAI.getGenerativeModel({ model: MODEL });
   }
   const result = await _vertexModel.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -89,6 +88,7 @@ async function geminiInterpret(utterance, sceneContext) {
   });
   return result.response.candidates[0]?.content?.parts[0]?.text || '{}';
 }
+
 
 // POST /gemini/interpret
 app.post('/gemini/interpret', async (req, res) => {
