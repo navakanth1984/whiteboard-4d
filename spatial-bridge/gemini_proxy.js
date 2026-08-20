@@ -15,14 +15,8 @@ const { VertexAI } = require('@google-cloud/vertexai');
 
 const app = express();
 app.use(express.json({ limit: '512kb' }));
-app.use(cors({
-  origin: [
-    'https://bleuboard.vercel.app',
-    'https://bleuboard-dev.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ]
-}));
+app.use(cors());
+
 
 const PROJECT   = process.env.GCP_PROJECT || 'nthdim-academy-v2';  // from .env VERTEX_PROJECT_ID
 const REGION    = process.env.REGION || 'us-central1';              // from .env VERTEX_LOCATION

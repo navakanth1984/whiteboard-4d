@@ -16,10 +16,8 @@ const GCP_REGION   = 'us-central1';
 // Service: bleuboard-spatial-bridge | Project: nthdim-academy-v2
 const CLOUD_RUN_URL = 'https://bleuboard-spatial-bridge-526005048954.us-central1.run.app';
 
-const PROXY_BASE = (() => {
-  if (window.location.hostname === 'localhost') return 'http://localhost:8080';
-  return CLOUD_RUN_URL;
-})();
+const PROXY_BASE = CLOUD_RUN_URL;
+
 
 
 // Gemini API key — loaded server-side by the Cloud Run proxy from Secret Manager.

@@ -17,15 +17,9 @@ const express = require('express');
 const cors    = require('cors');
 
 const app = express();
-app.use(cors({
-  origin: [
-    'https://bleuboard.vercel.app',
-    'https://bleuboard-dev.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ]
-}));
+app.use(cors());
 app.use(express.json({ limit: '512kb' }));
+
 
 // ── Multi-backend Gemini client (Secret Manager API Key or Vertex AI ADC) ──
 const { VertexAI } = require('@google-cloud/vertexai');
