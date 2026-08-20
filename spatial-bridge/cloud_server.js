@@ -27,12 +27,13 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '512kb' }));
 
-// ── Inline Gemini proxy (avoids circular require issues with app splitting) ──
+// ── Multi-backend Gemini client (Secret Manager API Key or Vertex AI ADC) ──
 const { VertexAI } = require('@google-cloud/vertexai');
+const { GoogleGenAI } = require('@google/genai');
 
 const PROJECT = process.env.GCP_PROJECT || 'nthdim-academy-v2';
 const REGION  = process.env.REGION      || 'us-central1';
-const MODEL   = 'gemini-2.0-flash-001';
+const API_KEY = process.env.GEMINI_API_KEY;
 
 const SYSTEM_PROMPT = `You are the spatial intelligence layer for BleuuBoard — a 4D creative
 whiteboard with a Three.js scene graph. Translate the user's natural language utterance into a
@@ -52,19 +53,34 @@ RESPONSE FORMAT — always return valid JSON only, no markdown:
 
 SCENE CONTEXT is provided as a JSON snapshot. Use it to resolve pronouns.`;
 
+let _genAI = null;
 let _vertexModel = null;
-function getModel() {
-  if (_vertexModel) return _vertexModel;
-  const vAI = new VertexAI({ project: PROJECT, location: REGION });
-  _vertexModel = vAI.getGenerativeModel({ model: MODEL });
-  return _vertexModel;
-}
 
 async function geminiInterpret(utterance, sceneContext) {
-  const m = getModel();
   const sceneSnippet = sceneContext ? JSON.stringify(sceneContext).slice(0, 4000) : '{}';
   const prompt = `SCENE STATE:\n${sceneSnippet}\n\nUSER UTTERANCE:\n"${utterance}"\n\nRespond with JSON only.`;
-  const result = await m.generateContent({
+
+  // Path A: Google GenAI SDK using Secret Manager API Key (Fastest & most flexible)
+  if (API_KEY) {
+    if (!_genAI) _genAI = new GoogleGenAI({ apiKey: API_KEY });
+    const response = await _genAI.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        temperature: 0.2,
+        responseMimeType: 'application/json'
+      }
+    });
+    return response.text || '{}';
+  }
+
+  // Path B: Vertex AI ADC
+  if (!_vertexModel) {
+    const vAI = new VertexAI({ project: PROJECT, location: REGION });
+    _vertexModel = vAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  }
+  const result = await _vertexModel.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
     generationConfig: { temperature: 0.2, maxOutputTokens: 512, responseMimeType: 'application/json' }
@@ -92,17 +108,45 @@ app.post('/gemini/live-audio', async (req, res) => {
   const { audioB64, mimeType = 'audio/webm', sceneContext } = req.body;
   if (!audioB64) return res.status(400).json({ error: 'audioB64 required' });
   try {
-    const m = getModel();
     const sceneSnippet = sceneContext ? JSON.stringify(sceneContext).slice(0, 2000) : '{}';
-    const result = await m.generateContent({
-      contents: [{ role: 'user', parts: [
-        { inlineData: { mimeType, data: audioB64 } },
-        { text: `SCENE STATE:\n${sceneSnippet}\n\nTranscribe and return spatial action JSON.` }
-      ]}],
-      systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
-      generationConfig: { temperature: 0.2, maxOutputTokens: 512, responseMimeType: 'application/json' }
-    });
-    const raw = result.response.candidates[0]?.content?.parts[0]?.text || '{}';
+    let raw = '{}';
+
+    if (API_KEY) {
+      if (!_genAI) _genAI = new GoogleGenAI({ apiKey: API_KEY });
+      const response = await _genAI.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { inlineData: { mimeType, data: audioB64 } },
+              { text: `SCENE STATE:\n${sceneSnippet}\n\nTranscribe and return spatial action JSON.` }
+            ]
+          }
+        ],
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        }
+      });
+      raw = response.text || '{}';
+    } else {
+      if (!_vertexModel) {
+        const vAI = new VertexAI({ project: PROJECT, location: REGION });
+        _vertexModel = vAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      }
+      const result = await _vertexModel.generateContent({
+        contents: [{ role: 'user', parts: [
+          { inlineData: { mimeType, data: audioB64 } },
+          { text: `SCENE STATE:\n${sceneSnippet}\n\nTranscribe and return spatial action JSON.` }
+        ]}],
+        systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 512, responseMimeType: 'application/json' }
+      });
+      raw = result.response.candidates[0]?.content?.parts[0]?.text || '{}';
+    }
+
     let parsed;
     try { parsed = JSON.parse(raw); } catch { parsed = { action: 'unknown', raw }; }
     res.json({ ...parsed, raw });
