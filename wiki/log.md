@@ -1,5 +1,120 @@
 # Execution Log
 
+## 2026-08-18 (QA session — separate from the Antigravity implementation session logged below)
+A Claude Code session ran three rounds of live QA against `https://bleuboard-dev.vercel.app/v2/`
+(branch `feat/3d-flip-deck`, deployed by a separate agent, "Antigravity") using a browser
+automation tool plus direct console/JS inspection — not just visual screenshots.
+
+**Round 1** found and reported: uncaught `ReferenceError: ray is not defined` on background
+clicks; 3D text tool not placing text on Enter; a stale/duplicate object counter; toolbar
+overflow at narrower viewports making Save/Load/Export/Compass/Utilities completely unreachable;
+non-fatal `BufferGeometry: Buffer size too small` shader warnings on splat/text placement;
+deployment drift between the live site and the local `master` checkout.
+
+**Round 2** (after Antigravity's fix pass) re-verified each: `ray` crash fixed, text placement
+fixed, toolbar overflow fixed (new "Utilities" drawer), Flow-link visibility fixed. Also
+retracted a false-positive from round 1 — "Clear All Objects" was never broken, it correctly
+triggers a native `confirm()` dialog that the browser automation tool silently declines,
+misread as non-functional. Found one still-broken item ("Reset Camera View" appeared inert)
+and flagged select/move/deselect as not yet independently re-verified.
+
+**Round 3**, prompted by "act as a trainer building a real Cloud Computing session" (i.e. test
+combined/realistic usage, not isolated clicks), found: select↔deselect toggle now works,
+tool-button double-click→NAV works, sky-click placement fallback now works (previously silently
+no-op'd above the floor plane), "Reset Camera View" now works, Flow-link visuals dramatically
+improved (thick glowing arrow tube vs. a faint line before).
+
+**Then a user-reported regression**: manual object dragging appeared broken — "frame moves, but
+the object doesn't." This Claude Code session diagnosed and fixed it directly (not just
+reported it) — see the `v2 — Current State` section of `whiteboard-4d_gbrain.md` for full root
+cause and evidence. Summary: `updatePhysics()` in `rapier_engine.js` was reverting every manual
+position edit on the next animation frame because no edit path told the Rapier rigid body about
+the change. Fixed and deployed in two commits on `feat/3d-flip-deck` (`1e13a63`, `a074be6`),
+covering mouse/gizmo drag, MediaPipe hand-tracking pinch/scale/rotate, and voice move/scale/
+rotate commands. **User-confirmed working after redeploy.**
+
+Also caught mid-session: Antigravity shipped Dual-Hand Tracking + Continuous Voice Commands
+(`c9daa8c`) with the *same* unsynced-physics pattern in four new call sites — patched
+proactively in the same fix commit rather than waiting for them to be reported separately.
+
+## 2026-08-18
+- Tagged `v2-splat-stable` on `master` to preserve the verified Gaussian Splat milestone.
+- Implemented **Mobile Adaptive Performance & Touch Gestures** on branch `feat/mobile-adaptive-gestures` per `docs/superpowers/specs/2026-08-18-bleuboard-v2-mobile-adaptive-perf-design.md`:
+  - Created `v2/src/core/device_tier.js` with `detectDeviceTier()` and tiered pixel ratio / splat size budgets.
+  - Updated `v2/src/core/scene.js` with tier-aware DPR clamping (1.5 max on mobile, 2.0 on desktop).
+  - Updated `v2/src/objects/splat.js` with 8MB asset size gating on mobile tier.
+  - Created `v2/src/core/touch_gestures.js` for 1-finger translation and 2-finger twist rotation of selected objects, avoiding conflicts with `OrbitControls` or the Object Action Dock.
+  - Live CDP verification: 0 console errors, sustained **44–48 FPS**. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
+- Implemented **WebCam & Mobile Hand Tracking** on branch `feat/hand-tracking-mediapipe`:
+  - Added `@mediapipe/tasks-vision` (v0.10.14) ESM import map.
+  - Created `v2/src/input/hand_tracking.js` with GPU delegate, front camera / webcam stream, pinch detection ($<0.065$ dist), holographic 3D hand cursor, and 60 FPS dual-rate vector interpolation.
+  - Added `HAND TRACK` toggle in topbar with real-time status dot and PIP webcam feed.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/hand_tracking_mediapipe_qa_report.md`.
+- Implemented **4D Temporal Time-Travel Scrubber** on branch `feat/4d-temporal-scrubber`:
+  - Created `v2/src/temporal/history4d.js` with `actionTimeline` recording, `seekToRatio()` scene reconstruction, and animated `playReplay()` time-lapse loop.
+  - Added `#timeline-4d` UI bar with play/pause, range scrubber slider, speed toggle (1x, 2x, 4x), time readout, object counter, and LIVE button.
+  - Hooked `recordTimelineEvent('create', o)` into `v2/src/core/history.js`.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/temporal_4d_scrubber_qa_report.md`.
+- Implemented **1-Click Full 3D Scene GLTF / GLB Exporter** on branch `feat/scene-glb-exporter`:
+  - Created `v2/src/export/scene_export.js` using Three.js `GLTFExporter`.
+  - Added `Export 3D .GLB` button in session modal.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/scene_glb_export_qa_report.md`.
+- Implemented **Autonomous In-World AI Spatial Copilot** on branch `feat/ai-spatial-copilot`:
+  - Created `v2/src/agent/copilot.js` with hovering 3D drone mesh (plasma core, gyroscopic rings, laser cone).
+  - Built spatial directives engine for radial circles, planar grids, automatic Signal Flow connections, and guided 3D tours.
+  - Integrated Web Speech API voice control and topbar `#btn-copilot`.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/ai_spatial_copilot_qa_report.md`.
+- Implemented **Rapier.js 3D Physics Engine** on branch `feat/rapier-3d-physics`:
+  - Added `@dimforge/rapier3d-compat` (v0.14.0) ESM import map.
+  - Created `v2/src/physics/rapier_engine.js` with rigid body bounding colliders, zero-g / earth / moon gravity modes, physical impulse tossing, and 60 FPS transform synchronization.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/rapier_3d_physics_qa_report.md`.
+- Implemented **360° Procedural Skybox & Holodeck Environments** on branch `feat/holodeck-environments`:
+  - Created `v2/src/core/holodeck.js` with 360° skydome geometry and dynamic atmosphere presets (Cyber Void, Vaporwave Sunset, Architect Studio, Deep Space Nebula).
+  - Built real-time lighting and atmosphere re-tinting engine (`setEnvironment`).
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/holodeck_environments_qa_report.md`.
+- Implemented **VRM Anime & Cyberpunk Avatar Loader** on branch `feat/vrm-avatar-loader`:
+  - Added `@pixiv/three-vrm` (v3.3.4) ESM import map.
+  - Created `v2/src/nav/vrm_loader.js` with SpringBone secondary physics, procedural eye blinking, and look-at IK targeting.
+  - Unified `.vrm` file parsing into Avatar Engine modal.
+  - Live CDP verification: 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
+- Implemented **3D Handwriting-to-Typography AI OCR Engine** on branch `feat/ocr-handwriting-recognition`:
+  - Created `v2/src/agent/ocr_engine.js` integrating Tesseract.js with 3D stroke vertex canvas projection.
+  - Automatically replaces rough handwriting sketches with clean 3D extruded typography at original spatial center.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/ocr_engine_qa_report.md`.
+- Implemented **WebXR Spatial VR/AR Mode** on branch `feat/webxr-spatial-headset`:
+  - Created `v2/src/xr/webxr_engine.js` with Apple Vision Pro / Meta Quest 3 6DoF motion controllers and laser pointer rays.
+  - Mounted dynamic immersive VR / AR entrance buttons in bottombar.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/webxr_spatial_headset_qa_report.md`.
+- Implemented **Real-Time Multi-User WebRTC Collaboration Engine** on branch `feat/multiplayer-webrtc`:
+  - Added `peerjs` (v1.5.4) ESM import map.
+  - Created `v2/src/net/multiplayer.js` with 20Hz avatar pose broadcast and holographic wireframe peer mesh synchronization.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/multiplayer_webrtc_qa_report.md`.
+- Implemented **3D Positional Audio Spatializer** on branch `feat/3d-spatial-audio`:
+  - Created `v2/src/audio/spatial_audio.js` with `THREE.AudioListener` and `PositionalAudio` inverse distance attenuation and 180° directional cones.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/spatial_audio_qa_report.md`.
+- Implemented **Interactive 3D Live Code Sandbox Cards** on branch `feat/3d-code-sandbox`:
+  - Created `v2/src/objects/code_card.js` with syntax-highlighted 2D canvas texture and isolated async JavaScript sandbox execution.
+  - Displays real-time output console tray with return values and timing (0.8ms).
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/code_sandbox_card_qa_report.md`.
+- Implemented **Procedural Synthesized Cyber Micro-Audio & Mobile Haptics** on branch `feat/spatial-haptics-audio`:
+  - Created `v2/src/audio/haptics.js` with zero-cost procedural Web Audio oscillator synthesis (hover pop, click, vacuum whoosh, crystal snap chime) and mobile hardware vibration.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/spatial_haptics_qa_report.md`.
+- Implemented **VisionOS 3D Holographic Orbital Action Ring Menu** on branch `feat/visionos-orbital-menu`:
+  - Created `v2/src/ui/orbital_menu.js` with 6 radial spring action buttons (Duplicate, Physics Toss, Connect, Tint, OCR, Dissolve) hovering around selected 3D objects.
+  - Live CDP verification: 0 console errors. QA report at `verification/visionos_orbital_menu_qa_report.md`.
+- Implemented **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** on branch `feat/isometric-holomap-radar`:
+  - Created `v2/src/ui/holomap.js` with real-time 2D Canvas orthographic radar sweep, object blips, player heading tracking, and 1-click spatial teleportation.
+  - Live CDP verification: 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
+- Implemented **Selective Neon Bloom Post-Processing FX Pipeline** on branch `feat/neon-bloom-postprocessing`:
+  - Created `v2/src/fx/postprocessing.js` with Three.js r180 `EffectComposer`, `UnrealBloomPass`, and adaptive mobile resolution scaling.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
+- Implemented **3D Multi-Page Interactive Flip Deck & Document Carousel** on branch `feat/3d-flip-deck`:
+  - Created `v2/src/objects/flip_deck.js` with realistic 3D spine curl/pivot rotation, custom multi-page canvas textures, and procedural audio.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**. QA report at `verification/3d_flip_deck_qa_report.md`.
+- **Deployed BleuBoard v2.0.0 Suite to Dev Vercel Staging**:
+  - Live URL: `https://bleuboard-dev.vercel.app/v2/`
+  - Live CDP Verification on Vercel: 93/93 network assets loaded with HTTP 200, 0 console errors, and all 18 diagnostic probes active.
+
 ## 2026-08-17
 - **Merged PR #1 into master** (commit `37e4c75`), establishing the complete 22-module BleuBoard v2 modular architecture at `/v2/` with 0 console errors and v1 preserved intact at tag `v1-final`.
 - Implemented **Gaussian Splat Integration** on branch `feat/splat-integration` per `docs/superpowers/specs/2026-08-16-bleuboard-v2-splat-integration-design.md`:
@@ -8,7 +123,13 @@
   - Added Splat toolbar button and `buildSplatPalette()` in `v2/src/ui/modes.js`.
   - Sourced sample 4MB asset `v2/assets/splats/butterfly.spz`.
   - Live CDP verification: 0 console errors, full gizmo raycasting/selection, and sustained **45–48 FPS** (meeting spec gate).
-  - QA report committed at `verification/splat_integration_qa_report.md`.
+- **Merged PR #2 into master** (commit `df12ca0`), integrating 3D Gaussian Splatting via `@sparkjsdev/spark` and `.spz` assets.
+- Implemented **Blender Asset-Prep & AccuRig Avatar Pipeline** on branch `feat/blender-accurig-pipeline` per `docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`:
+  - Created canonical, reusable 3D asset optimization guide at `docs/superpowers/pipelines/blender-asset-prep-guide.md`.
+  - Added `GLTFLoader`, `loadCustomAvatar()`, and standard humanoid bone mapping (`mixamorig:*` and standard rig hierarchy) in `v2/src/nav/character.js`.
+  - Added AccuRig / glTF file import button and file listener to `v2/src/ui/avatar_picker.js`.
+  - Live CDP verification: 0 console errors, sustained **48.0 FPS**, full gender/custom switching, and modal UI integration verified.
+  - QA report committed at `verification/blender_accurig_pipeline_qa_report.md`.
 
 ## 2026-08-15
 Scoped and specced **BleuBoard v2** (modular fork + visual craft pass). Design committed to

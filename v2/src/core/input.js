@@ -56,11 +56,41 @@ export function hitToFree(hit) {
 // Surface helper: world point + normal under the pointer
 export function hitToSurface(cx, cy) {
   const h = getHit(cx, cy);
-  if (!h) return null;
-  const n = h.face
-    ? h.face.normal.clone().transformDirection(h.object.matrixWorld)
-    : new THREE.Vector3(0, 1, 0);
-  return { point: h.point.clone(), normal: n };
+  if (h) {
+    const n = h.face
+      ? h.face.normal.clone().transformDirection(h.object.matrixWorld)
+      : new THREE.Vector3(0, 1, 0);
+    return { point: h.point.clone(), normal: n };
+  }
+
+  // Smart Fallback Projection Plane:
+  // When clicking into open sky or high viewports without hitting a floor/wall mesh,
+  // project the ray onto the floor plane or eye-level vertical workspace plane in front of the camera.
+  const { camera } = getSceneState();
+  if (!camera) return null;
+  setMouse(cx, cy);
+  ray.setFromCamera(m2, camera);
+
+  // 1. Try floor plane (Y = 0) within reasonable distance
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const floorHit = new THREE.Vector3();
+  if (ray.ray.intersectPlane(floorPlane, floorHit) && floorHit.distanceTo(camera.position) < 80) {
+    floorHit.x = Math.max(-50, Math.min(50, floorHit.x));
+    floorHit.z = Math.max(-50, Math.min(50, floorHit.z));
+    return { point: floorHit, normal: new THREE.Vector3(0, 1, 0) };
+  }
+
+  // 2. Fallback: Vertical billboard plane at distance 8 units in front of camera
+  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const planeCenter = camera.position.clone().addScaledVector(forward, 8);
+  const eyePlane = new THREE.Plane().setFromNormalAndCoplanarPoint(forward.clone().negate(), planeCenter);
+  const eyeHit = new THREE.Vector3();
+  if (ray.ray.intersectPlane(eyePlane, eyeHit)) {
+    eyeHit.y = Math.max(0.5, Math.min(25, eyeHit.y));
+    return { point: eyeHit, normal: forward.clone().negate() };
+  }
+
+  return { point: camera.position.clone().addScaledVector(forward, 6), normal: new THREE.Vector3(0, 0, 1) };
 }
 
 export function rayPlane(plane, cx, cy) {

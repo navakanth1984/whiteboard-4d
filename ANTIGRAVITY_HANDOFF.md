@@ -1,3 +1,38 @@
+# Update — 2026-08-18 (Claude Code QA + fix, read this first)
+
+A separate Claude Code session ran three rounds of live QA against
+`https://bleuboard-dev.vercel.app/v2/` (this branch, `feat/3d-flip-deck`) while you were shipping
+Dual-Hand Tracking + Voice Commands, found and reported several bugs which you fixed correctly
+(the `ray` crash, text placement, HUD counter, toolbar overflow, Flow-link visibility, sky-click
+placement, tool double-click, Reset Camera View, select/deselect toggle — all re-verified
+working), then found one you hadn't: **manual object movement silently reverted after release**
+("frame moves, object doesn't").
+
+**That session diagnosed and fixed it directly rather than just reporting it.** Full root cause,
+evidence, and fix are written up in `wiki/whiteboard-4d_gbrain.md` under
+**"v2 — Current State"** — read that section before touching drag/physics code again. One-line
+summary: `updatePhysics()` in `rapier_engine.js` unconditionally overwrote every object's
+position from its (unmoved) Rapier rigid body every frame, because no edit path ever told
+physics about a manual move. Fixed in commits `1e13a63` and `a074be6` on this branch
+(`setDraggingObject`/`syncBodyTransform` in `rapier_engine.js`, wired into all four edit paths:
+mouse drag, gizmo drag, hand-tracking pinch, voice commands). **User-confirmed working live**
+after redeploy. Tagged `v2-physics-drag-fixed`.
+
+**Two follow-up gaps from that same fix are now on you, not urgent, see wiki Known Gaps:**
+1. `syncBodyTransform` doesn't resize the Rapier collider when an object's Three.js scale
+   changes (gizmo-scale / two-hand pinch-scale / voice "bigger"/"smaller") — collision volume
+   can silently mismatch visual size for a rescaled object.
+2. `applyImpulse` (the physics "toss on release" function) exists in `rapier_engine.js` but
+   nothing calls it — no drag-end code computes velocity from drag motion and applies it, so
+   objects just stop dead on release instead of tossing. If a toss feel was intended, it needs
+   wiring up; if not, consider whether `applyImpulse` is dead code to remove.
+
+Also: confirm your deploy targets the branch you think it does before your next session —
+`master` is currently 20 commits behind `feat/3d-flip-deck`, and the live site has previously
+been caught serving code that didn't match what a session's local `master` checkout showed.
+
+---
+
 # Handoff to Antigravity — 2026-08-15
 
 **Task:** BleuBoard v2 — fork the single-file app into ES modules, then apply the visual craft pass.
@@ -239,26 +274,55 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 ## Queue status
 
 1. [x] **PR #1 (Modular Fork + Craft Pass)** — merged into `master` (commit `37e4c75`), v1 tagged `v1-final` as baseline reference.
-2. [x] **Gaussian Splat Integration** — implemented on `feat/splat-integration` (commit `074b37e`), verified via CDP at 45–48 FPS with 0 console errors. QA report at `verification/splat_integration_qa_report.md`.
-3. [ ] **Blender + AccuRig Asset Pipeline** — queued next once `feat/splat-integration` is merged to `master`. Full design at [`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
+2. [x] **PR #2 (Gaussian Splat Integration)** — merged into `master` (commit `df12ca0`), Spark & `.spz` live in scene graph. Tagged `v2-splat-stable`.
+3. [x] **Blender + AccuRig Asset Pipeline** — implemented on `feat/blender-accurig-pipeline`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/blender_accurig_pipeline_qa_report.md`.
+4. [x] **Mobile Adaptive Performance & Touch Gestures** — implemented on `feat/mobile-adaptive-gestures`, verified via CDP at 44–48 FPS with 0 console errors. QA report at `verification/mobile_adaptive_perf_qa_report.md`.
+5. [x] **WebCam & Mobile Hand Tracking (MediaPipe)** — implemented on `feat/hand-tracking-mediapipe`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/hand_tracking_mediapipe_qa_report.md`.
+6. [x] **4D Temporal Time-Travel Scrubber** — implemented on `feat/4d-temporal-scrubber`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/temporal_4d_scrubber_qa_report.md`.
+7. [x] **1-Click 3D Scene GLTF / GLB Exporter** — implemented on `feat/scene-glb-exporter`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/scene_glb_export_qa_report.md`.
+8. [x] **Autonomous In-World AI Spatial Copilot** — implemented on `feat/ai-spatial-copilot`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ai_spatial_copilot_qa_report.md`.
+9. [x] **Rapier.js 3D Physics Engine** — implemented on `feat/rapier-3d-physics`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/rapier_3d_physics_qa_report.md`.
+10. [x] **360° Procedural Skybox & Holodeck Environments** — implemented on `feat/holodeck-environments`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/holodeck_environments_qa_report.md`.
+11. [x] **VRM Anime & Cyberpunk Avatar Loader** — implemented on `feat/vrm-avatar-loader`, verified via CDP with 0 console errors. QA report at `verification/vrm_avatar_loader_qa_report.md`.
+12. [x] **3D Handwriting-to-Typography AI OCR Engine** — implemented on `feat/ocr-handwriting-recognition`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/ocr_engine_qa_report.md`.
+13. [x] **WebXR Spatial VR/AR Headset Mode** — implemented on `feat/webxr-spatial-headset`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/webxr_spatial_headset_qa_report.md`.
+14. [x] **Real-Time WebRTC Spatial Multiplayer** — implemented on `feat/multiplayer-webrtc`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/multiplayer_webrtc_qa_report.md`.
+15. [x] **3D Positional Audio Spatializer** — implemented on `feat/3d-spatial-audio`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/spatial_audio_qa_report.md`.
+16. [x] **Interactive 3D Live Code Sandbox Cards** — implemented on `feat/3d-code-sandbox`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/code_sandbox_card_qa_report.md`.
+17. [x] **Procedural Synthesized Cyber Micro-Audio & Mobile Haptics** — implemented on `feat/spatial-haptics-audio`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/spatial_haptics_qa_report.md`.
+18. [x] **VisionOS 3D Holographic Orbital Action Ring Menu** — implemented on `feat/visionos-orbital-menu`, verified via CDP with 0 console errors. QA report at `verification/visionos_orbital_menu_qa_report.md`.
+19. [x] **Isometric 3D Holomap Radar HUD & 1-Click Spatial Teleporter** — implemented on `feat/isometric-holomap-radar`, verified via CDP with 0 console errors. QA report at `verification/isometric_holomap_radar_qa_report.md`.
+20. [x] **Selective Neon Bloom Post-Processing FX Pipeline** — implemented on `feat/neon-bloom-postprocessing`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/neon_bloom_postprocessing_qa_report.md`.
+21. [x] **3D Multi-Page Interactive Flip Deck & Document Carousel** — implemented on `feat/3d-flip-deck`, verified via CDP at 48.0 FPS with 0 console errors. QA report at `verification/3d_flip_deck_qa_report.md`.
+22. [x] **Dual-Hand Tracking (2-hand gestures) & Continuous Voice Command Assistant** — implemented (commit `c9daa8c`). Verified working but shipped with the same unsynced-physics bug as item 23 in its four new gesture/voice edit paths — patched in the same fix, see item 23.
+23. [x] **Fix: manual drag reverted by Rapier physics** — diagnosed and fixed by a separate Claude Code QA session, not by Antigravity, after 3 rounds of live QA (commits `1e13a63`, `a074be6`). User-confirmed working live. Tagged `v2-physics-drag-fixed`. Full writeup: `wiki/whiteboard-4d_gbrain.md` → "v2 — Current State".
+24. [ ] **Physics collider scale sync** — `syncBodyTransform` doesn't resize the Rapier collider on Three.js scale changes. Not reported as a symptom yet; flagged as a latent gap from item 23's fix.
+25. [ ] **Wire up `applyImpulse` toss-on-release, or remove it** — exists in `rapier_engine.js`, unused. Decide intent before next drag/physics work.
+26. [x] **GCP Integration (PR #3: `feat/gemini-copilot-backend`)** — Gemini 2.5 Flash copilot brain + Secret Manager security + Cloud Run proxy + Vertex AI Search RAG. Cloud Run live at `https://bleuboard-spatial-bridge-526005048954.us-central1.run.app`. Staging deployed to `https://bleuboard-dev.vercel.app/v2/` and verified with 0 console errors. Ready for final PO review.
+27. [x] **Accessibility: 4D Scrubber ARIA Switch & Focus Rings (PR #7)** — Incorporated from Jules into `feat/gemini-copilot-backend` (commit `7aecdbb`). Verified in live DevTools with full `role="switch"`, `aria-pressed`, and `:focus-visible` styling.
 
 ---
 
-## Queued next — Blender + AccuRig asset pipeline
+## Deliverables Summary
 
-**Once the splat integration branch has merged to `master`** — full design at
-[`docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md`](docs/superpowers/specs/2026-08-17-bleuboard-v2-blender-accurig-pipeline-design.md).
-Read it in full before starting — this is a pointer, not the plan.
-
-Short version, two independent pieces sharing one tool:
-1. **Blender** (free, GPL) — a documented retopology → UV unwrap → bake pipeline for any future
-   3D asset. Not a code change; upstream asset prep that feeds `v2/src/objects/models.js`'s
-   existing loading path.
-2. **AccuRig** (Reallusion, free) — re-rig an existing in-world avatar via AccuRig's auto-rig
-   (full body + fingers), export FBX/USD, wire into `v2/src/nav/character.js`.
-
-Both tools verified genuinely free with no commercial-use gate this session — unlike Tripo AI,
-whose free tier is CC BY 4.0 / no commercial use. Tripo and Patina (pricing unconfirmed) are
-explicitly excluded from this task; do not substitute them in without a separate decision.
-
-**Queue order is strict: PR #1 → splat integration → this. Do not start out of order.**
+- **Blender 3D Asset Prep Guide:** [`docs/superpowers/pipelines/blender-asset-prep-guide.md`](docs/superpowers/pipelines/blender-asset-prep-guide.md)
+- **AccuRig Avatar Rigging & SkinnedMesh System:** [`v2/src/nav/character.js`](v2/src/nav/character.js)
+- **Mobile Adaptive Tiering & Multi-Touch Gestures:** [`v2/src/core/device_tier.js`](v2/src/core/device_tier.js), [`v2/src/core/touch_gestures.js`](v2/src/core/touch_gestures.js)
+- **WebCam & Mobile Hand Tracking:** [`v2/src/input/hand_tracking.js`](v2/src/input/hand_tracking.js)
+- **4D Temporal Time-Travel & Scrubber Engine:** [`v2/src/temporal/history4d.js`](v2/src/temporal/history4d.js)
+- **1-Click 3D Scene GLTF / GLB Exporter:** [`v2/src/export/scene_export.js`](v2/src/export/scene_export.js)
+- **Autonomous In-World AI Spatial Copilot:** [`v2/src/agent/copilot.js`](v2/src/agent/copilot.js)
+- **Rapier.js 3D Physics Engine:** [`v2/src/physics/rapier_engine.js`](v2/src/physics/rapier_engine.js)
+- **360° Holodeck Environments:** [`v2/src/core/holodeck.js`](v2/src/core/holodeck.js)
+- **VRM Humanoid Avatar Loader:** [`v2/src/nav/vrm_loader.js`](v2/src/nav/vrm_loader.js)
+- **3D AI OCR Engine:** [`v2/src/agent/ocr_engine.js`](v2/src/agent/ocr_engine.js)
+- **WebXR Spatial VR/AR Engine:** [`v2/src/xr/webxr_engine.js`](v2/src/xr/webxr_engine.js)
+- **WebRTC Multiplayer Collaboration:** [`v2/src/net/multiplayer.js`](v2/src/net/multiplayer.js)
+- **3D Positional Audio Spatializer:** [`v2/src/audio/spatial_audio.js`](v2/src/audio/spatial_audio.js)
+- **Interactive 3D Live Code Sandbox Cards:** [`v2/src/objects/code_card.js`](v2/src/objects/code_card.js)
+- **Procedural Cyber Audio & Haptics Engine:** [`v2/src/audio/haptics.js`](v2/src/audio/haptics.js)
+- **VisionOS 3D Orbital Action Menu:** [`v2/src/ui/orbital_menu.js`](v2/src/ui/orbital_menu.js)
+- **Isometric 3D Holomap Radar HUD:** [`v2/src/ui/holomap.js`](v2/src/ui/holomap.js)
+- **Selective Neon Bloom FX Pipeline:** [`v2/src/fx/postprocessing.js`](v2/src/fx/postprocessing.js)
+- **3D Multi-Page Flip Deck Carousel:** [`v2/src/objects/flip_deck.js`](v2/src/objects/flip_deck.js)
+- **QA Verification Reports:** [`verification/`](verification/)

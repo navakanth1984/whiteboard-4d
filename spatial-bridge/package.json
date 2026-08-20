@@ -1,0 +1,24 @@
+{
+  "name": "bleuboard-spatial-bridge",
+  "version": "2.0.0",
+  "description": "BleuuBoard v2 Cloud Run backend — Gemini proxy + Dialogflow CX webhook",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node cloud_server.js",
+    "dev": "node --watch cloud_server.js",
+    "start:local-bridge": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/aiplatform": "^3.23.0",
+    "@google-cloud/dialogflow-cx": "^4.9.0",
+    "@google-cloud/secret-manager": "^5.6.0",
+    "@google-cloud/vertexai": "^1.12.0",
+    "@google/genai": "^2.18.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

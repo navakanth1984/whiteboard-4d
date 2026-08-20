@@ -1,4 +1,4 @@
-import { GENDERS, SKIN_TONES, avatarConfig, setAvatarConfig } from '../nav/character.js';
+import { GENDERS, SKIN_TONES, avatarConfig, setAvatarConfig, loadCustomAvatar } from '../nav/character.js';
 import { povMode, setPOVMode } from '../nav/gamer_nav.js';
 
 export function initAvatarPickerUI() {
@@ -86,13 +86,25 @@ function renderAvatarModalContent() {
 
     <!-- Gender Identity Selection -->
     <div class="av-section">
-      <div class="av-sec-title">👤 Avatar Identity (All Genders)</div>
+      <div class="av-sec-title">👤 Avatar Identity & AccuRig Pipeline</div>
       <div class="av-grid-3">
         ${Object.keys(GENDERS).map(g => `
           <button class="av-gender-choice ${avatarConfig.gender === g ? 'active' : ''}" data-gender="${g}">
             <strong>${GENDERS[g].label}</strong>
           </button>
         `).join('')}
+      </div>
+    </div>
+
+    <!-- AccuRig / Custom Skinned Avatar Upload -->
+    <div class="av-section">
+      <div class="av-sec-title">🤖 AccuRig / Custom Skinned Avatar (.glb / .gltf)</div>
+      <div class="av-upload-row" style="display:flex;gap:10px;align-items:center;">
+        <button class="av-upload-btn" id="btn-upload-avatar" style="flex:1;padding:10px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.35);border-radius:8px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;">
+          <span class="material-symbols-outlined">upload_file</span>
+          <span>Import Custom AccuRig / glTF Rigged Avatar</span>
+        </button>
+        <input type="file" id="input-avatar-file" accept=".glb,.gltf" style="display:none;">
       </div>
     </div>
 
@@ -150,4 +162,18 @@ function renderAvatarModalContent() {
       renderAvatarModalContent();
     });
   });
+
+  const upBtn = container.querySelector('#btn-upload-avatar');
+  const upInput = container.querySelector('#input-avatar-file');
+  if (upBtn && upInput) {
+    upBtn.addEventListener('click', () => upInput.click());
+    upInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        loadCustomAvatar(file, () => {
+          renderAvatarModalContent();
+        });
+      }
+    });
+  }
 }

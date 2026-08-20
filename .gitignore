@@ -3,3 +3,7 @@ __pycache__
 .graphify
 spatial-bridge/*.log
 node_modules
+.env
+.env.*
+*.env
+

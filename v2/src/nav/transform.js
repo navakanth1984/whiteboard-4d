@@ -3,20 +3,32 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { getSceneState } from '../core/scene.js';
 import { objects, removeObj } from '../core/history.js';
 import { SASCore, SASCard } from '../agent/interpret.js';
+import { setDraggingObject, syncBodyTransform } from '../physics/rapier_engine.js';
+
+import { refreshLinks } from '../graph/links.js';
 
 export let transformControl = null;
 export let gizmoHelper = null;
 export let selectedObject = null;
 let dropLine = null;
 let floorShadowCircle = null;
-let boxHelper = null;
 export let gizmoMode = 'translate'; // 'translate', 'rotate', 'scale'
 
 export function isGizmoHit(raycaster) {
   if (!transformControl || !selectedObject) return false;
+  if (transformControl.dragging || (transformControl.axis && transformControl.axis !== 'null')) {
+    return true;
+  }
   try {
     const target = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
-    const hits = raycaster.intersectObject(target, true);
+    const visibleMeshes = [];
+    target.traverse(c => {
+      if (c.isMesh && c.visible && c.name && ['X', 'Y', 'Z', 'XY', 'YZ', 'XZ', 'XYZ', 'E', 'START', 'END'].includes(c.name)) {
+        visibleMeshes.push(c);
+      }
+    });
+    if (visibleMeshes.length === 0) return false;
+    const hits = raycaster.intersectObjects(visibleMeshes, true);
     return hits && hits.length > 0;
   } catch (e) {
     return false;
@@ -38,39 +50,46 @@ export function initTransformSystem() {
   if (!scene || !camera || !renderer) return;
 
   transformControl = new TransformControls(camera, renderer.domElement);
-  transformControl.size = 0.85;
+  transformControl.size = 1.15;
   transformControl.setSpace('world');
   gizmoHelper = (typeof transformControl.getHelper === 'function') ? transformControl.getHelper() : transformControl;
   scene.add(gizmoHelper);
+  if (typeof window !== 'undefined') {
+    window.__transformControl = transformControl;
+  }
 
   // Disable orbit controls while dragging gizmo
   transformControl.addEventListener('dragging-changed', event => {
     if (controls) controls.enabled = !event.value;
     if (event.value && selectedObject) {
+      setDraggingObject(selectedObject.id);
       const interp = SASCore.interpret(selectedObject);
       if (interp) {
         SASCard.render(interp, selectedObject);
         SASCore.record({ evt: 'drag-start', type: selectedObject.type, frame: interp.frame, id: selectedObject.id });
       }
     } else if (!event.value && selectedObject) {
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+      setDraggingObject(null);
       const interp = SASCore.interpret(selectedObject);
       SASCore.record({ evt: 'drag-end', type: selectedObject.type, frame: interp ? interp.frame : '?', id: selectedObject.id });
     }
   });
 
   transformControl.addEventListener('change', () => {
+    if (selectedObject && selectedObject.root) {
+      selectedObject.root.updateMatrixWorld(true);
+      if (transformControl.dragging) {
+        syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+      }
+    }
     updateDropLine();
-    if (boxHelper && selectedObject) boxHelper.update();
+    refreshLinks();
     if (selectedObject) {
       const interp = SASCore.interpret(selectedObject);
       if (interp) SASCard.render(interp, selectedObject);
     }
   });
-
-  // Bounding Box Highlight Helper
-  boxHelper = new THREE.BoxHelper(new THREE.Mesh(), 0x38bdf8);
-  boxHelper.visible = false;
-  scene.add(boxHelper);
 
   // Create Floor Elevation Drop Line Helper
   const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
@@ -191,27 +210,28 @@ export function selectObject(obj) {
     transformControl.setMode(gizmoMode);
   }
 
-  if (boxHelper) {
-    boxHelper.setFromObject(obj.root);
-    boxHelper.visible = true;
-  }
-
   updateDropLine();
   updateActionDockUI();
   SASCard.hover(obj);
+}
+if (typeof window !== 'undefined') {
+  window.__selectObject = selectObject;
 }
 
 export function deselectObject() {
   selectedObject = null;
   window.__selectedObject = null;
+  setDraggingObject(null);
   if (transformControl) {
     transformControl.detach();
   }
-  if (boxHelper) boxHelper.visible = false;
   if (dropLine) dropLine.visible = false;
   if (floorShadowCircle) floorShadowCircle.visible = false;
   updateActionDockUI();
   SASCard.hide();
+}
+if (typeof window !== 'undefined') {
+  window.__deselectObject = deselectObject;
 }
 
 export function updateDropLine() {
@@ -235,4 +255,70 @@ export function updateDropLine() {
 
   floorShadowCircle.position.copy(floorPos);
   floorShadowCircle.visible = (rootPos.y > 0.2);
+}
+
+// ════════ DIRECT OBJECT BODY DRAGGING ════════
+export let isDirectDragging = false;
+const directDragPlane = new THREE.Plane();
+const directDragOffset = new THREE.Vector3();
+
+export function startDirectObjectDrag(obj, hitPoint) {
+  if (!obj || !obj.root) return;
+  const { camera, controls } = getSceneState();
+  if (!camera) return;
+
+  isDirectDragging = true;
+  if (typeof window !== 'undefined') window.__isDirectDragging = true;
+  if (controls) controls.enabled = false;
+  setDraggingObject(obj.id);
+
+  // Create a plane facing the camera coplanar with the object position
+  const camDir = new THREE.Vector3();
+  camera.getWorldDirection(camDir);
+  directDragPlane.setFromNormalAndCoplanarPoint(camDir.negate(), obj.root.position);
+
+  // Offset from hit point to object root position
+  if (hitPoint) {
+    directDragOffset.copy(obj.root.position).sub(hitPoint);
+  } else {
+    directDragOffset.set(0, 0, 0);
+  }
+}
+
+export function updateDirectObjectDrag(cx, cy, raycaster) {
+  if (!isDirectDragging || !selectedObject || !selectedObject.root) return;
+  const { camera } = getSceneState();
+  if (!camera || !raycaster) return;
+
+  const planeHit = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(directDragPlane, planeHit)) {
+    selectedObject.root.position.copy(planeHit.add(directDragOffset));
+    // Clamp within world coordinates
+    selectedObject.root.position.x = Math.max(-50, Math.min(50, selectedObject.root.position.x));
+    selectedObject.root.position.y = Math.max(0.2, Math.min(30, selectedObject.root.position.y));
+    selectedObject.root.position.z = Math.max(-50, Math.min(50, selectedObject.root.position.z));
+
+    selectedObject.root.updateMatrixWorld(true);
+    if (gizmoHelper && typeof gizmoHelper.updateMatrixWorld === 'function') {
+      gizmoHelper.updateMatrixWorld(true);
+    }
+    syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+    updateDropLine();
+    refreshLinks();
+  }
+}
+
+export function endDirectObjectDrag() {
+  if (isDirectDragging) {
+    isDirectDragging = false;
+    if (typeof window !== 'undefined') window.__isDirectDragging = false;
+    if (selectedObject) {
+      syncBodyTransform(selectedObject.id, selectedObject.root.position, selectedObject.root.quaternion);
+    }
+    setDraggingObject(null);
+    const { controls } = getSceneState();
+    if (controls && window.__currentMode === 'nav') {
+      controls.enabled = true;
+    }
+  }
 }

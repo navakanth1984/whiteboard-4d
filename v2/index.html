@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BleuBoard v2 — 4D Creative Whiteboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +15,11 @@
     "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/2.1.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/2.1.0/spark.module.js",
+      "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm",
+      "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.14.0/+esm",
+      "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.3.4/lib/three-vrm.module.js",
+      "peerjs": "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/+esm"
     }
   }
   </script>
@@ -42,11 +47,53 @@
     <span class="avatar-status-dot"></span>
   </button>
 
+  <!-- WebCam Hand Tracking Toggle -->
+  <button id="btn-hand-tracking" class="tb-avatar-btn" title="Toggle WebCam Dual-Hand 3D Tracking (Pinch Move • 2-Hand Scale/Rotate • Palm Delete)">
+    <span class="material-symbols-outlined">front_hand</span>
+    <span id="hand-tracking-lbl">HANDS TRACK</span>
+    <span class="avatar-status-dot" id="hand-status-dot" style="background:#64748b;"></span>
+  </button>
+
+  <!-- Continuous Voice Commands Toggle -->
+  <button id="btn-voice-control" class="tb-avatar-btn" title="Toggle Continuous Hands-Free Voice Commands Assistant">
+    <span class="material-symbols-outlined">mic</span>
+    <span id="voice-status-lbl">VOICE</span>
+    <span class="avatar-status-dot" id="voice-status-dot" style="background:#64748b;"></span>
+  </button>
+
+  <!-- Autonomous AI Copilot Toggle -->
+  <button id="btn-copilot" class="tb-avatar-btn" title="Toggle In-World AI Copilot Voice Directives">
+    <span class="material-symbols-outlined">psychology</span>
+    <span id="copilot-voice-lbl">COPILOT</span>
+    <span class="avatar-status-dot" id="copilot-status-dot" style="background:#64748b;"></span>
+  </button>
+
+  <!-- Studio Utilities & Actions -->
+  <button id="btn-utilities" class="tb-avatar-btn" title="Open Studio Utilities, Save/Load & Export Hub">
+    <span class="material-symbols-outlined">tune</span>
+    <span>UTILITIES</span>
+  </button>
+
   <div class="tb-pickers">
     <div class="cpick" title="Stroke / object colour"><label for="pick-ink">Ink</label><input type="color" id="pick-ink" value="#00ccff"></div>
     <div class="cpick" title="Board background colour"><label for="pick-bg">Board BG</label><input type="color" id="pick-bg" value="#00000d"></div>
   </div>
   <div class="tb-hud" id="hud-desktop">NAV · 0 objects</div>
+</div>
+
+<!-- Floating Real-Time Voice Command HUD -->
+<div id="voice-hud">
+  <div class="vh-header">
+    <span class="vh-mic-icon">🎙️</span>
+    <span class="vh-heard">Listening...</span>
+  </div>
+  <div class="vh-action">Voice Commands Ready</div>
+</div>
+
+<!-- WebCam Hand Tracking Feed PIP -->
+<div id="hand-cam-container" style="display:none;position:fixed;bottom:80px;right:20px;width:170px;height:128px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(56,189,248,0.5);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:9000;background:#000;">
+  <video id="hand-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
+  <div id="hand-hud" style="position:absolute;bottom:4px;left:6px;font-size:10px;color:#38bdf8;font-family:monospace;pointer-events:none;">DUAL HANDS · ACTIVE</div>
 </div>
 
 <!-- Central Gamer Precision Reticle -->
@@ -90,6 +137,18 @@
   <button class="pov-btn active" id="btn-toggle-dpad" title="Toggle 3D Flight D-Pad Controller"><span class="material-symbols-outlined">gamepad</span></button>
 </div>
 
+<!-- ════════ 4D TEMPORAL TIME-TRAVEL SCRUBBER ════════ -->
+<div id="timeline-4d" style="display:none;position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,6,23,0.85);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.35);border-radius:12px;padding:8px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);color:#fff;width:min(90vw,640px);">
+  <button id="tl-play-btn" style="background:rgba(56,189,248,0.2);border:1px solid rgba(56,189,248,0.4);border-radius:50%;width:32px;height:32px;color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+    <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+  </button>
+  <input type="range" id="tl-scrubber" min="0" max="100" value="100" style="flex:1;accent-color:#38bdf8;cursor:pointer;">
+  <span id="tl-time-lbl" style="font-family:monospace;font-size:12px;color:#94a3b8;min-width:85px;">00:00 / 00:10</span>
+  <span id="tl-count-lbl" style="font-family:monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px;">0/0 OBJS</span>
+  <button id="tl-speed-btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:3px 8px;font-size:11px;color:#fff;cursor:pointer;">1x</button>
+  <button id="tl-live-btn" style="background:#0284c7;border:none;border-radius:6px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer;font-weight:bold;">LIVE</button>
+</div>
+
 <!-- ════════ TOOL BAR (Professional Spatial Studio) ════════ -->
 <div id="bottombar">
   <button class="tb active" data-mode="nav"     title="Navigate — orbit 3D space, select and transform objects"><span class="material-symbols-outlined tb-icon">explore</span><span class="tb-label">Nav</span></button>
@@ -105,8 +164,42 @@
   <button class="tb"        data-mode="connect" title="Link objects with glowing signal flow"><span class="material-symbols-outlined tb-icon">timeline</span><span class="tb-label">Flow</span></button>
   <button class="tb danger" data-mode="erase"   title="Delete an object"><span class="material-symbols-outlined tb-icon">delete</span><span class="tb-label">Erase</span></button>
   <button class="tb toggle on" id="btn-motion-toggle" role="switch" aria-pressed="true" aria-label="Pause or resume 3D flow animations" title="Pause or resume flow signal animations"><span class="material-symbols-outlined tb-icon">bolt</span><span class="tb-label">Flow Motion</span></button>
-  <button class="tb toggle" id="btn-4d"         title="Toggle 4D orbital animation for objects"><span class="material-symbols-outlined tb-icon">schedule</span><span class="tb-label">4D</span></button>
+  <button class="tb toggle" id="btn-4d" role="switch" aria-pressed="false" aria-label="Toggle 4D temporal timeline scrubber" title="Toggle 4D orbital animation for objects"><span class="material-symbols-outlined tb-icon">schedule</span><span class="tb-label">4D</span></button>
   <button class="tb"        id="btn-guide"      title="Show studio guide"><span class="material-symbols-outlined tb-icon">help_outline</span><span class="tb-label">Guide</span></button>
+</div>
+
+<!-- ════════ ASSET PALETTE DRAWER (Cards, Nodes, Boards, Stickers, Splats) ════════ -->
+<div id="palette" class="glass-drawer">
+  <div class="pal-hdr">
+    <span id="pal-title">Asset Palette</span>
+    <button id="pal-close" class="modal-close-btn">✕</button>
+  </div>
+  <div id="pal-tabs" class="pal-tabs-row"></div>
+  <div id="pal-grid" class="pal-grid-box"></div>
+</div>
+
+<!-- ════════ 3D INK BRUSH SELECTOR ════════ -->
+<div id="brush-picker">
+  <button class="bp-btn active" data-brush="pen" title="Pen (Smooth)"><span class="material-symbols-outlined">edit</span></button>
+  <button class="bp-btn" data-brush="pencil" title="Pencil (Textured)"><span class="material-symbols-outlined">border_color</span></button>
+  <button class="bp-btn" data-brush="marker" title="Marker (Bold)"><span class="material-symbols-outlined">format_paint</span></button>
+  <button class="bp-btn" data-brush="brush" title="Neon Brush"><span class="material-symbols-outlined">brush</span></button>
+  <button class="bp-btn" data-brush="highlighter" title="Glow Highlighter"><span class="material-symbols-outlined">auto_awesome</span></button>
+</div>
+
+<!-- ════════ 3D TEXT INPUT OVERLAY ════════ -->
+<div id="text-overlay" class="text-popup-box">
+  <div class="text-input-wrap">
+    <input type="text" id="text-input" placeholder="Type 3D text..." autocomplete="off">
+    <button id="btn-text-submit" class="text-action-btn primary" title="Place 3D Text">✓ Place</button>
+    <button id="btn-text-close" class="text-action-btn" title="Cancel (Esc)">✕</button>
+  </div>
+  <div id="text-style-row">
+    <button id="btn-text-cursive" class="text-style-btn" title="Cursive Tube Text">✒️ Cursive</button>
+    <button id="btn-text-ring" class="text-style-btn" title="3D Ring Text Around Point">🔵 Ring</button>
+  </div>
+  <div id="text-hint">Press Enter or click Place · Shift+Enter = Ring · Esc = Cancel</div>
+  <div id="word-predict-row"></div>
 </div>
 
 <!-- ════════ 3D SPATIAL D-PAD (Manual Touch / Click Flight Controller) ════════ -->
@@ -130,7 +223,7 @@
 <div id="size-hud">
   <button class="sz-btn" id="sz-minus">−</button>
   <span id="sz-val">100%</span>
-  <input type="range" id="sz-range" min="5" max="500" step="5" value="100">
+  <input type="range" id="sz-range" aria-label="Object Scale Size" min="5" max="500" step="5" value="100">
   <button class="sz-btn" id="sz-plus">+</button>
 </div>
 
@@ -147,47 +240,36 @@
   </div>
   <div class="op-radius">
     <span>r</span>
-    <input type="range" id="orbit-radius" min="0.5" max="8" step="0.5" value="2.5">
+    <input type="range" id="orbit-radius" aria-label="Orbit Pattern Radius" min="0.5" max="8" step="0.5" value="2.5">
     <span id="orbit-radius-val">2.5</span>
   </div>
 </div>
 
-<!-- ════════ UTILITIES ════════ -->
-<div id="utils">
-  <button class="ubtn" id="btn-reset">⟳ Reset view</button>
-  <button class="ubtn" id="btn-scene">🎨 Scene colors</button>
-  <div id="scene-panel">
-    <div class="srow"><span>Wall</span><input type="color" id="pick-wall" value="#0c1e3a"></div>
-    <div class="srow"><span>Floor</span><input type="color" id="pick-floor" value="#08182e"></div>
-    <div class="srow"><span>Board BG</span><input type="color" id="pick-bg2" value="#00000d"></div>
+<!-- ════════ STUDIO UTILITIES GLASS DRAWER ════════ -->
+<div id="utils-drawer" class="glass-drawer">
+  <div class="pal-hdr">
+    <span>🛠️ Studio Utilities &amp; Export</span>
+    <button id="utils-close" class="modal-close-btn">✕</button>
   </div>
-  <button class="ubtn" id="btn-upload3d">📦 Upload 3D model</button>
-  <button class="ubtn" id="btn-window">🖥 Share a window</button>
-  <button class="ubtn" id="btn-rec">🔴 Presentation</button>
-  <div id="rec-panel">
-    <div class="srow"><span>🎤 Presenter mic</span><input type="checkbox" id="rec-mic" checked></div>
-    <div class="srow"><span>📷 Webcam (PiP)</span><input type="checkbox" id="rec-cam"></div>
-    <div class="srow"><span>🎬 Video format</span><select id="rec-vid-fmt" class="rec-select"></select></div>
-    <div class="srow"><span>🌉 Send to Spatial Bridge (local)</span><input type="checkbox" id="rec-bridge"></div>
-    <button class="ubtn" id="rec-start" style="background:rgba(200,40,40,.5);color:#fbb;">● Start recording</button>
+  <div class="utils-grid">
+    <button class="ubtn" id="btn-export"><span class="material-symbols-outlined">save</span>💾 Save Session (JSON)</button>
+    <button class="ubtn" id="btn-import"><span class="material-symbols-outlined">file_open</span>📂 Load Session (JSON)</button>
+    <button class="ubtn" id="btn-export-glb" style="background:linear-gradient(135deg,rgba(56,189,248,0.25),rgba(168,85,247,0.25));color:#38bdf8;"><span class="material-symbols-outlined">view_in_ar</span>🚀 Export 3D Scene (.GLB)</button>
+    <button class="ubtn" id="btn-share-link" style="color:#9fd;"><span class="material-symbols-outlined">share</span>🔗 Share &amp; Export Hub</button>
+    <button class="ubtn" id="btn-reset"><span class="material-symbols-outlined">videocam</span>⟳ Reset Camera View</button>
+    <button class="ubtn" id="btn-scene"><span class="material-symbols-outlined">palette</span>🎨 Scene Colors</button>
+    <div id="scene-panel" style="display:none;flex-direction:column;gap:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:10px;">
+      <div class="srow"><label for="pick-wall">Wall</label><input type="color" id="pick-wall" value="#0c1e3a"></div>
+      <div class="srow"><label for="pick-floor">Floor</label><input type="color" id="pick-floor" value="#08182e"></div>
+      <div class="srow"><label for="pick-bg2">Board BG</label><input type="color" id="pick-bg2" value="#00000d"></div>
+    </div>
+    <button class="ubtn" id="btn-rec"><span class="material-symbols-outlined">videocam</span>🔴 Presentation</button>
+    <button class="ubtn" id="btn-audio-rec"><span class="material-symbols-outlined">mic</span>🎙️ Audio Recording</button>
+    <button class="ubtn danger" id="btn-clear" style="color:#f87171;"><span class="material-symbols-outlined">delete_sweep</span>🗑️ Clear All Objects</button>
   </div>
-  <div id="bridge-panel" style="display:none;flex-direction:column;gap:6px;margin-top:4px;">
-    <div class="srow"><span id="bridge-status">🌉 Bridge</span></div>
-    <video id="bridge-preview" style="width:100%;border-radius:6px;display:none;" controls></video>
-    <div id="bridge-moments" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
-  </div>
-  <button class="ubtn" id="btn-audio-rec">🎙 Audio Recording</button>
-  <div id="audio-rec-panel">
-    <div class="srow"><span>🎵 Audio format</span><select id="audio-rec-fmt" class="rec-select"></select></div>
-    <button class="ubtn" id="audio-rec-start" style="background:rgba(40,80,200,.5);color:#bbf;">● Start audio rec</button>
-  </div>
-  <button class="ubtn" id="btn-clear">🗑 Clear all</button>
-  <button class="ubtn" id="btn-export">💾 Save Session</button>
-  <button class="ubtn" id="btn-import">📂 Load Session</button>
-  <button class="ubtn" id="btn-share-link" style="background:rgba(20,140,100,.35);color:#9fd;">🚀 Share & Export Hub</button>
-  <button class="ubtn" id="btn-compass">🧭 3D Compass</button>
   <input type="file" id="import-input" accept=".json" style="display:none">
 </div>
+
 
 <!-- MULTI-FORMAT SHARE EXPORT HUB MODAL -->
 <div id="export-hub-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,4,20,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:16px;">
@@ -253,9 +335,10 @@
     <div class="session-input-group" id="session-save-section">
       <label class="session-label">Session Name</label>
       <input type="text" class="session-input" id="session-name-input" autocomplete="off" spellcheck="false">
-      <div class="session-actions" style="margin-top: 10px;">
+      <div class="session-actions" style="margin-top: 10px; display: flex; gap: 8px;">
         <button class="session-btn primary" id="btn-session-save-browser">Save to Browser</button>
-        <button class="session-btn" id="btn-session-download">Download File</button>
+        <button class="session-btn" id="btn-session-download">Download JSON</button>
+        <button class="session-btn" id="btn-export-glb" style="background:rgba(56,189,248,0.2);border:1px solid #38bdf8;color:#fff;">Export 3D .GLB</button>
       </div>
     </div>
     <div class="session-input-group" id="session-load-section">
@@ -332,71 +415,96 @@
 <!-- Recording indicator -->
 <div id="rec-dot"><span class="dot"></span>REC <span id="rec-time">0:00</span> · <button id="rec-stop">⏹ Stop</button></div>
 
-<!-- ════════ GUIDE ════════ -->
+<!-- ════════ MASTER SPATIAL STUDIO GUIDE ════════ -->
 <div id="guide-overlay">
   <div id="guide-card">
 
-    <!-- Progress dots -->
+    <!-- Progress dots (6 Chapters) -->
     <div class="guide-dots">
-      <span class="gdot active"></span>
-      <span class="gdot"></span>
-      <span class="gdot"></span>
-      <span class="gdot"></span>
+      <span class="gdot active" title="Chapter 1: Spatial Canvas & Locomotion"></span>
+      <span class="gdot" title="Chapter 2: 3D Creation, Splats & Code"></span>
+      <span class="gdot" title="Chapter 3: AI Copilot, Hands & 3D OCR"></span>
+      <span class="gdot" title="Chapter 4: Rapier Physics, Avatars & Holodecks"></span>
+      <span class="gdot" title="Chapter 5: WebXR, Multiplayer & Spatial Audio"></span>
+      <span class="gdot" title="Chapter 6: 4D Time-Travel & 1-Click GLB Export"></span>
     </div>
 
-    <!-- Step 1 — Welcome -->
+    <!-- Chapter 1 — Spatial Canvas & Locomotion -->
     <div class="gstep active" id="gstep-0">
-      <div class="gstep-icon">⬡</div>
-      <h1>BLEUUBOARD</h1>
-      <p class="gstep-sub">4D Creative Whiteboard &nbsp;·&nbsp; <span style="color:#f90;letter-spacing:2px;font-size:9px;">ALPHA</span></p>
-      <p class="gstep-desc">A living canvas where you draw 3D strokes, place shapes, images, video and animated critters — then push everything into the 4th dimension.</p>
-      <div class="gstep-pills">
-        <div class="gpill"><span>✏️</span>Draw</div>
-        <div class="gpill"><span>🟦</span>Build</div>
-        <div class="gpill"><span>🎬</span>Media</div>
-        <div class="gpill"><span>🦩</span>Critters</div>
-        <div class="gpill"><span>⏱</span>4D Time</div>
-      </div>
+      <div class="gstep-icon">🌌</div>
+      <h1>BLEUUBOARD 4D</h1>
+      <p class="gstep-sub">Next-Gen Spatial Collaboration Studio &nbsp;·&nbsp; <span style="color:#38bdf8;letter-spacing:2px;font-size:10px;">STUDIO MANUAL</span></p>
+      <p class="gstep-desc">A unified 3D spatial studio fusing Gaussian Splats, AI Vision, Real-Time Physics, WebRTC Multiplayer, and 4D Temporal Time-Travel.</p>
+      <ul class="glist">
+        <li><b>3 Camera POVs</b> — Switch between <b>FPS</b> (1st person), <b>TPS</b> (3rd person character), and <b>Orbit</b> (studio view).</li>
+        <li><b>Gamer Flight Locomotion</b> — Fly freely with <b>WASD</b>, ascend with <b>Space</b>, descend with <b>C</b>, or use the 3D Flight D-Pad.</li>
+        <li><b>1-Click Camera Recovery</b> — Click <b>UTILITIES → Reset Camera View</b> to instantly recover your perspective and center your avatar in any POV mode.</li>
+        <li><b>Quick Tool Toggle</b> — Click any active tool icon a second time to automatically deselect it and return to <b>NAV</b> mode.</li>
+        <li><b>Isometric Holomap Radar</b> — 1-click teleportation to any spatial sector across 100m world coordinates.</li>
+      </ul>
     </div>
 
-    <!-- Step 2 — Draw & Build -->
+    <!-- Chapter 2 — 3D Creation, Gaussian Splats & Live Code -->
     <div class="gstep" id="gstep-1">
-      <div class="gstep-icon">✏️</div>
-      <h2>Draw &amp; Build in 3D</h2>
+      <div class="gstep-icon">✨</div>
+      <h2>3D Creation, Splats &amp; Live Code</h2>
       <ul class="glist">
-        <li><b>Draw</b> — drag anywhere to paint glowing 3D tubes in space</li>
-        <li><b>3D Text</b> — click a spot, type, get solid extruded letters</li>
-        <li><b>Block</b> — click any surface to stack voxels like Minecraft</li>
-        <li><b>Shapes</b> — 12 solids + 8 flat shapes placed on any face</li>
-        <li><b>Stickers</b> — 48 emoji &amp; animals as floating sprites</li>
+        <li><b>Smart Eye-Level Placement</b> — Click anywhere in the viewport or open sky; objects automatically project onto an ergonomic workspace plane.</li>
+        <li><b>3D Ink &amp; Extruded Text</b> — Paint glowing 3D tubes in mid-air or place extruded solid typography anywhere.</li>
+        <li><b>3D Gaussian Splatting (.SPZ)</b> — Place and manipulate photorealistic 3D point cloud scans with real-time 3D gizmos.</li>
+        <li><b>Interactive Live Code Sandbox</b> — Place glass JavaScript terminals in space and execute live code in real time.</li>
+        <li><b>High-Visibility Flow Links</b> — Connect cards and architecture nodes with thick glowing neon pipelines and animated energy signal pulses.</li>
       </ul>
     </div>
 
-    <!-- Step 3 — Media & Critters -->
+    <!-- Chapter 3 — AI Copilot, Hand Tracking & 3D OCR -->
     <div class="gstep" id="gstep-2">
-      <div class="gstep-icon">🦩</div>
-      <h2>Media &amp; Living Objects</h2>
+      <div class="gstep-icon">🤖</div>
+      <h2>AI Copilot, Vision &amp; 3D OCR</h2>
       <ul class="glist">
-        <li><b>Image</b> — drop any photo as a floating 3D panel</li>
-        <li><b>Video</b> — plays &amp; loops on the board (tap to pause)</li>
-        <li><b>Audio</b> — spatial sound that fades with distance in 3D</li>
-        <li><b>Critters</b> — flamingo, parrot, stork &amp; horse with real animations</li>
-        <li><b>4D toggle ⏱</b> — new objects drift through time like a tesseract</li>
+        <li><b>Object Selection &amp; Deselection</b> — In NAV mode, click an object to attach 3D transform gizmos; click the same object again to deselect it.</li>
+        <li><b>WebCam &amp; Mobile Hand Tracking</b> — Enable <b>HAND TRACK</b> to pinch-to-draw and pinch-to-grab objects using Google MediaPipe.</li>
+        <li><b>In-World AI Spatial Copilot</b> — Toggle <b>COPILOT</b> for an autonomous 3D companion drone with voice and layout intelligence.</li>
+        <li><b>3D Handwriting-to-Typography OCR</b> — Draw rough sketches or text, then click <b>3D OCR</b> to convert them to clean 3D typography.</li>
+        <li><b>VisionOS 3D Orbital Action Menu</b> — Select any object to open a floating 6-action radial menu (Duplicate, Toss, Connect, Tint, OCR, Dissolve).</li>
       </ul>
     </div>
 
-    <!-- Step 4 — Move, Resize & Present -->
+    <!-- Chapter 4 — Rapier Physics, Avatars & Holodecks -->
     <div class="gstep" id="gstep-3">
-      <div class="gstep-icon">🚀</div>
-      <h2>Move, Resize &amp; Present</h2>
+      <div class="gstep-icon">⚡</div>
+      <h2>Physics, Avatars &amp; Holodecks</h2>
       <ul class="glist">
-        <li><b>Move ✋</b> — drag to reposition · scroll = depth</li>
-        <li><b>Icons ⬡</b> — place tech (cloud, AI, server) &amp; creative (camera, VFX, edit) nodes with pulsing rings</li>
-        <li><b>Link 🔗</b> — click two objects → animated particle flows A→B · right-click link to reverse direction</li>
-        <li><b>Draw ✏️</b> — finish a stroke to get suggestions: convert to text, image, or icon node</li>
-        <li><b>🔴 Record</b> — capture the board + mic + webcam picture-in-picture</li>
+        <li><b>Rapier.js 3D Physics Simulation</b> — WASM rigid body physics with dynamic bounding colliders, zero-g drift, and impulse toss.</li>
+        <li><b>AccuRig &amp; SkinnedMesh Rigging</b> — Industry-standard bone hierarchies with walking, idle, and jump kinematics.</li>
+        <li><b>VRM Anime &amp; Cyberpunk Avatars</b> — Load humanoid `.vrm` characters with SpringBone hair/cloth physics and procedural blinking.</li>
+        <li><b>360° Holodeck Atmospheres</b> — Switch between <i>Cyber Void</i>, <i>Vaporwave Sunset</i>, <i>Architect Studio</i>, and <i>Deep Space Nebula</i>.</li>
       </ul>
-      <button class="guide-start" id="guide-start-btn">START CREATING →</button>
+    </div>
+
+    <!-- Chapter 5 — WebXR Spatial VR/AR & Multiplayer -->
+    <div class="gstep" id="gstep-4">
+      <div class="gstep-icon">🌐</div>
+      <h2>WebXR, Multiplayer &amp; Audio</h2>
+      <ul class="glist">
+        <li><b>WebXR Spatial VR/AR Mode</b> — Enter full immersion on Apple Vision Pro or Meta Quest 3 with 6DoF motion controllers and laser rays.</li>
+        <li><b>Real-Time WebRTC Multiplayer</b> — P2P mesh network with 20Hz avatar transform broadcasting and wireframe peer visualization.</li>
+        <li><b>3D Positional Audio Cones</b> — Web Audio `Panner3D` with inverse distance attenuation and 180° directional audio cones.</li>
+        <li><b>Procedural Cyber Micro-Audio &amp; Haptics</b> — In-memory synthesized audio feedback (hover pops, clicks, whooshes, chimes) + mobile vibration.</li>
+      </ul>
+    </div>
+
+    <!-- Chapter 6 — 4D Time-Travel & 1-Click GLB Export -->
+    <div class="gstep" id="gstep-5">
+      <div class="gstep-icon">⏱️</div>
+      <h2>4D Time-Travel &amp; 1-Click GLB Export</h2>
+      <ul class="glist">
+        <li><b>4D Temporal Time-Travel Scrubber</b> — Rewind, fast-forward, and play back spatial construction history at 1x/2x/4x speed.</li>
+        <li><b>1-Click 3D Scene GLB / GLTF Export</b> — Export your entire multi-object 3D scene directly into Blender, Unreal Engine, or Unity.</li>
+        <li><b>Live Presentation &amp; Recording</b> — Toggle <b>UTILITIES → 🔴 Presentation</b> for live streaming, screen capture, and audio narration.</li>
+        <li><b>Persistent Browser Sessions</b> — Save complete sessions to localStorage or download standalone JSON files with 1-click reload.</li>
+      </ul>
+      <button class="guide-start" id="guide-start-btn">ENTER BLEUUBOARD STUDIO →</button>
     </div>
 
     <!-- Back / Next navigation -->
@@ -405,7 +513,7 @@
       <button class="gnav-next" id="guide-next">Next →</button>
     </div>
 
-    <button class="guide-skip" id="guide-skip-btn">Skip — don't show again</button>
+    <button class="guide-skip" id="guide-skip-btn">Skip Guide</button>
   </div>
 </div>
 

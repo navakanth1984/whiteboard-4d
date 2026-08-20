@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { initScene, updateDust, updateTesseract, render, getSceneState, camera, controls, fill, ambient, scene } from './core/scene.js';
-import { setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
-import { register, undoLast, redoLast, updateUndoRedoBtns, objects, links, undoStack, redoStack } from './core/history.js';
+import { ray, m2, setMouse, getHit, hitToPos, hitToFree, hitToSurface, rayPlane, setupPointerEvents } from './core/input.js';
+import { register, undoLast, redoLast, updateUndoRedoBtns, clearAllObjects, objects, links, undoStack, redoStack } from './core/history.js';
 import {
   initStrokeSystem,
   beginStroke,
@@ -98,20 +98,24 @@ import {
 import {
   initAvatarSystem,
   avatarConfig,
+  setExecutionMode,
+  setAvatarPreset,
+  setAvatarSkinTone,
   performAvatarAction,
-  GENDERS,
-  setAvatarConfig
+  avatarRoot,
+  loadCustomAccuRigModel
 } from './nav/character.js';
 
 import {
   initGamerNav,
   updateGamerNav,
-  setPOVMode,
-  focusOnObject,
-  povMode,
   handlePointerDown,
   handlePointerMove,
-  handlePointerUp
+  handlePointerUp,
+  setPOVMode,
+  povMode,
+  setPointerLocked,
+  resetNavigation
 } from './nav/gamer_nav.js';
 
 import {
@@ -119,263 +123,329 @@ import {
   selectObject,
   deselectObject,
   selectedObject,
-  transformControl,
   isGizmoHit,
-  setGizmoMode
+  setGizmoMode,
+  startDirectObjectDrag,
+  updateDirectObjectDrag,
+  endDirectObjectDrag,
+  isDirectDragging
 } from './nav/transform.js';
 
-import {
-  initAvatarPickerUI,
-  updatePOVUI
-} from './ui/avatar_picker.js';
+import { initAvatarPickerUI } from './ui/avatar_picker.js';
+import { initHUDSystem, updateHUD } from './ui/hud.js';
+import { initGuideSystem, showGuide } from './ui/guide.js';
+import { initWritingAssistEvents } from './draw/assist.js';
+import { initModeSystem, setMode, currentMode, getCurrentMode } from './ui/modes.js';
+import { detectDeviceTier, getDeviceBudget } from './core/device_tier.js';
+import { initTouchGestures } from './core/touch_gestures.js';
+import { initHandTracking, toggleHandTracking, handTrackingActive } from './input/hand_tracking.js';
+import { initHistory4D, recordTimelineEvent } from './temporal/history4d.js';
+import { initCopilot, toggleCopilot, updateCopilot, executeDirective } from './agent/copilot.js';
+import { initHolodeck, setHolodeckAtmosphere, toggleHolodeckMenu, HOLODECK_PRESETS } from './core/holodeck.js';
+import { initVRMLoader, loadVRMAvatar, updateVRM } from './nav/vrm_loader.js';
+import { initOCREngine, runOCRFromPoints } from './agent/ocr_engine.js';
+import { initWebXREngine, isXRSessionActive } from './xr/webxr_engine.js';
+import { initMultiplayer, updateMultiplayer, broadcastObjectCreation } from './net/multiplayer.js';
+import { initSpatialAudioSystem, playSpatialSynthTone } from './audio/spatial_audio.js';
+import { initCodeSandboxSystem, addCodeSandboxCard } from './objects/code_card.js';
+import { initHapticsAudioSystem, playHapticSynth, vibrateDevice } from './audio/haptics.js';
+import { initOrbitalMenuSystem, summonOrbitalMenu, dismissOrbitalMenu, updateOrbitalMenu } from './ui/orbital_menu.js';
+import { initHolomapSystem, updateHolomap, toggleHolomap } from './ui/holomap.js';
+import { initPostprocessing, setBloomEnabled, setBloomStrength } from './fx/postprocessing.js';
+import { initFlipDeckSystem, addFlipDeckCard } from './objects/flip_deck.js';
+import { exportSceneToGLB } from './export/scene_export.js';
+import { initPhysics, updatePhysics, registerPhysicsBody } from './physics/rapier_engine.js';
+import { initVoiceCommandsSystem } from './agent/voice_commands.js';
 
-import {
-  initHUDSystem,
-  updateHUD
-} from './ui/hud.js';
+// Setup Diagnostic Probes for Browser Verification
+window.__historyProbe = { objects, links, undoStack, redoStack };
+window.__avatarProbe = { avatarConfig, performAvatarAction };
+window.__handTrackingProbe = { initHandTracking, toggleHandTracking, active: () => handTrackingActive };
+window.__copilotProbe = { initCopilot, toggleCopilot, executeDirective };
+window.__physicsProbe = { initPhysics, registerPhysicsBody };
+window.__holodeckProbe = { initHolodeck, setHolodeckAtmosphere, HOLODECK_PRESETS };
+window.__vrmProbe = { initVRMLoader, loadVRMAvatar };
+window.__ocrProbe = { initOCREngine, runOCRFromPoints };
+window.__webxrProbe = { initWebXREngine, isXRSessionActive };
+window.__multiplayerProbe = { initMultiplayer, broadcastObjectCreation };
+window.__spatialAudioProbe = { initSpatialAudioSystem, playSpatialSynthTone };
+window.__codeCardProbe = { initCodeSandboxSystem, addCodeSandboxCard };
+window.__hapticsProbe = { initHapticsAudioSystem, playHapticSynth, vibrateDevice };
+window.__orbitalMenuProbe = { initOrbitalMenuSystem, summonOrbitalMenu, dismissOrbitalMenu };
+window.__holomapProbe = { initHolomapSystem, toggleHolomap };
+window.__bloomProbe = { initPostprocessing, setBloomEnabled, setBloomStrength };
+window.__flipDeckProbe = { initFlipDeckSystem, addFlipDeckCard };
 
-import {
-  initGuide,
-  showGuide,
-  hideGuide,
-  goGuideStep
-} from './ui/guide.js';
-
-import {
-  initInterpretSystem,
-  SASCore,
-  SASCard,
-  getLegoSnapPosition,
-  setMovePlaneFor
-} from './agent/interpret.js';
-
-import {
-  initModeSystem,
-  setMode,
-  currentMode,
-  buildCardPalette,
-  buildIconPalette,
-  buildBoardPalette,
-  buildStickerPalette
-} from './ui/modes.js';
-
-// Boot scene & render loop
-const canvasEl = document.getElementById('c');
-initScene(canvasEl);
+// Initialize Complete Core Spatial Engine
+const deviceBudget = detectDeviceTier();
+initScene();
 initStrokeSystem();
 initTextSystem();
 initAuraSystem();
+initHUDSystem();
 initAvatarSystem();
 initGamerNav();
 initTransformSystem();
 initAvatarPickerUI();
-initHUDSystem();
-initGuide();
-initInterpretSystem();
+initGuideSystem();
+initWritingAssistEvents();
 initModeSystem();
+initTouchGestures();
+initHandTracking();
+initVoiceCommandsSystem();
+initHistory4D();
+initCopilot();
+initPhysics();
+initHolodeck();
+initVRMLoader();
+initOCREngine();
+initWebXREngine();
+initMultiplayer();
+initSpatialAudioSystem();
+initCodeSandboxSystem();
+initHapticsAudioSystem();
+initOrbitalMenuSystem();
+initHolomapSystem();
+initPostprocessing();
+initFlipDeckSystem();
 
-// Connect UI Undo / Redo buttons
-const btnUndo = document.getElementById('btn-undo');
-const btnRedo = document.getElementById('btn-redo');
-if (btnUndo) btnUndo.addEventListener('click', () => undoLast());
-if (btnRedo) btnRedo.addEventListener('click', () => redoLast());
-updateUndoRedoBtns();
+// Wire Utilities Drawer & UI Controls
+function setupUIUtilities() {
+  const btnUtils = document.getElementById('btn-utilities');
+  const utilsDrawer = document.getElementById('utils-drawer');
+  const utilsClose = document.getElementById('utils-close');
 
-// Wire input handlers & test diagnostic probe
-window.__historyProbe = {
-  register,
-  undoLast,
-  redoLast,
-  objects,
-  links,
-  undoStack,
-  redoStack
-};
+  if (btnUtils && utilsDrawer) {
+    btnUtils.addEventListener('click', () => {
+      utilsDrawer.classList.toggle('show');
+      playHapticSynth('click');
+    });
+  }
+  if (utilsClose && utilsDrawer) {
+    utilsClose.addEventListener('click', () => {
+      utilsDrawer.classList.remove('show');
+      playHapticSynth('pop');
+    });
+  }
 
-window.__drawProbe = {
-  beginStroke,
-  addStrokePoint,
-  endStroke,
-  setMode,
-  setBrushStyle,
-  getDrawing: () => drawing,
-  getDrawPts: () => drawPts
-};
+  // Reset Camera View
+  const btnReset = document.getElementById('btn-reset');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      resetNavigation();
+      playHapticSynth('whoosh');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
 
-window.__shapeProbe = {
-  SHAPES,
-  curShape: () => curShape,
-  setCurShape,
-  addShape,
-  addBlock
-};
+  // Save Session JSON
+  const btnExport = document.getElementById('btn-export');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      saveSessionToDownload('bleuboard-session');
+      playHapticSynth('snap');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
 
-window.__sceneProbe = {
-  get camera() { return getSceneState().camera; },
-  get controls() { return getSceneState().controls; },
-  get scene() { return getSceneState().scene; },
-  get composer() { return getSceneState().composer; },
-  get renderer() { return getSceneState().renderer; }
-};
-
-window.__mediaProbe = {
-  addImagePanel,
-  addVideoPanel,
-  addSpatialAudio,
-  addLiveScreenShare,
-  serializeSession,
-  loadSessionData,
-  saveSessionToDownload,
-  createLink
-};
-
-window.__boardProbe = {
-  addMiniBoard,
-  BOARD_STYLES,
-  curBoardStyle,
-  setCurBoardStyle
-};
-
-window.__stickersProbe = {
-  addIconNode,
-  ICON_CATEGORIES,
-  getActiveIconItem
-};
-
-window.__modelsProbe = {
-  addSpatialCard,
-  CARD_PRESETS
-};
-
-window.__transformProbe = {
-  selectObject,
-  deselectObject,
-  get transformControl() { return transformControl; },
-  get selectedObject() { return selectedObject; }
-};
-
-window.__guideProbe = {
-  showGuide,
-  hideGuide,
-  goGuideStep
-};
-
-window.__sasProbe = {
-  SASCore,
-  SASCard,
-  getLegoSnapPosition,
-  setMovePlaneFor
-};
-
-window.__modeProbe = {
-  setMode,
-  get currentMode() { return currentMode; },
-  buildCardPalette,
-  buildIconPalette,
-  buildBoardPalette,
-  buildStickerPalette
-};
-
-window.__splatProbe = {
-  addSplatObject,
-  loadSplatFile,
-  SPLAT_PRESETS,
-  curSplat: () => curSplat,
-  setCurSplat,
-  initSparkRenderer
-};
-
-const btnWindow = document.getElementById('btn-window');
-if (btnWindow) {
-  btnWindow.addEventListener('click', () => {
-    const ink = document.getElementById('pick-ink')?.value || '#00ccff';
-    addLiveScreenShare(ink);
-  });
-}
-
-const btnExport = document.getElementById('btn-export');
-if (btnExport) {
-  btnExport.addEventListener('click', () => {
-    saveSessionToDownload('bleuboard-session');
-  });
-}
-
-const btnImport = document.getElementById('btn-import');
-const importInput = document.getElementById('import-input');
-if (btnImport && importInput) {
-  btnImport.addEventListener('click', () => importInput.click());
-  importInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const data = JSON.parse(ev.target.result);
-        loadSessionData(data);
-      } catch (err) {
-        console.error('Failed to parse session json:', err);
+  // Load Session JSON
+  const btnImport = document.getElementById('btn-import');
+  const importInput = document.getElementById('import-input');
+  if (btnImport && importInput) {
+    btnImport.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            loadSessionData(data);
+            playHapticSynth('snap');
+            if (utilsDrawer) utilsDrawer.classList.remove('show');
+          } catch (err) {
+            alert('Invalid session JSON file.');
+          }
+        };
+        reader.readAsText(file);
       }
-    };
-    reader.readAsText(file);
-  });
+    });
+  }
+
+  // 1-Click GLB Export
+  const btnExportGLB = document.getElementById('btn-export-glb');
+  if (btnExportGLB) {
+    btnExportGLB.addEventListener('click', () => {
+      exportSceneToGLB('bleuboard-3d-scene');
+      playHapticSynth('snap');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
+
+  // Clear All Objects (instant with haptic feedback)
+  const btnClear = document.getElementById('btn-clear');
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      clearAllObjects();
+      playHapticSynth('whoosh');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
+
+  // Presentation & Screen Recording Toggle
+  const btnRec = document.getElementById('btn-rec');
+  let isPresenting = false;
+  if (btnRec) {
+    btnRec.addEventListener('click', async () => {
+      if (!isPresenting) {
+        try {
+          await startRecording(true, false, status => {
+            if (status === 'stopped') {
+              isPresenting = false;
+              btnRec.innerHTML = '<span class="material-symbols-outlined">videocam</span>🔴 Presentation';
+              btnRec.style.background = '';
+            }
+          });
+          isPresenting = true;
+          btnRec.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>⏹ Stop Presentation';
+          btnRec.style.background = 'rgba(239,68,68,0.4)';
+          playHapticSynth('pop');
+        } catch (err) {
+          console.warn('Presentation recording error:', err);
+        }
+      } else {
+        stopRecording();
+        isPresenting = false;
+        btnRec.innerHTML = '<span class="material-symbols-outlined">videocam</span>🔴 Presentation';
+        btnRec.style.background = '';
+        playHapticSynth('snap');
+      }
+    });
+  }
+
+  // Scene Colors Toggle
+  const btnScene = document.getElementById('btn-scene');
+  const scenePanel = document.getElementById('scene-panel');
+  if (btnScene && scenePanel) {
+    btnScene.addEventListener('click', () => {
+      scenePanel.style.display = scenePanel.style.display === 'flex' ? 'none' : 'flex';
+      playHapticSynth('click');
+    });
+  }
+
+  // Scene Colors Pickers
+  const pickWall = document.getElementById('pick-wall');
+  const pickFloor = document.getElementById('pick-floor');
+  const pickBg2 = document.getElementById('pick-bg2');
+  const { scene: currentScene } = getSceneState();
+
+  if (pickWall && currentScene) {
+    pickWall.addEventListener('input', e => {
+      if (currentScene.background) currentScene.background.set(e.target.value);
+    });
+  }
+  if (pickFloor && currentScene) {
+    pickFloor.addEventListener('input', e => {
+      const grid = currentScene.getObjectByName('GroundGrid');
+      if (grid && grid.material) grid.material.color.set(e.target.value);
+    });
+  }
+  if (pickBg2 && currentScene) {
+    pickBg2.addEventListener('input', e => {
+      if (currentScene.background) currentScene.background.set(e.target.value);
+    });
+  }
+
+  // Share & Export Hub Modal
+  const btnShareLink = document.getElementById('btn-share-link');
+  const exportHubModal = document.getElementById('export-hub-modal');
+  const exportHubClose = document.getElementById('export-hub-close');
+  if (btnShareLink && exportHubModal) {
+    btnShareLink.addEventListener('click', () => {
+      exportHubModal.style.display = 'flex';
+      playHapticSynth('pop');
+      if (utilsDrawer) utilsDrawer.classList.remove('show');
+    });
+  }
+  if (exportHubClose && exportHubModal) {
+    exportHubClose.addEventListener('click', () => {
+      exportHubModal.style.display = 'none';
+    });
+  }
+
+  // Palette Close Button
+  const palClose = document.getElementById('pal-close');
+  const pal = document.getElementById('palette');
+  if (palClose && pal) {
+    palClose.addEventListener('click', () => {
+      pal.classList.remove('show');
+      setMode('nav');
+    });
+  }
+
+  // Guide Re-entry Button
+  const btnGuide = document.getElementById('btn-guide');
+  if (btnGuide) {
+    btnGuide.addEventListener('click', () => {
+      showGuide();
+      playHapticSynth('pop');
+    });
+  }
 }
 
-const recStartBtn = document.getElementById('rec-start');
-if (recStartBtn) {
-  recStartBtn.addEventListener('click', () => {
-    const withMic = document.getElementById('rec-mic')?.checked !== false;
-    const withCam = document.getElementById('rec-cam')?.checked === true;
-    startRecording(withMic, withCam);
-  });
-}
+setupUIUtilities();
 
+// Wire Handlers & Locomotion
 let pendingLinkSource = null;
 
 setupPointerEvents({
-  onDown: (cx, cy) => {
+  onDown: (cx, cy, e) => {
+    const mode = getCurrentMode();
     const ink = document.getElementById('pick-ink')?.value || '#00ccff';
 
-    if (currentMode === 'draw') {
+    if (mode === 'draw') {
       if (avatarConfig.executionMode === 'avatar') {
         const surf = hitToSurface(cx, cy);
         if (surf) performAvatarAction('draw', surf.point, () => {}, 0.1);
       }
       beginStroke(cx, cy);
-    } else if (currentMode === 'card') {
-      const surf = hitToSurface(cx, cy);
-      if (surf) {
-        performAvatarAction('place', surf.point, () => {
-          const o = addSpatialCard(curCard, surf, ink);
-          selectObject(o);
-        });
-      }
-    } else if (currentMode === 'board') {
-      const surf = hitToSurface(cx, cy);
-      const pos = surf ? surf.point.clone().add(new THREE.Vector3(0, 2.5, 0)) : new THREE.Vector3(0, 4.5, -5);
-      performAvatarAction('place', pos, () => {
-        const o = addMiniBoard({ styleKey: curBoardStyle, position: pos, colorHex: ink });
+    } else if (mode === 'card') {
+      const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 3.5, -6), normal: new THREE.Vector3(0, 0, 1) };
+      performAvatarAction('place', surf.point, () => {
+        const o = addSpatialCard(curCard, surf, ink);
+        setMode('nav');
         if (o) selectObject(o);
       });
-    } else if (currentMode === 'icon') {
-      const surf = hitToSurface(cx, cy);
+    } else if (mode === 'board') {
+      const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 2.0, -6), normal: new THREE.Vector3(0, 0, 1) };
+      const pos = surf.point.clone().add(new THREE.Vector3(0, 2.5, 0));
+      performAvatarAction('place', pos, () => {
+        const o = addMiniBoard({ styleKey: curBoardStyle, position: pos, colorHex: ink });
+        setMode('nav');
+        if (o) selectObject(o);
+      });
+    } else if (mode === 'icon') {
+      const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 3.5, -6), normal: new THREE.Vector3(0, 0, 1) };
       const item = getActiveIconItem();
-      if (surf && item) {
+      if (item) {
         performAvatarAction('place', surf.point, () => {
           const o = addIconNode(item, surf, ink);
-          selectObject(o);
+          setMode('nav');
+          if (o) selectObject(o);
         });
       }
-    } else if (currentMode === 'splat') {
+    } else if (mode === 'splat') {
       const surf = hitToSurface(cx, cy) || { point: new THREE.Vector3(0, 0.5, -4), normal: new THREE.Vector3(0, 1, 0) };
       performAvatarAction('place', surf.point, () => {
         const o = addSplatObject({ presetKey: curSplat, surf, ink });
+        setMode('nav');
         if (o) selectObject(o);
       });
-    } else if (currentMode === 'connect') {
+    } else if (mode === 'connect') {
       const { camera } = getSceneState();
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
-      const roots = objects.map(o => o.root);
+      const roots = objects.map(o => o.root).filter(Boolean);
       const hits = ray.intersectObjects(roots, true);
       if (hits.length > 0) {
         let cur = hits[0].object;
@@ -396,65 +466,70 @@ setupPointerEvents({
           }
         }
       }
-    } else if (currentMode === 'image') {
+    } else if (mode === 'image') {
       const surf = hitToSurface(cx, cy);
       if (surf) {
         const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = 'image/*';
-        inp.onchange = e => {
-          const file = e.target.files[0];
+        inp.onchange = ev => {
+          const file = ev.target.files[0];
           if (file) {
             performAvatarAction('place', surf.point, () => {
               const o = addImagePanel(URL.createObjectURL(file), surf.point, ink);
+              setMode('nav');
               if (o) selectObject(o);
             });
           }
         };
         inp.click();
       }
-    } else if (currentMode === 'video') {
+    } else if (mode === 'video') {
       const surf = hitToSurface(cx, cy);
       if (surf) {
         const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = 'video/*';
-        inp.onchange = e => {
-          const file = e.target.files[0];
+        inp.onchange = ev => {
+          const file = ev.target.files[0];
           if (file) {
             performAvatarAction('place', surf.point, () => {
-              addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+              const o = addVideoPanel(URL.createObjectURL(file), surf.point, ink);
+              setMode('nav');
+              if (o) selectObject(o);
             });
           }
         };
         inp.click();
       }
-    } else if (currentMode === 'audio') {
+    } else if (mode === 'audio') {
       const surf = hitToSurface(cx, cy);
       if (surf) {
         const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = 'audio/*';
-        inp.onchange = e => {
-          const file = e.target.files[0];
+        inp.onchange = ev => {
+          const file = ev.target.files[0];
           if (file) {
             performAvatarAction('place', surf.point, () => {
-              addSpatialAudio(URL.createObjectURL(file), surf, ink);
+              const o = addSpatialAudio(URL.createObjectURL(file), surf, ink);
+              setMode('nav');
+              if (o) selectObject(o);
             });
           }
         };
         inp.click();
       }
-    } else if (currentMode === 'text') {
+    } else if (mode === 'text') {
       const hit = getHit(cx, cy);
       const free = hitToFree(hit);
       showTextInput(cx, cy, free || new THREE.Vector3(0, 11, -9));
-    } else if (currentMode === 'nav') {
+    } else if (mode === 'nav') {
       const { camera } = getSceneState();
       setMouse(cx, cy);
       ray.setFromCamera(m2, camera);
 
-      // 1. If clicking on 3D Gizmo handles, let TransformControls drag without deselecting
+      // 1. If clicking on 3D Gizmo handles, let TransformControls handle axis drag
       if (isGizmoHit(ray)) {
         return;
       }
@@ -475,35 +550,47 @@ setupPointerEvents({
         });
 
         if (clickedObj) {
+          // Select object (or keep selected) and initiate direct body drag
           selectObject(clickedObj);
+          startDirectObjectDrag(clickedObj, hits[0].point);
           return;
         }
       }
 
-      // 3. If clicking empty background, deselect and enable camera look
+      // 3. If clicking empty background, deselect active object and enable camera look
       deselectObject();
       handlePointerDown(e || { clientX: cx, clientY: cy, button: 0 });
     }
   },
   onMove: (cx, cy, e) => {
+    const mode = getCurrentMode();
     setMouse(cx, cy);
-    if (currentMode === 'nav') {
+    if (mode === 'nav') {
+      if (isDirectDragging) {
+        const { camera } = getSceneState();
+        if (camera) ray.setFromCamera(m2, camera);
+        updateDirectObjectDrag(cx, cy, ray);
+        return;
+      }
       handlePointerMove(e || { clientX: cx, clientY: cy });
     }
-    if (currentMode === 'draw' && drawing) {
+    if (mode === 'draw' && drawing) {
       addStrokePoint(cx, cy);
     }
   },
   onUp: (cx, cy, e) => {
-    if (currentMode === 'nav') {
+    const mode = getCurrentMode();
+    if (mode === 'nav') {
+      if (isDirectDragging) {
+        endDirectObjectDrag();
+      }
       handlePointerUp();
     }
-    if (currentMode === 'draw') {
+    if (mode === 'draw') {
       endStroke();
     }
   }
 });
-
 
 const clock = new THREE.Clock();
 let elapsed = 0;
@@ -542,6 +629,12 @@ function animate() {
   tickLinks(dt);
   refreshLinks();
   tickAuras(t);
+  updateCopilot(t, dt);
+  updatePhysics(dt);
+  updateVRM(dt, camera?.position);
+  updateMultiplayer(dt, avatarRoot?.position, avatarRoot?.quaternion);
+  updateOrbitalMenu(camera);
+  updateHolomap(camera, avatarRoot?.position, dt);
 
   // Tick object billboard and spin rotations
   objects.forEach(o => {

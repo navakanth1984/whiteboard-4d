@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { getSceneState } from '../core/scene.js';
 
 export const GENDERS = {
@@ -31,6 +32,16 @@ export const GENDERS = {
     hairStyle: 'holo_crest',
     hairColor: '#a855f7',
     jacketColor: 0x030712
+  },
+  custom: {
+    label: 'AccuRig / Custom Humanoid Avatar',
+    torsoScale: [0.80, 1.10, 0.45],
+    shoulderWidth: 0.95,
+    hipWidth: 0.75,
+    height: 2.30,
+    hairStyle: 'custom',
+    hairColor: '#38bdf8',
+    jacketColor: 0x0f172a
   }
 };
 
@@ -53,6 +64,8 @@ export let avatarConfig = {
 
 export let avatarRoot = null;
 export let fpHandRoot = null;
+export let customAvatarModel = null;
+export let customMixer = null;
 
 // Rig Limb References for Kinematics
 let rig = {
@@ -86,10 +99,23 @@ let actionTimer = 0;
 let animWalkTime = 0;
 
 export function setAvatarConfig(cfg) {
-  avatarConfig = { ...avatarConfig, ...cfg };
+  Object.assign(avatarConfig, cfg);
   rebuildAvatar();
   rebuildFPHand();
 }
+
+export function setExecutionMode(mode) {
+  setAvatarConfig({ executionMode: mode });
+}
+
+export function setAvatarPreset(gender) {
+  setAvatarConfig({ gender });
+}
+
+export function setAvatarSkinTone(skinTone) {
+  setAvatarConfig({ skinTone });
+}
+
 
 export function initAvatarSystem() {
   const { scene } = getSceneState();
@@ -108,6 +134,11 @@ export function rebuildAvatar() {
   if (!avatarRoot) return;
   while (avatarRoot.children.length > 0) {
     avatarRoot.remove(avatarRoot.children[0]);
+  }
+
+  if (avatarConfig.gender === 'custom' && customAvatarModel) {
+    avatarRoot.add(customAvatarModel);
+    return;
   }
 
   const spec = GENDERS[avatarConfig.gender] || GENDERS.female;
@@ -551,11 +582,16 @@ export function updateAvatar(dt, velocity = new THREE.Vector3(), isMoving = fals
       if (rig.rForearm) rig.rForearm.rotation.set(0, 0, 0);
     }
   }
+
+  if (customMixer) {
+    customMixer.update(dt);
+  }
 }
 
 export function performAvatarAction(type, targetPos, onComplete, duration = 0.35) {
+  if (typeof onComplete === 'function') onComplete();
+
   if (avatarConfig.executionMode !== 'avatar') {
-    if (typeof onComplete === 'function') onComplete();
     return;
   }
 
@@ -569,7 +605,67 @@ export function performAvatarAction(type, targetPos, onComplete, duration = 0.35
     type,
     targetPos: targetPos ? targetPos.clone() : null,
     duration,
-    onComplete
+    onComplete: null
   };
   actionTimer = 0;
 }
+
+export function loadCustomAvatar(source, onLoad, onError) {
+  const loader = new GLTFLoader();
+  const url = (typeof source === 'string') ? source : URL.createObjectURL(source);
+
+  loader.load(url, (gltf) => {
+    customAvatarModel = gltf.scene;
+
+    // Normalize height and centering
+    const box = new THREE.Box3().setFromObject(customAvatarModel);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    if (size.y > 0.01) {
+      const targetHeight = 2.3;
+      const scale = targetHeight / size.y;
+      customAvatarModel.scale.setScalar(scale);
+    }
+
+    // Traverse and search for bones
+    customAvatarModel.traverse((node) => {
+      if (node.isMesh || node.isSkinnedMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+      if (node.isBone) {
+        const n = node.name.toLowerCase();
+        if (n.includes('hip') || n.includes('pelvis')) rig.pelvis = node;
+        else if (n.includes('spine') || n.includes('chest')) rig.torso = node;
+        else if (n.includes('head')) rig.head = node;
+        else if (n.includes('left') && (n.includes('arm') || n.includes('shoulder'))) rig.lShoulder = node;
+        else if (n.includes('left') && n.includes('forearm')) rig.lForearm = node;
+        else if (n.includes('right') && (n.includes('arm') || n.includes('shoulder'))) rig.rShoulder = node;
+        else if (n.includes('right') && n.includes('forearm')) rig.rForearm = node;
+        else if (n.includes('left') && (n.includes('thigh') || n.includes('upleg'))) rig.lThighGroup = node;
+        else if (n.includes('left') && (n.includes('calf') || n.includes('leg'))) rig.lCalfGroup = node;
+        else if (n.includes('right') && (n.includes('thigh') || n.includes('upleg'))) rig.rThighGroup = node;
+        else if (n.includes('right') && (n.includes('calf') || n.includes('leg'))) rig.rCalfGroup = node;
+      }
+    });
+
+    if (gltf.animations && gltf.animations.length > 0) {
+      customMixer = new THREE.AnimationMixer(customAvatarModel);
+      const action = customMixer.clipAction(gltf.animations[0]);
+      action.play();
+    } else {
+      customMixer = null;
+    }
+
+    avatarConfig.gender = 'custom';
+    rebuildAvatar();
+
+    if (typeof onLoad === 'function') onLoad(gltf);
+  }, undefined, (err) => {
+    console.error('Error loading custom avatar glTF:', err);
+    if (typeof onError === 'function') onError(err);
+  });
+}
+
+export const loadCustomAccuRigModel = loadCustomAvatar;
+

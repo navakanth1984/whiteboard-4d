@@ -1,4 +1,7 @@
+import * as THREE from 'three';
 import { scene, placeTargets } from './scene.js';
+import { recordTimelineEvent } from '../temporal/history4d.js';
+import { registerPhysicsBody } from '../physics/rapier_engine.js';
 
 export let idCtr = 0;
 export const objects = [];
@@ -59,6 +62,9 @@ export function register(rootOrObj, type, label, color, opts = {}) {
   if (scene) {
     scene.add(root);
   }
+
+  recordTimelineEvent('create', o);
+  registerPhysicsBody(o);
 
   updateUndoRedoBtns();
   if (window.compassViewport && typeof window.compassViewport.markDirty === 'function') {
@@ -132,6 +138,18 @@ export function undoLast() {
   return o;
 }
 
+export function removeObject(o) {
+  if (!o) return;
+  if (scene && o.root) {
+    scene.remove(o.root);
+  }
+  const i = objects.indexOf(o);
+  if (i > -1) objects.splice(i, 1);
+  const ui = undoStack.indexOf(o);
+  if (ui > -1) undoStack.splice(ui, 1);
+  updateUndoRedoBtns();
+}
+
 export function redoLast() {
   const o = redoStack.pop();
   if (!o) return null;
@@ -163,6 +181,9 @@ export function redoLast() {
 
 export function removeObj(o) {
   if (!o) return;
+  if (typeof window !== 'undefined' && window.__selectedObject === o && typeof window.__deselectObject === 'function') {
+    window.__deselectObject();
+  }
   if (scene && o.root) {
     scene.remove(o.root);
   }
@@ -203,3 +224,19 @@ export function removeObj(o) {
   if (moveTarget === o) moveTarget = null;
   updateUndoRedoBtns();
 }
+
+export function clearAllObjects() {
+  if (typeof window !== 'undefined' && typeof window.__deselectObject === 'function') {
+    window.__deselectObject();
+  }
+  while (objects.length > 0) {
+    removeObj(objects[0]);
+  }
+  undoStack.length = 0;
+  redoStack.length = 0;
+  updateUndoRedoBtns();
+}
+
+export const undo = undoLast;
+export const redo = redoLast;
+

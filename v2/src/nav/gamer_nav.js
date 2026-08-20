@@ -301,3 +301,41 @@ export function updateGamerNav(dt) {
     isSprinting
   };
 }
+
+export function setPointerLocked(val) {
+  // Optional pointer lock hook
+}
+
+export function resetNavigation() {
+  playerHeading = 0;
+  playerPitch = 0.15;
+  playerVelocity.set(0, 0, 0);
+  focusTarget = null;
+  focusTween = null;
+  
+  if (avatarRoot) {
+    avatarRoot.position.set(0, 0, 5);
+    avatarRoot.rotation.set(0, 0, 0);
+  }
+  
+  const { camera, controls } = getSceneState();
+  if (camera) {
+    if (povMode === 'orbit') {
+      camera.position.set(0, 5, 12);
+      camera.lookAt(0, 1.5, 0);
+    } else if (povMode === 'tps') {
+      camera.position.set(1.2, 2.0, 9.4);
+      camera.lookAt(0, 1.6, 0);
+    } else if (povMode === 'fps') {
+      camera.position.set(0, 1.9, 5);
+      camera.lookAt(0, 1.9, -5);
+    }
+  }
+  
+  if (controls && povMode === 'orbit') {
+    controls.target.set(0, 1.5, 0);
+    controls.update();
+  }
+}
+
+

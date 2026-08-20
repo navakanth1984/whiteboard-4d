@@ -174,3 +174,8 @@ export function showStrokeActionPopup(screenPos, detected, strokeObj, inkColor) 
 export function hideStrokeActionPopup() {
   if (popupEl) popupEl.style.display = 'none';
 }
+
+export function initWritingAssistEvents() {
+  // Ready
+}
+
