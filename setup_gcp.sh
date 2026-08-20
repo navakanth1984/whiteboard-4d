@@ -8,14 +8,12 @@
 
 set -euo pipefail
 
-PROJECT_ID="${1:-}"
-if [[ -z "$PROJECT_ID" ]]; then
-  echo "❌  Usage: bash setup_gcp.sh <PROJECT_ID>"
-  echo "   Example: bash setup_gcp.sh bleuboard-genai-2026"
-  exit 1
-fi
+PROJECT_ID="${1:-nthdim-academy-v2}"   # default from .env VERTEX_PROJECT_ID
+REGION="${2:-us-central1}"            # default from .env VERTEX_LOCATION
 
-REGION="us-central1"
+# Override any conflicting env-level project setting (CLOUDSDK_CORE_PROJECT)
+export CLOUDSDK_CORE_PROJECT="$PROJECT_ID"
+
 SA_NAME="bleuboard-agent"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 

@@ -10,7 +10,8 @@
 
 const express = require('express');
 const cors = require('cors');
-const { VertexAI } = require('@google-cloud/aiplatform');
+const { VertexAI } = require('@google-cloud/vertexai');
+
 
 const app = express();
 app.use(express.json({ limit: '512kb' }));

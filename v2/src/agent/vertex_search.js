@@ -8,20 +8,19 @@
 // This module is browser-side — it talks to the Gemini proxy Cloud Run service.
 // No direct GCP credentials in the browser.
 
-// ── GCP config from environment (matches .env: VERTEX_PROJECT_ID=nthdim-academy-v2) ─────
+// ── GCP config (project: nthdim-academy-v2, region: us-central1) ─────────────
 const GCP_PROJECT  = 'nthdim-academy-v2';
 const GCP_REGION   = 'us-central1';
 
-// Cloud Run proxy URL — set after first deploy of bleuboard-gemini-proxy
-// Deploy: gcloud run deploy bleuboard-gemini-proxy --region us-central1 --project nthdim-academy-v2
-// Then update this URL with the real hash from `gcloud run services describe` output.
-const CLOUD_RUN_URL = `https://bleuboard-gemini-proxy-${GCP_REGION.replace(/-/g,'')}a.a.run.app`; // placeholder
+// Cloud Run URL — deployed 2026-08-20
+// Service: bleuboard-spatial-bridge | Project: nthdim-academy-v2
+const CLOUD_RUN_URL = 'https://bleuboard-spatial-bridge-526005048954.us-central1.run.app';
 
 const PROXY_BASE = (() => {
   if (window.location.hostname === 'localhost') return 'http://localhost:8080';
-  // Use CLOUD_RUN_URL after deploy — update above constant
   return CLOUD_RUN_URL;
 })();
+
 
 // Gemini API key — loaded server-side by the Cloud Run proxy from Secret Manager.
 // NEVER put the raw key here. In .env locally: set GEMINI_API_KEY=<your-key>
@@ -68,7 +67,7 @@ export function buildSceneSnapshot(objects, camera) {
  */
 export async function interpretWithGemini(utterance) {
   try {
-    const res = await fetch(`${PROXY_BASE}/interpret`, {
+    const res = await fetch(`${PROXY_BASE}/gemini/interpret`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ utterance, sceneContext: _sceneSnapshot }),
@@ -91,7 +90,7 @@ export async function interpretAudioWithGemini(audioBlob) {
   try {
     const arrayBuf = await audioBlob.arrayBuffer();
     const b64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
-    const res = await fetch(`${PROXY_BASE}/live-audio`, {
+    const res = await fetch(`${PROXY_BASE}/gemini/live-audio`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
