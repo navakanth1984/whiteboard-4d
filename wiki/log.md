@@ -1,5 +1,32 @@
 # Execution Log
 
+## 2026-08-20 (QA lead sweep — 6 parallel subagents + fix round)
+Ran a full-surface QA sweep of BleuuBoard v2 (staging `bleuboard-dev.vercel.app/v2/`, branch
+`feat/gemini-copilot-backend`), one subagent per feature area from the wiki's documented feature
+surface, then manually re-verified every "P0" finding before fixing anything.
+
+Environment issue found: the Browser-tool pane's WebGL compositor didn't render in 3 of 6 QA
+sessions, blocking all 3D-canvas coordinate clicks — the physics drag-snap-back regression test
+(2026-08-18 fix) still needs a re-run in a working session.
+
+Two automated "P0" findings were retracted after manual re-verification (keyboard-Space-on-button
+was a QA-tool synthetic-input limitation, reproduced on a control `<button>` with zero app code;
+the 4D-scrubber phantom-object count was an artifact of a QA agent's own synthetic placement
+attempts, not reproducible on a clean reload) — full writeup in
+`wiki/whiteboard-4d_gbrain.md` under "2026-08-20 — Full-surface QA sweep + accessibility fix round".
+
+Fixed and verified live (local `server.cjs`, DOM-inspected, 0 new console errors, `#btn-4d` toggle
+regression-checked): 10 missing/mismatched accessibility labels in `v2/index.html` — the 4D
+play/pause button, the 4D timeline scrubber, the 4D object-count status region, the Session Name
+`<label for>` association, and 6 icon-only close buttons. Branch `fix/qa-accessibility-labels` →
+PR opened against `feat/gemini-copilot-backend`, not merged (awaiting review per standing rule).
+
+Confirmed-but-deferred: Copilot AI is voice/mic-only with no text-input fallback (backend itself
+verified fully working via direct HTTP); onboarding guide Next/Back button lands on the wrong
+control when another panel is open (corroborated by 2 independent agents, root cause not yet
+triaged); "V-sign quick-spawn" gesture undocumented in-app; "Clear All Objects" confirm() gate
+possibly missing (low-confidence, needs clean re-check).
+
 ## 2026-08-18 (QA session — separate from the Antigravity implementation session logged below)
 A Claude Code session ran three rounds of live QA against `https://bleuboard-dev.vercel.app/v2/`
 (branch `feat/3d-flip-deck`, deployed by a separate agent, "Antigravity") using a browser

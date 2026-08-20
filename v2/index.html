@@ -107,7 +107,7 @@
   <div class="avatar-modal-box">
     <div class="avatar-modal-hdr">
       <h3><span class="material-symbols-outlined" style="vertical-align:middle;margin-right:6px;color:#38bdf8;">manage_accounts</span> Spatial Avatar &amp; Action Engine</h3>
-      <button id="avatar-modal-close" class="modal-close-btn">✕</button>
+      <button id="avatar-modal-close" class="modal-close-btn" aria-label="Close">✕</button>
     </div>
     <div id="avatar-modal-body"></div>
   </div>
@@ -139,12 +139,12 @@
 
 <!-- ════════ 4D TEMPORAL TIME-TRAVEL SCRUBBER ════════ -->
 <div id="timeline-4d" style="display:none;position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,6,23,0.85);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.35);border-radius:12px;padding:8px 16px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);color:#fff;width:min(90vw,640px);">
-  <button id="tl-play-btn" style="background:rgba(56,189,248,0.2);border:1px solid rgba(56,189,248,0.4);border-radius:50%;width:32px;height:32px;color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-    <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+  <button id="tl-play-btn" aria-label="Play or pause 4D timeline replay" style="background:rgba(56,189,248,0.2);border:1px solid rgba(56,189,248,0.4);border-radius:50%;width:32px;height:32px;color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+    <span class="material-symbols-outlined" style="font-size:18px;" aria-hidden="true">play_arrow</span>
   </button>
-  <input type="range" id="tl-scrubber" min="0" max="100" value="100" style="flex:1;accent-color:#38bdf8;cursor:pointer;">
+  <input type="range" id="tl-scrubber" aria-label="4D timeline position" min="0" max="100" value="100" style="flex:1;accent-color:#38bdf8;cursor:pointer;">
   <span id="tl-time-lbl" style="font-family:monospace;font-size:12px;color:#94a3b8;min-width:85px;">00:00 / 00:10</span>
-  <span id="tl-count-lbl" style="font-family:monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px;">0/0 OBJS</span>
+  <span id="tl-count-lbl" role="status" aria-live="polite" style="font-family:monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.1);padding:2px 6px;border-radius:4px;">0/0 OBJS</span>
   <button id="tl-speed-btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:3px 8px;font-size:11px;color:#fff;cursor:pointer;">1x</button>
   <button id="tl-live-btn" style="background:#0284c7;border:none;border-radius:6px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer;font-weight:bold;">LIVE</button>
 </div>
@@ -172,7 +172,7 @@
 <div id="palette" class="glass-drawer">
   <div class="pal-hdr">
     <span id="pal-title">Asset Palette</span>
-    <button id="pal-close" class="modal-close-btn">✕</button>
+    <button id="pal-close" class="modal-close-btn" aria-label="Close">✕</button>
   </div>
   <div id="pal-tabs" class="pal-tabs-row"></div>
   <div id="pal-grid" class="pal-grid-box"></div>
@@ -249,7 +249,7 @@
 <div id="utils-drawer" class="glass-drawer">
   <div class="pal-hdr">
     <span>🛠️ Studio Utilities &amp; Export</span>
-    <button id="utils-close" class="modal-close-btn">✕</button>
+    <button id="utils-close" class="modal-close-btn" aria-label="Close">✕</button>
   </div>
   <div class="utils-grid">
     <button class="ubtn" id="btn-export"><span class="material-symbols-outlined">save</span>💾 Save Session (JSON)</button>
@@ -276,7 +276,7 @@
   <div style="background:#040c2c;border:1px solid rgba(80,160,255,0.3);border-radius:18px;max-width:540px;width:100%;padding:24px;box-shadow:0 0 60px rgba(0,80,255,0.25);color:#fff;font-family:'Segoe UI',system-ui,sans-serif;">
     <div style="display:flex;justify-space-between;align-items:center;margin-bottom:18px;border-bottom:1px solid rgba(80,160,255,0.15);padding-bottom:12px;">
       <h3 style="font-size:17px;font-weight:700;color:#7df;">🚀 Share & Export Hub ("Draw.io Style")</h3>
-      <button id="export-hub-close" style="background:none;border:none;color:#8ab;font-size:22px;cursor:pointer;">✕</button>
+      <button id="export-hub-close" aria-label="Close" style="background:none;border:none;color:#8ab;font-size:22px;cursor:pointer;">✕</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;">
       <button class="ubtn" id="eh-btn-link" style="padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px;background:rgba(20,60,180,0.3);border-color:rgba(80,160,255,0.4);">
@@ -330,10 +330,10 @@
   <div class="session-card">
     <div class="session-header">
       <span class="session-title" id="session-modal-title">Save Session</span>
-      <button class="session-close" id="btn-session-close">✕</button>
+      <button class="session-close" id="btn-session-close" aria-label="Close">✕</button>
     </div>
     <div class="session-input-group" id="session-save-section">
-      <label class="session-label">Session Name</label>
+      <label class="session-label" for="session-name-input">Session Name</label>
       <input type="text" class="session-input" id="session-name-input" autocomplete="off" spellcheck="false">
       <div class="session-actions" style="margin-top: 10px; display: flex; gap: 8px;">
         <button class="session-btn primary" id="btn-session-save-browser">Save to Browser</button>
@@ -367,7 +367,7 @@
     <button class="ds-btn" id="ds-text">🅣 To Text</button>
     <button class="ds-btn" id="ds-image">🖼 Image</button>
     <button class="ds-btn" id="ds-icon">⬡ Icon</button>
-    <button class="ds-dismiss" id="ds-dismiss">✕</button>
+    <button class="ds-dismiss" id="ds-dismiss" aria-label="Close">✕</button>
   </div>
 </div>
 
