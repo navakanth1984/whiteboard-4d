@@ -91,13 +91,17 @@ export function createLink(a, b, ink = '#38bdf8') {
     flowDir: 1,
     particles,
     arrowHead,
-    lineCol
+    lineCol,
+    lastPa: pa.clone(),
+    lastPb: pb.clone()
   };
 
   links.push(link);
   return link;
 }
 
+// Performance optimization: Bolt ⚡
+// Skip expensive TubeGeometry allocation/disposal unless endpoints have actually moved.
 export function refreshLinks() {
   links.forEach(lk => {
     const a = objects.find(o => o.id === lk.a);
@@ -106,6 +110,19 @@ export function refreshLinks() {
 
     const pa = center(a);
     const pb = center(b);
+
+    // If endpoints haven't moved significantly and geometry/curve exists, skip TubeGeometry rebuild
+    if (lk.curve && lk.line?.geometry && lk.lastPa && lk.lastPb &&
+        lk.lastPa.distanceToSquared(pa) < 0.0001 &&
+        lk.lastPb.distanceToSquared(pb) < 0.0001) {
+      return;
+    }
+
+    if (!lk.lastPa) lk.lastPa = new THREE.Vector3();
+    if (!lk.lastPb) lk.lastPb = new THREE.Vector3();
+    lk.lastPa.copy(pa);
+    lk.lastPb.copy(pb);
+
     const mid = pa.clone().lerp(pb, 0.5).add(new THREE.Vector3(0, 2.2, 0));
     lk.curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
 
