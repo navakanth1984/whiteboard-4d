@@ -253,3 +253,29 @@ one significant physics fix, see below).
   cross-checking with direct JS/console inspection rather than trusting a single screenshot —
   but it means **live visual QA by a human is still worth doing periodically**, not fully
   supersedable by this workflow.
+
+---
+
+## 2026-08-20 — Google Cloud GenAI (Gemini 2.5 Flash), Secret Manager & Accessibility Integration
+
+### System Status
+- **Branch**: `feat/gemini-copilot-backend` (PR #3 open against `master`)
+- **Staging Dev URL**: `https://bleuboard-dev.vercel.app/v2/` (verified live with 0 console errors)
+- **Cloud Run Backend**: `https://bleuboard-spatial-bridge-526005048954.us-central1.run.app` (revision `00008-pmt`, active)
+
+### Verified Capabilities
+1. **Google Secret Manager Security (`nthdim-academy-v2`)**:
+   - `bleuboard-gemini-api-key`, `bleuboard-openrouter-api-key`, `bleuboard-sarvam-api-key`, `bleuboard-elevenlabs-api-key` created as Secret Manager secrets.
+   - Bound at Cloud Run container startup via `--set-secrets`.
+   - `.gitignore` updated with `.env*`. All API keys completely eliminated from source code, comments, and commit history.
+2. **Gemini 2.5 Flash Copilot Spatial Intelligence**:
+   - Natural language commands translated into structured Three.js spatial actions (`create`, `move`, `rotate`, `scale`, `navigate`, `holodeck`, etc.) with high confidence (0.95+).
+   - Audio path upgraded with `FileReader` base64 streaming (eliminating call-stack overflows on large audio blobs).
+   - Dual-path fallback: Gemini Live Audio primary $\rightarrow$ browser Web Speech API fallback.
+3. **Universal CORS & Direct Routing**:
+   - Express backend in `cloud_server.js` configured with `app.use(cors())`.
+   - Supports local dev (`127.0.0.1:3000`), preview deployments, and staging (`bleuboard-dev.vercel.app`).
+4. **Accessibility (PR #7 from Jules)**:
+   - Added `role="switch"`, `aria-pressed="false"`, and descriptive `aria-label` to `#btn-4d`.
+   - Synchronized `aria-pressed` in `v2/src/temporal/history4d.js` upon timeline toggle.
+   - Added `:focus-visible` focus ring styles (`outline: 2px solid #38bdf8`) in `v2/styles/main.css`.

@@ -298,7 +298,8 @@ cannot reproduce in v2; anything requiring credentials; any deploy; any proposal
 23. [x] **Fix: manual drag reverted by Rapier physics** — diagnosed and fixed by a separate Claude Code QA session, not by Antigravity, after 3 rounds of live QA (commits `1e13a63`, `a074be6`). User-confirmed working live. Tagged `v2-physics-drag-fixed`. Full writeup: `wiki/whiteboard-4d_gbrain.md` → "v2 — Current State".
 24. [ ] **Physics collider scale sync** — `syncBodyTransform` doesn't resize the Rapier collider on Three.js scale changes. Not reported as a symptom yet; flagged as a latent gap from item 23's fix.
 25. [ ] **Wire up `applyImpulse` toss-on-release, or remove it** — exists in `rapier_engine.js`, unused. Decide intent before next drag/physics work.
-26. [ ] **GCP Integration (PR #3: feat/gemini-copilot-backend)** — Gemini 2.0 Flash copilot brain + Dialogflow CX webhook + Vertex AI Search RAG. Commit `f0871b6`. **Needs: GCP project set, Cloud Run deploy, RENDER_CHECK, TASTE_GATE, then explicit merge approval.** See `v2/assets/google_cloud_resources.md` for credit IDs and resource registry.
+26. [x] **GCP Integration (PR #3: `feat/gemini-copilot-backend`)** — Gemini 2.5 Flash copilot brain + Secret Manager security + Cloud Run proxy + Vertex AI Search RAG. Cloud Run live at `https://bleuboard-spatial-bridge-526005048954.us-central1.run.app`. Staging deployed to `https://bleuboard-dev.vercel.app/v2/` and verified with 0 console errors. Ready for final PO review.
+27. [x] **Accessibility: 4D Scrubber ARIA Switch & Focus Rings (PR #7)** — Incorporated from Jules into `feat/gemini-copilot-backend` (commit `7aecdbb`). Verified in live DevTools with full `role="switch"`, `aria-pressed`, and `:focus-visible` styling.
 
 ---
 

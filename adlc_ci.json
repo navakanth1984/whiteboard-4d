@@ -1,5 +1,11 @@
 [
   {
+    "timestamp": "2026-08-20T14:42:56.341418",
+    "action": "stage",
+    "status": "PASS",
+    "detail": "https://bleuboard-qhjcpfft3-navakanth1984s-projects.vercel.app"
+  },
+  {
     "timestamp": "2026-07-18T23:43:14.445224",
     "action": "deploy",
     "status": "PASS",
@@ -139,14 +145,6 @@
     "status": "PASS",
     "staging_url": "https://bleuboard-qe875gu8o-navakanth1984s-projects.vercel.app",
     "prod_url": "https://bleuboard-ph8h37rr8-navakanth1984s-projects.vercel.app",
-    "smoke": "Smoke test PASSED \u2014 8/8 checks"
-  },
-  {
-    "timestamp": "2026-06-25T19:56:54.526302",
-    "action": "deploy",
-    "status": "PASS",
-    "staging_url": "https://bleuboard-lbyort03b-navakanth1984s-projects.vercel.app",
-    "prod_url": "https://bleuboard-fqux2kcoc-navakanth1984s-projects.vercel.app",
     "smoke": "Smoke test PASSED \u2014 8/8 checks"
   }
 ]

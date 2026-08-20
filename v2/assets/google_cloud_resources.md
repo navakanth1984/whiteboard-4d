@@ -54,10 +54,19 @@
 
 | Service Name | URL | Purpose | Status |
 |---|---|---|---|
-| `bleuboard-gemini-proxy` | *(deploy pending)* | Gemini 2.0 Flash NL→spatial action API | Not deployed |
-| `bleuboard-dialogflow-webhook` | *(deploy pending)* | Dialogflow CX fulfillment webhook | Not deployed |
+| `bleuboard-spatial-bridge` | `https://bleuboard-spatial-bridge-526005048954.us-central1.run.app` | Gemini 2.5 Flash spatial proxy + Dialogflow CX webhook + Secret Manager | ✅ **LIVE** (Revision `00008-pmt`) |
 
 ---
+
+## Secret Manager Keys (`nthdim-academy-v2`)
+
+| Secret Name | Bound Env Var | Purpose |
+|---|---|---|
+| `bleuboard-gemini-api-key:latest` | `GEMINI_API_KEY` | Gemini 2.5 Flash Spatial Intelligence API |
+| `bleuboard-openrouter-api-key:latest` | `OPENROUTER_API_KEY` | Multi-model routing / fallback |
+| `bleuboard-sarvam-api-key:latest` | `SARVAM_API_KEY` | Indian language voice TTS/ASR |
+| `bleuboard-elevenlabs-api-key:latest` | `ELEVENLABS_API_KEY` | Cyberpunk Spatial Micro-Audio synthesis |
+
 
 ## Vertex AI Resources
 
