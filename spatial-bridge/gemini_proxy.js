@@ -23,8 +23,8 @@ app.use(cors({
   ]
 }));
 
-const PROJECT   = process.env.GCP_PROJECT || '';
-const REGION    = process.env.REGION || 'us-central1';
+const PROJECT   = process.env.GCP_PROJECT || 'nthdim-academy-v2';  // from .env VERTEX_PROJECT_ID
+const REGION    = process.env.REGION || 'us-central1';              // from .env VERTEX_LOCATION
 const MODEL     = 'gemini-2.0-flash-001'; // Consumes GenAI App Builder credit
 
 // ── System prompt for spatial command grounding ──────────────────────────────

@@ -8,10 +8,27 @@
 // This module is browser-side — it talks to the Gemini proxy Cloud Run service.
 // No direct GCP credentials in the browser.
 
+// ── GCP config from environment (matches .env: VERTEX_PROJECT_ID=nthdim-academy-v2) ─────
+const GCP_PROJECT  = 'nthdim-academy-v2';
+const GCP_REGION   = 'us-central1';
+
+// Cloud Run proxy URL — set after first deploy of bleuboard-gemini-proxy
+// Deploy: gcloud run deploy bleuboard-gemini-proxy --region us-central1 --project nthdim-academy-v2
+// Then update this URL with the real hash from `gcloud run services describe` output.
+const CLOUD_RUN_URL = `https://bleuboard-gemini-proxy-${GCP_REGION.replace(/-/g,'')}a.a.run.app`; // placeholder
+
 const PROXY_BASE = (() => {
   if (window.location.hostname === 'localhost') return 'http://localhost:8080';
-  return 'https://bleuboard-gemini-proxy-REPLACE_WITH_HASH-uc.a.run.app'; // set after deploy
+  // Use CLOUD_RUN_URL after deploy — update above constant
+  return CLOUD_RUN_URL;
 })();
+
+// Gemini API key — loaded server-side by the Cloud Run proxy from Secret Manager.
+// NEVER put the raw key here. In .env locally: set GEMINI_API_KEY=<your-key>
+// In Cloud Run: set via --set-env-vars or Secret Manager (see setup_gcp.sh).
+const GEMINI_API_KEY = null; // browser never holds the key — Cloud Run proxy handles auth
+
+
 
 let _sceneSnapshot = {};
 

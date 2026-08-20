@@ -31,9 +31,11 @@
 
 | Field | Value |
 |---|---|
-| Project ID | *(set with `setup_gcp.sh <PROJECT_ID>`)* |
-| Billing account | *(must be the account holding the credits above)* |
-| Region | `us-central1` (recommended — full Vertex AI support) |
+| **Project ID** | `nthdim-academy-v2` |
+| **Region** | `us-central1` |
+| **Vertex AI Location** | `us-central1` |
+| **Gemini API Key** | in `.env` → `GEMINI_API_KEY` (used by Cloud Run proxy) |
+| Bootstrap script | `bash whiteboard-4d/setup_gcp.sh nthdim-academy-v2` |
 
 ---
 
