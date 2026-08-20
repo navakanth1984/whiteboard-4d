@@ -1,150 +1,189 @@
-# BleuuBoard v2 — Holographic Toolbar + HUD Redesign
+# BleuuBoard v2 — Avatar-HUD Interface Redesign + Alien-Humanoid Avatar
 
 **Date:** 2026-08-20
-**Repo:** `C:\Users\navka\navakanth001\whiteboard-4d` (branch: new `design/holographic-toolbar` off `master`)
-**Scope decision:** Toolbar + HUD only, first pass. Modals/drawers, onboarding guide, and 3D scene
-assets (avatars, environment, materials) are explicitly deferred to later phases — see §6.
+**Repo:** `C:\Users\navka\navakanth001\whiteboard-4d` (branch: `design/holographic-toolbar` off
+`fix/qa-accessibility-labels` — note: **branch name predates the final direction below and is kept
+as-is to avoid rewriting pushed history; the design superseded the branch's namesake.**)
+**Scope decision:** Two coordinated tracks — (1) toolbar + HUD visual redesign (CSS/DOM), and
+(2) sourcing an alien-humanoid VRM avatar (3D asset). Modals/drawers, onboarding guide, and the
+rest of the 3D scene (environment/materials) remain deferred to later phases — see §7.
 
 ---
 
-## 1. Design direction (established via visual brainstorming)
+## 1. Design direction — how we got here (context for future sessions)
 
-Reference: **holographic touch-consoles** — the floating translucent glass panels from *Avatar*'s
-science consoles / Iron Man's Jarvis interface, not literal COD/Fortnite skins. Three visual
-directions were mocked up and compared (tactical-military, vibrant-stylized-opaque, and
-glass-glow-hybrid); the tactical and opaque-plastic directions were explicitly rejected in favor of
-translucent, edge-lit glass with volumetric glow.
+Three directions were mocked up and compared live via the brainstorming visual companion before
+landing on the final one. Recording the rejections, not just the winner, so this isn't re-litigated:
 
-**Core principle: "pull, not push."** The interface should invite engagement, not perform at the
-user constantly:
-- **Resting state is quiet** — dim glass, faint edge-light, near-imperceptible scanline. Calm,
-  dormant, waiting.
-- **Hover/proximity is the invitation** — glow gently intensifies as the cursor approaches/lands.
-- **Active/touch is the payoff** — full amber bloom + ripple fires only on real interaction, so it
-  reads as a reward, not a default visual state.
-- **No ambient animation competes for attention.** The scanline sweep is felt, not watched — subtle
-  enough that a user who isn't looking for it won't consciously register it.
+1. **Fully holographic glass** (translucent panes, cyan glow, scanline shimmer) — **rejected**:
+   "flat and lame." This is the generic every-AI-SaaS-site look; it read as cheap, not premium.
+2. **Bold flat esports-broadcast graphic** (Valorant/Apex-style diagonal cuts, hard offset shadows,
+   no transparency) — mocked up as an alternative, no explicit verdict given before the reference
+   image below superseded discussion.
+3. **Avatar (2009 film) RDA science-console HUD** — a reference image of the film's in-world
+   interface was provided directly: layered floating panels at different depths (not one flat
+   strip), a **circular radial dial as the hero touch element**, dense multi-tier data panels with
+   real typographic hierarchy (label/value/unit), hairline corner-bracket framing, live-camera-style
+   imagery embedded in panels, and genuine atmospheric bloom against a dark backdrop. **This is the
+   locked direction** — confirmed explicitly ("overall UI feel should be somewhere like this").
 
-This principle is why the palette approach (from the visual brainstorm) is **neutral base + single
-accent reserved for active/important state**, not one hero-color per tool — constant multi-color
-noise is the "push" failure mode this design explicitly avoids.
+**Why 1 and 2 failed and 3 works:** flat CSS gradients and single-strip toolbars can't carry
+"premium" — the reference's richness comes from *structural* depth (layered panels, a hero radial
+element, dense information design), not from color choice alone. The lesson for implementation:
+detail and layering matter more than picking the right glow color.
+
+**Core principle carried forward from the earlier brainstorm: "pull, not push."** Still valid,
+independent of which visual skin sits on top of it:
+- Resting state reads calm — dim glow, no panel visually dominates the frame at rest.
+- Hover/proximity intensifies glow — the interface "wakes up" for the user's attention.
+- Full bloom + response fires only on real interaction — a reward, not a default state.
+- No ambient animation loud enough to consciously notice unprompted.
+
+This is also why the palette stays **neutral cyan base + single amber/gold accent for
+active/important state** (proven out in the radial-dial mockup's progress arc) rather than a
+multi-color toolbar — constant color noise is exactly the "push" failure mode.
 
 ---
 
 ## 2. Visual system
 
+### Structure (the actual differentiator — see §1)
+- **Layered depth, not a flat strip.** Panels should read at (at least) two implied distances —
+  e.g. a hero element slightly "closer" than surrounding data chips, via size/glow-intensity/
+  z-index, not literal 3D transforms (keep it DOM/CSS, no WebGL needed for this layer).
+- **Circular radial dial as the hero interaction** for the primary/active tool selector — an SVG
+  arc-progress ring (`stroke-dasharray` technique) with a glowing center icon, replacing a plain
+  square "active" button. Reference implementation approach: same technique as
+  [react-circular-progressbar](https://github.com/iqnivek/react-circular-progressbar) (MIT) —
+  hand-rolled in vanilla SVG to respect the no-build-step constraint, not an added dependency.
+- **Dense data panels** for HUD/telemetry (object count, links, session stats, POV mode): multi-tier
+  typography (small mono label → large value → small unit), a thin progress/status bar, a live-status
+  dot, hairline corner-bracket framing (`::before`/`::after` L-shaped borders, not full panel borders).
+
 ### Palette
 | Token | Value | Use |
 |---|---|---|
-| `--holo-glass-bg` | `rgba(20,45,60,.10)` → `rgba(10,25,40,.04)` gradient | Resting panel fill |
-| `--holo-edge` | `rgba(120,235,255,.35)` (dim) → `.5` (hover) | Resting/hover border |
-| `--holo-glow` | `rgba(80,220,255,.18)` (dim) → `.35` (hover) | Resting/hover box-shadow bloom |
-| `--holo-accent-bg` | `rgba(255,200,80,.14)` → `rgba(255,140,20,.05)` gradient | Active panel fill |
-| `--holo-accent-edge` | `rgba(255,210,110,.85)` | Active border |
-| `--holo-accent-glow` | `rgba(255,180,60,.5)` + `rgba(255,140,20,.22)` (two-layer bloom) | Active box-shadow |
-| `--holo-text` | `#bfefff` (resting) / `#ffe9a8` (active) | Label + icon color |
-
-This keeps the existing cyan (`#38bdf8`-family) identity — it becomes the *glass* color rather than
-the *accent* color — and reuses amber/gold as the single accent, consistent across every screen
-compared during brainstorming.
+| `--hud-glass-bg` | `rgba(15,45,60,.35)` → `rgba(5,15,25,.55)` gradient | Panel fill |
+| `--hud-edge` | `rgba(120,235,255,.35–.6)` | Border / corner-bracket color |
+| `--hud-glow` | `rgba(80,220,255,.12–.35)` layered box-shadow | Ambient + hover bloom |
+| `--hud-accent` | `#ffcf5c` (amber) | Radial dial active arc, live-status highlights, "this matters" state |
+| `--hud-text` | `#e8fbff` (values) / `#5a8a9a`–`#8fe8ff` (labels) | Typography hierarchy |
 
 ### Typography
-No change — `Outfit` (labels), `Syne` (logo), `JetBrains Mono` (HUD numerics) are already in
-`v2/index.html`'s font stack and already read as "console/HUD-appropriate." Not in scope to replace.
+No change — `Outfit`, `Syne`, `JetBrains Mono` already in `v2/index.html`'s font stack and already
+read as console-appropriate. `JetBrains Mono` becomes the primary voice for the denser telemetry
+panels (labels, stat values) — already used for HUD numerics, just extended more consistently.
 
 ### Icons
-- **Base layer (quiet, load-bearing):** [Game-icons.net](https://game-icons.net) (CC BY 3.0) for
-  toolbar tool icons where a thematically-precise shape exists (node/graph, flow/link, card/board,
-  splat/particle, camera modes). These are line/silhouette SVGs — recolor to `currentColor` so they
-  inherit the glow treatment for free.
-- **Fallback for generic actions** (close, save, delete, etc. — where no thematic icon adds value):
-  keep the current **Material Symbols Outlined** icons already wired up in the codebase. Not worth
-  a wholesale icon-library swap for icons nobody will consciously notice — see §4 licensing note.
-- **HUD frame elements** (corner brackets, panel border accents, if used): 
-  [Kenney "Sci-Fi UI"](https://kenney.nl) pack (CC0) as a reference/source for shapes, redrawn as
-  inline SVG/CSS rather than imported as image assets (keeps them recolorable and glow-able, and
-  avoids shipping a raster/vector asset that can't inherit the effect system).
-- Attribution: add a `CREDITS.md` (or extend `Credits – navakanth.csv`) entry for Game-icons.net
-  (CC-BY requires it); Kenney/CC0 needs no attribution but crediting is good practice.
+Unchanged from the earlier brainstorm pass — this wasn't revisited and the reasoning still holds:
+- **Kenney "Sci-Fi UI"** (CC0) — reference/source for corner-bracket and frame shapes, redrawn as
+  inline SVG so they inherit `currentColor` + the glow treatment.
+- **Game-icons.net** (CC BY 3.0) — thematically-precise tool icons (node/graph, flow, card/board).
+  Attribution required — add to `CREDITS.md` / `Credits – navakanth.csv`.
+- Generic actions (close, save, delete) keep existing Material Symbols Outlined — no value in
+  swapping icons nobody consciously looks at.
 
-### Effect system (the actual "wow" — hand-coded, not imported)
-Built as reusable CSS custom properties + one shared class pattern (`.holo-panel`, `.holo-panel.active`),
-so every toolbar button/HUD badge gets the treatment from one definition, not per-element rules:
-1. **Glass fill** — soft gradient + `backdrop-filter: blur()`, matches existing `.glass-drawer` blur
-   approach already in the codebase (`v2/styles/main.css`), extended with translucency tuned lower.
-2. **Edge glow** — `border` + layered `box-shadow` (outer bloom + inset rim light), two states
-   (resting/hover) plus a third (active) per the palette table above.
-3. **Scanline shimmer** — a single subtle horizontal light-sweep, CSS `@keyframes`, long duration
-   (~4-6s), low opacity (~0.15-0.2 max), pauses/hidden on `prefers-reduced-motion: reduce`.
-4. **Touch ripple** — on click/tap, a brief expanding ring pulse from the touch point (CSS animation
-   triggered by a JS class toggle), reinforcing "you touched a pane of light" rather than "you
-   clicked a button."
-5. **Deferred to a later pass** (explicitly out of scope for this spec, per your "hard code later"
-   call): chromatic-aberration edge fringing, particle/noise grain, flicker/instability micro-jitter,
-   more elaborate volumetric bloom. These are real "wow" additions but add render cost and
-   complexity — ship the core glass/glow/scanline/ripple system first, verify it feels right live,
-   then layer these in as a follow-up pass once the base is proven.
+### Effect system (hand-coded, per the earlier "hard code later" decision)
+Ship first: glass fill (gradient + `backdrop-filter: blur()`), layered edge glow (box-shadow,
+resting/hover/active tiers), radial dial arc animation, corner-bracket framing, a live-status pulse
+dot. **Still explicitly deferred** to a follow-up pass: chromatic aberration, particle/noise grain,
+flicker/jitter, deeper volumetric bloom — unchanged from the original decision, not revisited.
 
 ---
 
-## 3. Component scope (this pass)
+## 3. Component scope (UI track)
 
-Applies the effect system to, in `v2/index.html` + `v2/styles/main.css`:
-- `#topbar` and all `.tb` buttons (main tool row: NAV/INK/TEXT/NODES/CARDS/BOARDS/SPLAT/IMAGE/
-  VIDEO/AUDIO/FLOW/ERASE/FLOW MOTION/4D)
-- `.tb-pov-switch` (FPS/TPS/Orbit buttons)
-- `#hud` (object/link counter) and `.tb-hud`
-- `#timeline-4d` (4D scrubber bar) — already touched by the 2026-08-20 a11y fix (PR #8); this pass
-  restyles it visually on top of those accessibility attributes, doesn't change them
-- D-pad / flight controls cluster
+Same target surfaces as originally scoped — **unchanged**:
+- `#topbar` and all `.tb` buttons (NAV/INK/TEXT/NODES/CARDS/BOARDS/SPLAT/IMAGE/VIDEO/AUDIO/FLOW/
+  ERASE/FLOW MOTION/4D) — the currently-active tool becomes the radial-dial treatment; others stay
+  as simpler bracket-framed rectangular buttons (a full ring-dial per tool would be visual noise —
+  reserve the "hero" treatment for what's active, consistent with the accent-restraint principle).
+- `.tb-pov-switch` (FPS/TPS/Orbit), `#hud` + `.tb-hud`, `#timeline-4d` (visual restyle only —
+  doesn't touch the PR #8 a11y attributes), D-pad/flight cluster.
 
-**Explicitly NOT touched this pass** (existing dark-glass styling stays as-is):
-- Modals: Avatar Engine, Utilities drawer, Session Save/Load, Export Hub, asset-picker palettes
-  (`#palette`, `.pal-item` grids)
-- Onboarding guide (`#guide-overlay`)
-- 3D scene content — placed objects, avatar model, environment/skybox, materials
-
-Rationale: smallest change that's still a complete, coherent, shippable "wow" moment (the toolbar
-and HUD are what's on-screen 100% of the time), lowest regression risk, fastest to verify live.
-Modals/guide get a follow-up pass once this one is validated against real use.
+**Explicitly NOT touched this pass:** modals (Avatar Engine, Utilities, Session, Export Hub,
+palette pickers), onboarding guide, 3D scene environment/materials — deferred, see §7.
 
 ---
 
-## 4. Licensing
+## 4. Avatar track — alien-humanoid VRM character
+
+**New scope, added this session.** The in-world avatar model should read as an alien-humanoid in
+the spirit of the *Avatar* reference (tall, blue-toned, otherworldly), sourced and integrated
+alongside the UI work rather than deferred, since the reference image was explicitly named as the
+target feel for "overall UI" including the world the UI sits over.
+
+### IP constraint (binding, not optional)
+The Na'vi character design (blue striped skin, specific facial proportions, tail, ear shape) is a
+copyrighted character design (Disney/20th Century). This work targets the **aesthetic** — tall,
+blue/bioluminescent-toned, elegant alien-humanoid — via genuinely free/CC-licensed third-party
+assets. **Do not attempt to reproduce the Na'vi design feature-for-feature.**
+
+### Sourcing (both, compared live — per explicit decision)
+1. **VRoid Hub (primary candidate)** — native VRM, zero conversion, drops directly into the
+   existing `@pixiv/three-vrm` loader (`v2/src/nav/vrm_loader.js`). Candidates found:
+   - [Alien Girl](https://hub.vroid.com/en/characters/2883369553102616793/models/3390903002810894116)
+   - [Free Alien Model](https://hub.vroid.com/en/characters/5639149099865727656/models/5925224587623355702)
+     — **license: free to use, credit to creator "Cryinadonut" required, no resale/redistribution
+     as own work.** Add to `CREDITS.md` if selected.
+   - [ALIEN](https://hub.vroid.com/en/characters/7212851844340800823/models/673723520194694360)
+   - Trade-off: anime-stylized, not painterly-realistic — may or may not read as "premium enough"
+     next to the redesigned HUD; verify live before committing.
+2. **Sketchfab CC0 (secondary candidate)** — more sculpted/realistic potential. Candidate:
+   [Alien Original Character](https://sketchfab.com/3d-models/alien-character-rigged-f2072fbe2db24ee3b975d104822cd53e)
+   (rigged, Maya/Blender, CC-licensed — verify exact license tier on download page before use).
+   Trade-off: exports glTF, not VRM — the existing avatar loader expects VRM blendshapes for facial
+   expression (per the VRM loader's "procedural eye blinking, look-at IK" features documented in
+   `wiki/log.md`); a Sketchfab model likely won't drive those without either (a) a VRM conversion
+   pass (e.g. via VRoid Studio import/export, if the mesh/rig is compatible) or (b) extending the
+   avatar system to handle a plain-glTF avatar without expression blendshapes as a fallback path.
+3. **Ready Player Me — considered, not pursued.** Fully customizable skin color but realistic-human
+   proportions only; can't produce an "alien" read regardless of skin tint. Also now Netflix-owned
+   (2025 acquisition) — noted in case that's relevant to a future licensing decision, not currently
+   a blocker since not selected.
+
+### Decision process
+Pull both a VRoid candidate and the Sketchfab candidate into the actual live scene, compare against
+the redesigned HUD, and decide based on how each actually reads in context — not from thumbnails
+alone. This is exploratory integration work, not a committed final pick yet.
+
+---
+
+## 5. Licensing summary
 
 | Source | License | Obligation |
 |---|---|---|
-| Game-icons.net | CC BY 3.0 | Attribution required — add to `CREDITS.md` / existing credits file |
-| Kenney Sci-Fi UI (shape reference only, redrawn) | CC0 | None, credit is courtesy only |
-| Material Symbols (existing, unchanged) | Apache 2.0 | None |
-
-No new runtime dependencies, no build step change — icons are inlined as SVG or added to the
-existing icon-font approach; the effect system is hand-written CSS.
-
----
-
-## 5. Testing / verification plan
-
-Per the repo's CDLC: implement on a new branch, verify live before commit.
-- Local `server.cjs` + Browser tool, both light-touch (hover, resting) and interaction (click/active)
-  states screenshotted for each restyled component.
-- Regression-check the 2026-08-20 a11y fixes (PR #8) aren't visually or functionally broken —
-  `aria-label`s, `#tl-scrubber`, focus-visible rings, `#btn-4d` toggle behavior all re-verified.
-- `prefers-reduced-motion` check: scanline/ripple animations disabled, static glow remains.
-- Console clean (0 new errors) after the change.
-- Real interaction test matching the "pull not push" principle: confirm resting state is visually
-  calm in a full screenshot (no panel should visually dominate at rest), and that hover/active states
-  are the only place bloom intensity increases.
+| Game-icons.net | CC BY 3.0 | Attribution required |
+| Kenney Sci-Fi UI (shapes, redrawn) | CC0 | None, credit courtesy |
+| Material Symbols (existing) | Apache 2.0 | None |
+| VRoid Hub "Free Alien Model" (if selected) | Free, credit required, no resale | Attribution required |
+| Sketchfab alien candidate (if selected) | CC-tier TBD on download | Verify before committing |
 
 ---
 
-## 6. Deferred to later phases (not in this spec)
+## 6. Testing / verification plan
 
-1. Modal/drawer/guide-overlay restyle to match (same effect system, applied to remaining surfaces).
-2. Additional effect layers: chromatic aberration, particle/noise, flicker/jitter, deeper volumetric
-   bloom.
-3. **3D scene asset upgrade** (separate, larger effort — original request's second half):
-   ultrarealistic materials/environment/avatar assets sourced from Poly Haven (CC0 HDRIs/PBR
-   textures), Sketchfab (CC0/CC-BY models), Quaternius (CC0 low-poly-to-mid-poly packs), and
-   Mixamo (free rigging/animation) — not started, needs its own brainstorm/spec once this UI pass
-   ships, since it's a materially different kind of work (3D asset pipeline vs. CSS/DOM styling).
+**UI track** (per repo CDLC — new branch, verify live before commit):
+- Local `server.cjs` + Browser tool; resting, hover, and active states screenshotted per component.
+- Regression-check PR #8's a11y attributes (`aria-label`s, `#tl-scrubber`, focus-visible rings,
+  `#btn-4d` toggle) survive the visual restyle unchanged.
+- `prefers-reduced-motion`: dial/pulse animations disabled, static state remains legible.
+- Console clean (0 new errors).
+- "Pull not push" check: full-screen screenshot at rest should have no panel visually dominating;
+  bloom intensity increase should only be observable on hover/active.
+
+**Avatar track:**
+- Both candidates loaded into the live scene via the existing Avatar Engine modal / VRM loader path.
+- Confirm no console errors on load for either.
+- Confirm existing avatar features (SpringBone physics, eye blink, look-at IK per `wiki/log.md`)
+  still function with whichever is selected — if the Sketchfab glTF candidate lacks blendshapes,
+  explicitly verify what degrades gracefully vs. breaks.
+
+---
+
+## 7. Deferred to later phases (unchanged from original)
+
+1. Modal/drawer/guide-overlay restyle to match the new HUD language.
+2. Chromatic aberration, particle/noise, flicker/jitter, deeper volumetric bloom.
+3. Wider 3D scene asset upgrade (environment/skybox, materials) beyond the avatar itself — Poly
+   Haven (CC0 HDRIs/PBR textures), Quaternius (CC0 packs) remain candidate sources, not started.
