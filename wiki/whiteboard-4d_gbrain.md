@@ -278,4 +278,92 @@ one significant physics fix, see below).
 4. **Accessibility (PR #7 from Jules)**:
    - Added `role="switch"`, `aria-pressed="false"`, and descriptive `aria-label` to `#btn-4d`.
    - Synchronized `aria-pressed` in `v2/src/temporal/history4d.js` upon timeline toggle.
+
+---
+
+## 2026-08-20 — Full-surface QA sweep + accessibility fix round
+
+**Method:** 6 parallel QA subagents against live staging (`https://bleuboard-dev.vercel.app/v2/`,
+branch `feat/gemini-copilot-backend`), one per feature area from the "v2 — Current State" feature
+surface above, followed by manual re-verification of every "P0" finding before touching code
+(per the Evidence Rule — do not fix a bug you haven't reproduced yourself).
+
+### Environment finding (not an app bug, but blocked ~half the sweep)
+The Browser-tool pane's WebGL compositor did not render frames in 3 of 6 QA sessions
+(`GL_INVALID_FRAMEBUFFER_OPERATION: ... Attachment has zero size`, screenshot calls timing out
+with "the Browser pane is not displayed"). This blocked all coordinate-based clicks inside the 3D
+canvas, so the **physics drag-snap-back regression test (verifying the 2026-08-18 fix,
+commits `1e13a63`/`a074be6`) could not be re-run** — still outstanding, needs a session with a
+working compositor. Object-manipulation gizmo/drag/Flow-link/scale-collider/toss tests are
+likewise still unverified this round.
+
+### Two "P0" automated findings retracted after manual re-verification — do not re-file blind
+1. **"`#btn-4d` not keyboard-operable (Space/Enter)"** — reproduced the *symptom* independently
+   (real, focused button, trusted OS-level Space key press, `aria-pressed` never changes), **but**
+   a control experiment on a brand-new vanilla `<button>` with zero app code showed the exact same
+   symptom in this same Browser-tool pane. Programmatic `.click()` on `#btn-4d` works correctly and
+   fires the listener as expected. Conclusion: this Browser pane's synthetic key-injection does not
+   reliably produce a native click-on-Space/Enter for *any* button — a tooling limitation of this
+   QA harness, not an app defect. If this needs re-checking, use a real browser/human tester, not
+   this Browser-tool pane.
+2. **"4D scrubber count desync — phantom object on empty board"** — could not reproduce on a
+   genuinely clean reload (`tl-count-lbl` correctly read `0/0 OBJS` at every scrub position).
+   Likely explanation: the reporting agent's own synthetic `PointerEvent`-based object-placement
+   attempts (a workaround for the same compositor issue above) partially registered an object into
+   the in-memory `objects` array without it becoming a real visible mesh or reaching the
+   session-export serializer — an artifact of non-standard synthetic input, not a fresh-load bug.
+   Not fixed; flagged here so it isn't miscategorized as a live regression if seen again.
+
+### Real findings, fixed this round (branch `fix/qa-accessibility-labels`)
+All in `v2/index.html`, additive `aria-label`/`for`/`role` attributes only, no logic changes —
+verified live (local `server.cjs`) via DOM inspection after each addition, 0 new console errors,
+`#btn-4d` toggle regression-checked (`aria-pressed` still flips, panel still shows/hides):
+- `#tl-play-btn` (4D play/pause) — was unlabeled icon-only (`"play_arrow"` glyph text) → added
+  `aria-label="Play or pause 4D timeline replay"`, icon span marked `aria-hidden="true"`.
+- `#tl-scrubber` (4D timeline position slider) — had no accessible name at all → added
+  `aria-label="4D timeline position"`.
+- `#tl-count-lbl` — added `role="status" aria-live="polite"` so screen readers hear count changes.
+- `#session-name-input` — its `<label>Session Name</label>` was not programmatically associated
+  (`for`/`id` mismatch) → added `for="session-name-input"`.
+- Six icon-only close buttons (`avatar-modal-close`, `pal-close`, `utils-close`,
+  `export-hub-close`, `btn-session-close`, `ds-dismiss`) — were `"✕"` glyph-only → added
+  `aria-label="Close"` to each.
+
+### Confirmed, not yet fixed (real findings, deferred)
+- **Copilot AI feature is voice/mic-only, no text-input fallback.** Backend
+  (`/health`, `/gemini/interpret` — field name is `utterance`, not `text`/`prompt`/`command` —,
+  `/dialogflow/`) all verified working correctly via direct HTTP with universal CORS. But the live
+  UI's Copilot control only opens a static telemetry-card panel; there is no chat/text box, so the
+  feature is unusable/untestable without real microphone hardware. Worth a text-input fallback for
+  both accessibility and testability.
+- ~~Onboarding guide Next/Back navigation instability~~ — **ROOT-CAUSED AND FIXED, 2026-08-20.**
+  `#avatar-modal` and `#export-hub-modal` (`v2/index.html`) both set inline `z-index:9999`, and
+  `#timeline-4d`/`#hand-cam-container` use `9000` — all above `#guide-overlay`'s `z-index:1000`
+  (`v2/styles/main.css`). If any of those panels is visible while the guide overlay is also
+  showing, it renders on top and swallows clicks meant for the guide, invisibly (semi-transparent
+  backdrops make it easy to miss on a screenshot) — exactly what both QA agents saw. **Verified
+  root cause with an A/B `elementFromPoint` test**: forcing `#avatar-modal` open alongside the
+  guide, a click at the Next button's screen position resolved to `#avatar-modal` at the old
+  z-index (1000) and to `#guide-card` after raising `#guide-overlay` to `z-index:10000`. Fixed by
+  raising `#guide-overlay`'s z-index above every other fixed overlay in the app.
+- **"V-sign quick-spawn" hand gesture is undocumented in-app** — the tooltip and onboarding guide
+  cover pinch-move/2-hand-scale-rotate/palm-delete but no V-sign content was found (guide
+  navigation instability above may have hidden it in an unreached chapter — not conclusively
+  absent, just not found).
+- Cosmetic-only, unconfirmed: "Clear All Objects" may be missing its native `confirm()` gate — one
+  agent saw no confirm/suppression log, but flagged it as low-confidence given the same session's
+  broader flakiness. Needs a clean re-check.
+
+### Physics drag-persistence regression test — RE-RUN, PASS (2026-08-20)
+Re-ran the one test the sweep above couldn't complete (compositor issue blocked all 6 QA
+sessions' canvas interaction). This session's Browser pane rendered correctly. Placed a real
+object (Databricks node card) via the actual UI flow, then:
+- **Direct-body drag** (real trusted `left_click_drag` on the mesh, not synthetic events):
+  position went `[7.57, 5.83, -10.6] → [3.49, 1.66, -10.58]`, held exactly steady across a 1.5s
+  wait (many physics ticks) — no snap-back.
+- **Gizmo drag** (Y-axis translate handle): `Y: 1.66 → 5.02`, again held steady across 1.5s.
+- Verified via direct `window.__selectedObject.root.position` inspection before/after, not just
+  visual screenshot. Zero console errors throughout.
+- **Conclusion: the 2026-08-18 physics drag-snap-back fix (commits `1e13a63`/`a074be6`) has NOT
+  regressed.** Both edit paths confirmed independently.
    - Added `:focus-visible` focus ring styles (`outline: 2px solid #38bdf8`) in `v2/styles/main.css`.
