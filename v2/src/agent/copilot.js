@@ -1,8 +1,14 @@
 // v2/src/agent/copilot.js — Autonomous In-World AI Spatial Copilot & Voice Directive Engine
+// Voice pipeline (priority order):
+//   1. Gemini Live Audio (MediaRecorder blob → Cloud Run proxy → structured action)
+//      Credit consumed: GenAI App Builder (₹94,804 remaining, expires 2027-04-26)
+//   2. Browser SpeechRecognition → interpretNL() → Gemini text API → local fallback
+//   3. Pure local executeDirective() regex (always available, credit-free)
 import * as THREE from 'three';
 import { getSceneState } from '../core/scene.js';
 import { objects, links, register } from '../core/history.js';
 import { createLink } from '../graph/links.js';
+import { interpretNL, interpretAudioNL } from './interpret.js';
 
 let copilotGroup = null;
 let coreMesh = null;
@@ -191,44 +197,188 @@ function startInspectionTour() {
 }
 
 /**
- * Speech Recognition Integration (Web Speech API)
+ * Voice pipeline — Gemini Live Audio primary, browser SpeechRecognition fallback.
+ *
+ * Gemini path (preferred, online):
+ *   MediaRecorder captures mic audio → on silence/utterance-end → audio blob sent to
+ *   Cloud Run proxy /live-audio → Gemini 2.0 Flash transcribes + returns spatial action
+ *   → executeGeminiAction() applies it to the Three.js scene.
+ *
+ * Browser fallback (offline or proxy unreachable):
+ *   SpeechRecognition transcript → interpretNL() (Gemini text API or local regex)
+ *   → executeDirective() / executeGeminiAction().
  */
+
+let mediaRecorder = null;
+let audioChunks = [];
+let silenceTimer = null;
+const SILENCE_MS = 1200; // send after 1.2 s of silence
+
 function initVoiceRecognition() {
+  // ── Gemini Live Audio path (primary) ──────────────────────────────────────
+  if (navigator.mediaDevices?.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      mediaRecorder = new MediaRecorder(stream, { mimeType: _bestMime() });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data?.size > 0) audioChunks.push(e.data);
+        // Reset silence timer on each chunk
+        clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => _flushAudioToGemini(), SILENCE_MS);
+      };
+
+      mediaRecorder.onerror = (err) => {
+        console.warn('[copilot] MediaRecorder error, switching to SpeechRecognition:', err);
+        _initSpeechRecognitionFallback();
+      };
+    }).catch(() => _initSpeechRecognitionFallback());
+  } else {
+    _initSpeechRecognitionFallback();
+  }
+
+  // ── Browser SpeechRecognition fallback ────────────────────────────────────
+  _initSpeechRecognitionFallback();
+}
+
+async function _flushAudioToGemini() {
+  if (!audioChunks.length) return;
+  const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+  audioChunks = [];
+
+  const hud = document.getElementById('copilot-speech-status');
+  if (hud) hud.textContent = '🔮 Gemini thinking…';
+
+  const action = await interpretAudioNL(blob);
+  if (action) {
+    executeGeminiAction(action);
+  } else {
+    // Audio path gave nothing — handled by SpeechRecognition path running in parallel
+    if (hud) hud.textContent = 'Say a command…';
+  }
+}
+
+function _initSpeechRecognitionFallback() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
+  if (!SpeechRecognition || speechRecognizer) return;
 
   speechRecognizer = new SpeechRecognition();
   speechRecognizer.continuous = true;
   speechRecognizer.interimResults = false;
   speechRecognizer.lang = 'en-US';
 
-  speechRecognizer.onresult = (event) => {
+  speechRecognizer.onresult = async (event) => {
     const transcript = event.results[event.results.length - 1][0].transcript;
-    executeDirective(transcript);
+    const hud = document.getElementById('copilot-speech-status');
+    if (hud) hud.textContent = `🎤 "${transcript}"`;
+
+    // Try Gemini text API first, then local fallback
+    const action = await interpretNL(transcript, { fallbackFn: executeDirective });
+    if (action && action._source !== 'local') {
+      executeGeminiAction(action);
+    }
+    // If _source === 'local', executeDirective already ran inside interpretNL fallback
   };
 
   speechRecognizer.onerror = (err) => {
-    console.warn('Voice Recognition Error:', err);
+    console.warn('[copilot] SpeechRecognition error:', err);
     stopVoiceControl();
   };
 }
 
-export function startVoiceControl() {
-  if (!speechRecognizer || isListening) return;
-  try {
-    speechRecognizer.start();
-    isListening = true;
-    updateVoiceUI();
-  } catch (err) {
-    console.error(err);
+/**
+ * Execute a structured Gemini spatial action on the Three.js scene.
+ * Handles the actions the Gemini proxy can return.
+ */
+function executeGeminiAction(action) {
+  const hud = document.getElementById('copilot-speech-status');
+  if (hud) hud.textContent = `AI: ${action.utterance_understood || action.action}`;
+
+  switch (action.action) {
+    case 'navigate':
+      if (action.target === 'camera') flyTo(0, 3.5, 5);
+      else _flyToNamed(action.target);
+      break;
+    case 'move':    _moveNamed(action.target, action.params); break;
+    case 'circle':
+    case 'arrange': arrangeInCircle(); flyTo(0, 4, 0); break;
+    case 'grid':    arrangeInGrid();   flyTo(0, 4, 0); break;
+    case 'line':    arrangeInLine();   flyTo(0, 3.5, 0); break;
+    case 'link':    connectClosestNodes(); break;
+    case 'search': {
+      // Highlight matching objects returned by Gemini
+      const matches = action.params?.matches || [];
+      matches.forEach(m => _highlightNamed(m.name));
+      break;
+    }
+    default:
+      // Unknown structured action — fall back to old regex path
+      executeDirective(action.utterance_understood || action.action);
   }
 }
 
+function _flyToNamed(name) {
+  if (!name) return;
+  const obj = objects.find(o =>
+    (o.userData?.label || o.name || '').toLowerCase().includes(name.toLowerCase())
+  );
+  if (obj?.root) flyTo(obj.root.position.x, obj.root.position.y + 2, obj.root.position.z + 3);
+  else flyTo(0, 3.5, 5);
+}
+
+function _moveNamed(name, params = {}) {
+  const obj = objects.find(o =>
+    (o.userData?.label || o.name || '').toLowerCase().includes((name || '').toLowerCase())
+  );
+  if (!obj?.root) return;
+  const dir = (params.direction || 'up').toLowerCase();
+  const amt = params.amount || 1;
+  if (dir === 'left')  obj.root.position.x -= amt;
+  if (dir === 'right') obj.root.position.x += amt;
+  if (dir === 'up')    obj.root.position.y += amt;
+  if (dir === 'down')  obj.root.position.y -= amt;
+  if (dir === 'forward' || dir === 'closer') obj.root.position.z -= amt;
+  if (dir === 'back'  || dir === 'farther') obj.root.position.z += amt;
+}
+
+function _highlightNamed(name) {
+  const obj = objects.find(o =>
+    (o.userData?.label || o.name || '').toLowerCase().includes((name || '').toLowerCase())
+  );
+  if (obj?.root) {
+    const orig = obj.root.position.clone();
+    obj.root.position.y += 0.4;
+    setTimeout(() => obj.root.position.copy(orig), 600);
+  }
+}
+
+function _bestMime() {
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg']) {
+    if (MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return '';
+}
+
+
+export function startVoiceControl() {
+  if (isListening) return;
+  isListening = true;
+  updateVoiceUI();
+  // Start MediaRecorder (Gemini path)
+  if (mediaRecorder && mediaRecorder.state === 'inactive') {
+    audioChunks = [];
+    mediaRecorder.start(250); // 250 ms timeslices → ondataavailable fires frequently
+  }
+  // Start browser SpeechRecognition (fallback path, runs in parallel)
+  try { if (speechRecognizer) speechRecognizer.start(); } catch (_) {}
+}
+
 export function stopVoiceControl() {
-  if (!speechRecognizer || !isListening) return;
-  speechRecognizer.stop();
+  if (!isListening) return;
   isListening = false;
   updateVoiceUI();
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  try { if (speechRecognizer) speechRecognizer.stop(); } catch (_) {}
+  clearTimeout(silenceTimer);
 }
 
 function updateVoiceUI() {

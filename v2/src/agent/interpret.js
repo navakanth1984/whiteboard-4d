@@ -1,7 +1,49 @@
 // v2/src/agent/interpret.js — Spatial Awareness System (SASCore & SASCard)
+// + Gemini 2.0 Flash NL interpreter (online) with local regex fallback (offline)
+//
+// Credit consumed: GenAI App Builder (₹94,804 remaining, expires 2027-04-26)
+// when interpretNL() / interpretAudioNL() are called online.
 import * as THREE from 'three';
 import { objects } from '../core/history.js';
 import { getSceneState } from '../core/scene.js';
+import { interpretWithGemini, interpretAudioWithGemini, buildSceneSnapshot } from './vertex_search.js';
+
+// ── Gemini upgrade wrapper ────────────────────────────────────────────────────
+// Call this from voice_commands.js instead of local regex parsing.
+// Tries Gemini first (online), falls back to local function on error/timeout.
+export async function interpretNL(utterance, { fallbackFn } = {}) {
+  const { camera } = getSceneState();
+  buildSceneSnapshot(objects, camera);           // refresh snapshot before every call
+
+  const geminiResult = await interpretWithGemini(utterance);
+  if (geminiResult && geminiResult.action && geminiResult.action !== 'unknown') {
+    console.info(`[interpret] Gemini → ${geminiResult.action}:${geminiResult.target} (confidence ${(geminiResult.confidence || 0).toFixed(2)})`);
+    return geminiResult;
+  }
+
+  // Offline fallback — pass the local parser function from the caller
+  if (typeof fallbackFn === 'function') {
+    const local = fallbackFn(utterance);
+    if (local) {
+      console.info('[interpret] local fallback →', local.action || 'unknown');
+      return { ...local, _source: 'local' };
+    }
+  }
+  return null;
+}
+
+// Audio path: Gemini Live Audio transcription + action, from MediaRecorder blob
+export async function interpretAudioNL(audioBlob) {
+  const { camera } = getSceneState();
+  buildSceneSnapshot(objects, camera);
+
+  const geminiResult = await interpretAudioWithGemini(audioBlob);
+  if (geminiResult && geminiResult.action && geminiResult.action !== 'unknown') {
+    console.info(`[interpret] Gemini Audio → ${geminiResult.action} ("${geminiResult.utterance_understood}")`);
+    return geminiResult;
+  }
+  return null;
+}
 
 export const SASCore = (() => {
   const GROUNDED = new Set(['block', 'shape', 'model', 'icon', 'card', 'board', 'splat']);
