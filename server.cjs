@@ -20,12 +20,28 @@ const MIME_TYPES = {
 };
 
 http.createServer((req, res) => {
-  const urlPath = req.url.split('?')[0]; // strip query string before comparing/joining
-  let normalizedPath = urlPath === '/' ? 'index.html' : urlPath;
-  if (normalizedPath === '/v2' || normalizedPath === '/v2/' || normalizedPath === 'v2' || normalizedPath === 'v2/') {
-    normalizedPath = 'v2/index.html';
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(req.url.split('?')[0]);
+  } catch (e) {
+    res.writeHead(400);
+    return res.end('400 Bad Request');
   }
-  let filePath = path.join(__dirname, normalizedPath);
+
+  let normalizedPath = decodedPath === '/' ? '/index.html' : decodedPath;
+  if (normalizedPath === '/v2' || normalizedPath === '/v2/' || normalizedPath === 'v2' || normalizedPath === 'v2/') {
+    normalizedPath = '/v2/index.html';
+  }
+
+  // Prevent path traversal by resolving relative to __dirname and enforcing jail boundary
+  const safeBase = path.resolve(__dirname);
+  const filePath = path.resolve(safeBase, '.' + path.normalize('/' + normalizedPath));
+
+  if (!filePath.startsWith(safeBase + path.sep) && filePath !== safeBase) {
+    res.writeHead(403);
+    return res.end('403 Forbidden');
+  }
+
   let extname = path.extname(filePath);
 
   fs.readFile(filePath, (err, content) => {
