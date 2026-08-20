@@ -86,8 +86,13 @@ export async function interpretWithGemini(utterance) {
  */
 export async function interpretAudioWithGemini(audioBlob) {
   try {
-    const arrayBuf = await audioBlob.arrayBuffer();
-    const b64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+    const b64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(audioBlob);
+    });
+
     const res = await fetch(`${PROXY_BASE}/gemini/live-audio`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,6 +103,7 @@ export async function interpretAudioWithGemini(audioBlob) {
       }),
       signal: AbortSignal.timeout(12000)
     });
+
     if (!res.ok) throw new Error(`proxy ${res.status}`);
     return await res.json();
   } catch (err) {
