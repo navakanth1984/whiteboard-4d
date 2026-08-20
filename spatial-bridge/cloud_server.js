@@ -33,7 +33,9 @@ const { GoogleGenAI } = require('@google/genai');
 
 const PROJECT = process.env.GCP_PROJECT || 'nthdim-academy-v2';
 const REGION  = process.env.REGION      || 'us-central1';
+const MODEL   = 'gemini-2.0-flash';
 const API_KEY = process.env.GEMINI_API_KEY;
+
 
 const SYSTEM_PROMPT = `You are the spatial intelligence layer for BleuuBoard — a 4D creative
 whiteboard with a Three.js scene graph. Translate the user's natural language utterance into a
